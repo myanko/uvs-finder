@@ -1,0 +1,42 @@
+.tab.selected {
+    background-color: rgb(60, 60, 60);
+    border-bottom-color: rgba(36, 36, 36, 0);
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.tab {
+    background-color: rgb(40, 40, 40);
+    -unity-slice-bottom: 0;
+    border-bottom-color: rgba(36, 36, 36, 0);
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+TemplateContainer{
+    flex-grow: 1;
+}
+
+.Highlighted {
+    color: rgb(255, 128, 0);
+}
+
+#Description {
+    -unity-font-style: bold;
+    flex-direction: row;
+    padding-right: 10px;
+}
+#Description Label{
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+#FilePath {
+    -unity-font-style: italic;
+}

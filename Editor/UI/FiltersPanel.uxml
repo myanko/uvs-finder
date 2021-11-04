@@ -1,0 +1,29 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:TextField picking-mode="Ignore" value="filler text" name="textFieldFindFilter" />
+    <ui:ScrollView scroll-deceleration-rate="0,135" elasticity="0,1">
+        <ui:Foldout text="Filter Node type" name="nodeTypes">
+            <ui:Toggle label="All" value="true" />
+            <ui:Toggle label="Variable" value="true" />
+            <ui:Toggle label="Variable Graph" value="true" />
+            <ui:Toggle label="Variable Object" value="true" />
+            <ui:Toggle label="Variable Scene" value="true" />
+            <ui:Toggle label="Variable App" value="true" />
+            <ui:Toggle label="Variable Flow" value="true" />
+            <ui:Toggle label="Subgraph" value="true" />
+            <ui:Toggle label="Groups" value="true" style="height: 16px;" />
+            <ui:Toggle label="Events" value="true" />
+            <ui:Toggle label="Graph Events" value="true" />
+            <ui:Toggle label="Variable Saved" value="true" />
+        </ui:Foldout>
+        <ui:Foldout text="Filter Graph Type" name="graphTypes">
+            <ui:Toggle label="All" />
+            <ui:Toggle label="Flow Graphs" value="true" />
+            <ui:Toggle label="State Graphs" />
+        </ui:Foldout>
+        <ui:Foldout text="Filter Other" name="attributeTypes">
+            <ui:Toggle label="All" />
+            <ui:Toggle label="Color" />
+            <ui:Toggle label="Flow Graphs" />
+        </ui:Foldout>
+    </ui:ScrollView>
+</ui:UXML>
