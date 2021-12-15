@@ -65,6 +65,10 @@ Or you can click on the menu **Tools/VisualScripting/UVS Find in All Graph** ite
 
 **CTRL+Shift+F** :Open the node finder and search in all graphs in the project.
 
+You should see this Shortcut Conflict panel, up to you, to change the shortcut or overide the **Align With View** default shortcut to the **UVS Find in All Graphs**.
+
+![Conflict](Conflict.png)
+
 
 
 ## User Settings
