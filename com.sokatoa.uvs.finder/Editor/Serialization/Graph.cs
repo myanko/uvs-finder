@@ -20,6 +20,11 @@ namespace Unity.VisualScripting.UVSFinder
             throw new NotImplementedException();
         }
 
+        public IEnumerable<object> GetAotStubs(HashSet<object> visited)
+        {
+            throw new NotImplementedException();
+        }
+
         public IEnumerable<object> aotStubs { get; }
 
         public void OnBeforeSerialize()

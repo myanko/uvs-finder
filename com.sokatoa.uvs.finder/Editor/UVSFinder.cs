@@ -44,7 +44,6 @@ namespace Unity.VisualScripting.UVSFinder
         public void OnEnable()
         {
             var path = new UVSFinderPaths().findRootPackagePath();
-            Debug.Log(path);
             // Each editor window contains a root VisualElement object
             VisualElement root = rootVisualElement;
 
