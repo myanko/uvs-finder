@@ -1,11 +1,11 @@
 {
   "displayName": "UVS Finder",
   "name": "com.sokatoa.uvs.finder",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "unity": "2020.3",
   "description": "Adds search capabilities to Visual Scripting",
   "dependencies": {
-    "com.unity.visualscripting": "1.7.2",
+    "com.unity.visualscripting": "1.5.2",
     "com.unity.nuget.newtonsoft-json": "2.0.2"
   }
 }
