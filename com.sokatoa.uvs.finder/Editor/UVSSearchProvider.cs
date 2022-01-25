@@ -26,7 +26,9 @@ namespace Unity.VisualScripting.UVSFinder
                 var assetPath = AssetDatabase.GetAssetPath(graphWindow.reference.serializedObject);
                 var assetType = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
                 if (assetType != typeof(StateGraphAsset))
+                {
                     assetType = typeof(ScriptGraphAsset);
+                }
                 var itemsFound = FindNodesFromAssetPath(keyword, assetPath, assetType);
                 if (itemsFound != null)
                 {
@@ -148,14 +150,43 @@ namespace Unity.VisualScripting.UVSFinder
                 }
 
                 // also search in embed graphs
-                // TODO: make this recursive
-                if (graphElement.nest?.embed?.graphElements != null)
+                searchInEmbeddedElements(graphElement, keyword, searchItems, assetPath, type);
+                
+                
+            }
+
+            return searchItems;
+        }
+
+        private static void searchInEmbeddedElements(GraphElement graphElement, string keyword, List<ResultItem> searchItems, string assetPath, Type type)
+        {
+            if (graphElement.nest?.embed?.graphElements != null)
+            {
+
+                foreach (var embedGraphElement in graphElement.nest.embed.graphElements)
                 {
-                    foreach(var embedGraphElement in graphElement.nest.embed.graphElements)
+                    //recurse
+                    searchInEmbeddedElements(embedGraphElement, keyword, searchItems, assetPath, type);
+
+                    // process
+                    if (string.IsNullOrEmpty(keyword))
                     {
-                        if (string.IsNullOrEmpty(keyword))
+                        // return all elements found
+                        searchItems.Add(new ResultItem()
                         {
-                            // return all elements found
+                            itemName = embedGraphElement.GetElementName(),
+                            assetPath = assetPath,
+                            guid = embedGraphElement.guid.ToString(),
+                            graphElement = embedGraphElement,
+                            type = type
+                        });
+                    }
+                    else
+                    {
+                        var searchTermLowerInvariant = keyword.ToLowerInvariant().Replace(" ", "").Replace(".", "");
+                        var embedElementNameLowerInvariant = embedGraphElement.GetElementName().ToLowerInvariant();
+                        if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant))
+                        {
                             searchItems.Add(new ResultItem()
                             {
                                 itemName = embedGraphElement.GetElementName(),
@@ -165,27 +196,9 @@ namespace Unity.VisualScripting.UVSFinder
                                 type = type
                             });
                         }
-                        else
-                        {
-                            var searchTermLowerInvariant = keyword.ToLowerInvariant().Replace(" ", "").Replace(".", "");
-                            var embedElementNameLowerInvariant = embedGraphElement.GetElementName().ToLowerInvariant();
-                            if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant))
-                            {
-                                searchItems.Add(new ResultItem()
-                                {
-                                    itemName = embedGraphElement.GetElementName(),
-                                    assetPath = assetPath,
-                                    guid = embedGraphElement.guid.ToString(),
-                                    graphElement = embedGraphElement,
-                                    type = type
-                                });
-                            }
-                        }
                     }
                 }
             }
-
-            return searchItems;
         }
 
         private static bool IsIgnoreElement(GraphElement graphElement)
