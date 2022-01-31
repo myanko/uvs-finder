@@ -128,15 +128,20 @@ namespace Unity.VisualScripting.UVSFinder
 
         private Texture2D GetIcon(ResultItem resultItem)
         {
-            if (resultItem.graphElement.type.EndsWith(".SetVariable") || resultItem.graphElement.type.EndsWith(".GetVariable"))
+            switch (resultItem.graphElement.GetType().ToString())
             {
-                return (BoltCore.Resources.icons.VariableKind(resultItem.graphElement.kind))[IconSize.Small];
+                case "Unity.VisualScripting.GetVariable":
+                    return (BoltCore.Resources.icons.VariableKind(((GetVariable)resultItem.graphElement).kind))[IconSize.Small];
+                case "Unity.VisualScripting.SetVariable":
+                    return (BoltCore.Resources.icons.VariableKind(((SetVariable)resultItem.graphElement).kind))[IconSize.Small];
+                    /*case "Bolt.GetVariable":
+                    case "Bolt.SetVariable":*/
             }
 
             //find the type full name with assembly
             Type objectType = (from asm in AppDomain.CurrentDomain.GetAssemblies()
                                from type in asm.GetTypes()
-                               where type.IsClass && type.Name == ((GraphElement)resultItem.graphElement).GetElementType().Split('.').Last()
+                               where type.IsClass && type.Name == ((GraphElement)resultItem.graphElement).GetType().ToString().Split('.').Last()
                                select type).FirstOrDefault();
             //Debug.Log(((GraphElement)searchItems[i].graphElement).type + " = " + objectType);
             var texture = objectType.Icon()?[IconSize.Small];
@@ -271,7 +276,7 @@ namespace Unity.VisualScripting.UVSFinder
             // because my GraphElement class cannot decorate the Widget for some reason...
             var realElement = canvas.graph.elements.Where(i => i.guid == resultItem.graphElement.guid).FirstOrDefault();
             var panPosition = new Vector2();
-            if (resultItem.graphElement.type == "Unity.VisualScripting.GraphGroup" || resultItem.graphElement.type == "Bolt.GraphGroup")
+            if (resultItem.graphElement.GetType().ToString() == "Unity.VisualScripting.GraphGroup" || resultItem.graphElement.GetType().ToString() == "Bolt.GraphGroup")
             {
                 var realGroup = canvas.graph.groups.Where(u => u.guid == resultItem.graphElement.guid).FirstOrDefault();
                 panPosition = new Vector2(realGroup.position.xMin + (canvas.viewport.width/2) - 10, realGroup.position.yMin + (canvas.viewport.height/2) - 10);
@@ -334,12 +339,13 @@ namespace Unity.VisualScripting.UVSFinder
             if (realElement != null)
             {
                 var panPosition = new Vector2();
-                if (resultItem.graphElement.type == "Unity.VisualScripting.GraphGroup" || resultItem.graphElement.type == "Bolt.GraphGroup")
+                if (resultItem.graphElement.GetType().ToString() == "Unity.VisualScripting.GraphGroup" || resultItem.graphElement.GetType().ToString() == "Bolt.GraphGroup")
                 {
                     panPosition = new Vector2(((GraphGroup)realElement).position.xMin + (canvas.viewport.width / 2) - 10, ((GraphGroup)realElement).position.yMin + (canvas.viewport.height / 2) - 10);
-                } else
+                } 
+                else
                 {
-                    panPosition = new Vector2(resultItem.graphElement.position.x, resultItem.graphElement.position.y);
+                    panPosition = new Vector2(((Unit)resultItem.graphElement).position.x, ((Unit)resultItem.graphElement).position.y);
                 }
                 graphWindow.context.selection.Select(realElement);
                 graphWindow.context.graph.zoom = 1f;
@@ -376,17 +382,19 @@ namespace Unity.VisualScripting.UVSFinder
         private void OpenWindow(ResultItem resultItem)
         {
             //Debug.Log($"Focusing in asset {graphItem.assetPath}, on {graphItem.itemName}");
-            UnityObject unityObject = AssetDatabase.LoadAssetAtPath(resultItem.assetPath, typeof(UnityObject));
             GraphReference graphReference;
             if (resultItem.type == typeof(ScriptGraphAsset))
             {
-                ScriptGraphAsset scriptGraphAsset = unityObject as ScriptGraphAsset;
-                graphReference = scriptGraphAsset.GetReference().AsReference();
-                //graphReference = GraphReference.New(scriptGraphAsset, true);
-            } else
+                var sga = AssetDatabase.LoadAssetAtPath<ScriptGraphAsset>(resultItem.assetPath);
+                //sga.graph.Instantiate(sga.GetReference().AsReference());
+                graphReference = sga.GetReference().AsReference();
+                //graphReference = GraphReference.New(sga.GetReference().root, true);
+            } 
+            else
             {
-                StateGraphAsset stateGraphAsset = unityObject as StateGraphAsset;
-                graphReference = GraphReference.New(stateGraphAsset, true);
+                var sga = AssetDatabase.LoadAssetAtPath<StateGraphAsset>(resultItem.assetPath);
+                //graphReference = GraphReference.New(sga.GetReference().root, true);
+                graphReference = sga.GetReference().AsReference();
             }
             // open the window
             GraphWindow.OpenActive(graphReference);

@@ -11,6 +11,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
+using UnityObject = UnityEngine.Object;
 
 namespace Unity.VisualScripting.UVSFinder
 {
@@ -21,15 +22,24 @@ namespace Unity.VisualScripting.UVSFinder
         public static List<ResultItem> PerformSearchInCurrentScript(string keyword)
         {
             var graphWindow = EditorWindow.GetWindow<GraphWindow>();
+            var searchTermLowerInvariant = keyword.ToLowerInvariant().Replace(" ", "").Replace(".", "");
             try
             {
                 var assetPath = AssetDatabase.GetAssetPath(graphWindow.reference.serializedObject);
                 var assetType = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
+                var guid = AssetDatabase.GUIDFromAssetPath(assetPath);
+                List<ResultItem> itemsFound;
                 if (assetType != typeof(StateGraphAsset))
                 {
                     assetType = typeof(ScriptGraphAsset);
+                    itemsFound = FindNodesFromScriptGraphAssetGuid(guid.ToString(), keyword);
+                    if (itemsFound != null)
+                    {
+                        return itemsFound;
+                    }
                 }
-                var itemsFound = FindNodesFromAssetPath(keyword, assetPath, assetType);
+                
+                itemsFound = FindNodesFromScriptGraphAssetGuid(guid.ToString(), keyword);
                 if (itemsFound != null)
                 {
                     return itemsFound;
@@ -37,17 +47,12 @@ namespace Unity.VisualScripting.UVSFinder
             } catch (Exception e)
             {
                 Debug.Log($"encountered an error while searching in current script: {e}");
-                return new List<ResultItem>();
             }
 
             return new List<ResultItem>();
-
         }
 
         // finds all the results nodes from the asset files
-        // sets the searchItems with the nodes found as a GraphItem
-        // for now, I can't seem to deserialize properly using the actual data classes
-        // so I deserialize to my own classes instead
         // TODO:
         // - search for embeded scripts in scenes
         public static List<ResultItem> PerformSearchAll(string keyword)
@@ -55,11 +60,10 @@ namespace Unity.VisualScripting.UVSFinder
             var searchItems = new List<ResultItem>();
             try {
                 string[] guids = AssetDatabase.FindAssets("t:ScriptGraphAsset");
-                //Debug.Log($"found {guids.Length} script graph assets");
+                Debug.Log($"found {guids.Length} script graph assets");
                 foreach (string guid in guids)
                 {
-                    var assetPath = AssetDatabase.GUIDToAssetPath(guid);
-                    var itemsFound = FindNodesFromAssetPath(keyword, assetPath, typeof(ScriptGraphAsset));
+                    var itemsFound = FindNodesFromScriptGraphAssetGuid(guid, keyword);
                     if (itemsFound != null)
                     {
                         searchItems = searchItems.Concat(itemsFound).ToList();
@@ -67,143 +71,82 @@ namespace Unity.VisualScripting.UVSFinder
                 }
                 // I can't seem to distinguish a stategraph from a scriptgraph from the json data
                 guids = AssetDatabase.FindAssets("t:StateGraphAsset");
-                //Debug.Log($"found {guids.Length} script graph assets");
+                Debug.Log($"found {guids.Length} state graph assets");
                 foreach (string guid in guids)
                 {
-                    var assetPath = AssetDatabase.GUIDToAssetPath(guid);
-                    var itemsFound = FindNodesFromAssetPath(keyword, assetPath, typeof(StateGraphAsset));
+                    var itemsFound = FindNodesFromStateGraphAssetGuid(guid, keyword);
                     if (itemsFound != null)
                     {
                         searchItems = searchItems.Concat(itemsFound).ToList();
                     }
                 }
             } catch(Exception e){
-                Debug.Log("encountered an error while searching in all scripts");
+                Debug.Log("encountered an error while searching in all scripts " + e.Message);
             }
             return searchItems;
         }
 
-        private static List<ResultItem> FindNodesFromAssetPath(string keyword, string assetPath, Type type)
+        // TODO: missing some recursion to dig into embedded elements
+        private static List<ResultItem> FindNodesFromScriptGraphAssetGuid(string guid, string keyword)
         {
-            try
-            {
-                var jsonString = DeserializeYamlAsset(assetPath);
-                var graphAsset = CreateFromJSON(jsonString);
-                
-                if (graphAsset.graph?.graphElements?.Count() > 0)
-                {
-                    return FindNodesFromGraph(graphAsset, keyword, type, assetPath);
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.Log($"Error while deserializing the data of asset {assetPath}: {e}");   
-            }
-            //Debug.Log(assetPath + " - " + graphAsset.graph?.graphElements?.Count());
-
-
-            return null;
-        }
-
-        // TODO: this method should eventually be replaced to use the actual data types
-        // instead of mine when deserializing
-        private static List<ResultItem> FindNodesFromGraph(GraphAsset graphAsset, string keyword, Type type, string assetPath = "")
-        {
+            var searchTermLowerInvariant = keyword.ToLowerInvariant().Replace(" ", "").Replace(".", "");
+            var assetPath = AssetDatabase.GUIDToAssetPath(guid);
+            var sga = AssetDatabase.LoadAssetAtPath<ScriptGraphAsset>(assetPath);
             var searchItems = new List<ResultItem>();
-            //Debug.Log($"found {graphAsset.graph.graphElements.Count()} graph elements with keyword: {keyword}");
-            foreach(var graphElement in graphAsset.graph.graphElements)
+            if (sga?.graph?.elements.Count() > 0)
             {
-                if (IsIgnoreElement(graphElement))
-                    continue;
-
-                if (string.IsNullOrEmpty(keyword))
-                {// return all elements found
-                    Debug.Log($"return {graphElement.GetElementName()} {assetPath}");
-                    graphElement.graph = graphAsset.graphReference;
-                    searchItems.Add(new ResultItem()
-                    {
-                        itemName = graphElement.GetElementName(),
-                        assetPath = assetPath,
-                        guid = graphElement.guid.ToString(),
-                        graphElement = graphElement,
-                        type = type
-                    });
-                }
-                else
+                foreach (var a in sga.graph.elements)
                 {
-                    var searchTermLowerInvariant = keyword.ToLowerInvariant().Replace(" ", "").Replace(".", "");
-                    var elementNameLowerInvariant = graphElement.GetElementName().ToLowerInvariant();
-
-                    // search in the elements directly
-                    if (elementNameLowerInvariant.Contains(searchTermLowerInvariant))
+                    var embedElementNameLowerInvariant = GraphElement.GetElementName(a).ToLowerInvariant();
+                    if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant))
                     {
-                        graphElement.graph = graphAsset.graphReference;
                         searchItems.Add(new ResultItem()
                         {
-                            itemName = graphElement.GetElementName(),
+                            itemName = GraphElement.GetElementName(a),
                             assetPath = assetPath,
-                            guid = graphElement.guid.ToString(),
-                            graphElement = graphElement,
-                            type = type
+                            guid = a.guid.ToString(),
+                            graphElement = a,
+                            type = typeof(ScriptGraphAsset)
                         });
                     }
                 }
-
-                // also search in embed graphs
-                searchInEmbeddedElements(graphElement, keyword, searchItems, assetPath, type);
-                
-                
             }
 
             return searchItems;
         }
 
-        private static void searchInEmbeddedElements(GraphElement graphElement, string keyword, List<ResultItem> searchItems, string assetPath, Type type)
+        // TODO: missing some recursion to dig into embedded elements
+        private static List<ResultItem> FindNodesFromStateGraphAssetGuid(string guid, string keyword)
         {
-            if (graphElement.nest?.embed?.graphElements != null)
+            var searchTermLowerInvariant = keyword.ToLowerInvariant().Replace(" ", "").Replace(".", "");
+            var assetPath = AssetDatabase.GUIDToAssetPath(guid);
+            var sga = AssetDatabase.LoadAssetAtPath<StateGraphAsset>(assetPath);
+            var searchItems = new List<ResultItem>();
+            if (sga?.graph?.elements.Count() > 0)
             {
-
-                foreach (var embedGraphElement in graphElement.nest.embed.graphElements)
+                foreach (var a in sga.graph.elements)
                 {
-                    //recurse
-                    searchInEmbeddedElements(embedGraphElement, keyword, searchItems, assetPath, type);
-
-                    // process
-                    if (string.IsNullOrEmpty(keyword))
+                    var embedElementNameLowerInvariant = GraphElement.GetElementName(a).ToLowerInvariant();
+                    if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant))
                     {
-                        // return all elements found
                         searchItems.Add(new ResultItem()
                         {
-                            itemName = embedGraphElement.GetElementName(),
+                            itemName = $"{GraphElement.GetElementName(a)}",
                             assetPath = assetPath,
-                            guid = embedGraphElement.guid.ToString(),
-                            graphElement = embedGraphElement,
-                            type = type
+                            guid = a.guid.ToString(),
+                            graphElement = a,
+                            type = typeof(StateGraphAsset)
                         });
                     }
-                    else
-                    {
-                        var searchTermLowerInvariant = keyword.ToLowerInvariant().Replace(" ", "").Replace(".", "");
-                        var embedElementNameLowerInvariant = embedGraphElement.GetElementName().ToLowerInvariant();
-                        if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant))
-                        {
-                            searchItems.Add(new ResultItem()
-                            {
-                                itemName = embedGraphElement.GetElementName(),
-                                assetPath = assetPath,
-                                guid = embedGraphElement.guid.ToString(),
-                                graphElement = embedGraphElement,
-                                type = type
-                            });
-                        }
-                    }
                 }
+                
             }
+            return searchItems;
         }
 
         private static bool IsIgnoreElement(GraphElement graphElement)
         {
-            switch (graphElement.type)
+            switch (graphElement.GetType().ToString())
             {
                 case "Bolt.ControlConnection":
                 case "Bolt.ValueConnection":
@@ -214,58 +157,12 @@ namespace Unity.VisualScripting.UVSFinder
 
             return false;
         }
-
-        private static GraphAsset CreateFromJSON(string jsonString)
-        {
-            return JsonConvert.DeserializeObject<GraphAsset>(jsonString, new Newtonsoft.Json.JsonSerializerSettings
-            {
-                TypeNameHandling = TypeNameHandling.All,
-                NullValueHandling = NullValueHandling.Ignore,
-            });
-        }
-
-        private static string DeserializeYamlAsset(string asset, string topNodeKey = "MonoBehaviour",
-            string dataNodeKey = "_data")
-        {
-            Ensure.That(nameof(asset)).IsNotNull(asset);
-            Ensure.That(nameof(topNodeKey)).IsNotNull(topNodeKey);
-            Ensure.That(nameof(dataNodeKey)).IsNotNull(dataNodeKey);
-
-            var assetPath = Path.Combine(Paths.project, asset);
-
-            if (!File.Exists(assetPath))
-            {
-                throw new FileNotFoundException($"Asset file {assetPath} not found.", assetPath);
-            }
-
-            try
-            {
-                var input = new StreamReader(assetPath);
-                var yaml = new YamlStream();
-                yaml.Load(input);
-
-                // Find the data node.
-                var rootNode = (YamlMappingNode)yaml.Documents[0].RootNode;
-                var topNode = (YamlMappingNode)rootNode.Children[topNodeKey];
-                var dataNode = (YamlMappingNode)topNode.Children[dataNodeKey];
-                var jsonNode = (YamlScalarNode)dataNode.Children["_json"];
-                var objectReferencesNode = (YamlSequenceNode)dataNode.Children["_objectReferences"];
-
-                // Read the contents
-                var jsonString = jsonNode.Value;
-                return jsonString;
-            }
-            catch (Exception ex)
-            {
-                throw new SerializationException("Failed to deserialize YAML asset.", ex);
-            }
-        }
     }
 
     public class ResultItem{
         public string guid;
         public string itemName;
-        public GraphElement graphElement;
+        public IGraphElement graphElement;
         public string assetPath;
         public Type type; //The type of the node
         public string content; //the name of the event is in content

@@ -1,64 +1,110 @@
-using Newtonsoft.Json;
-using System;
 using System.Linq;
 
 namespace Unity.VisualScripting.UVSFinder
 {
     public class GraphElement
     {
-        [JsonProperty(PropertyName = "$type")] 
-        public string type;
+        public GraphElement()
+        {
 
-        public VariableKind kind;
+        }
 
-        public Nest nest;
-
-        public GraphPosition position;
-        public GraphReference graph { get; set; }
-        public Guid guid { get; set; }
-
-        public GraphMember member;
-        public DefaultValues defaultValues;
-        public GraphValue value;
-
-        public string label;
-
-        public string GetElementName()
+        public static string GetElementName(IGraphElement ge)
         {
             var name = "";
 
-            switch (type)
+            switch (ge.GetType().ToString())
             {
                 case "Unity.VisualScripting.GetVariable":
-                case "Bolt.GetVariable":
-                    name = $"{defaultValues.name.content} [Get Variable: {kind}]";
+                    name = $"{((GetVariable)ge).defaultValues["name"]} [Get Variable: {((GetVariable)ge).kind}]";
                     break;
+                /*case "Bolt.GetVariable":
+                    var t = new Bolt.GetVariable();
+                    name = $"{t.name} [Get Variable: {t.kind}]";
+                    //name = $"{defaultValues.name.content} [Get Variable: {kind}]";
+                    break;*/
                 case "Unity.VisualScripting.SetVariable":
-                case "Bolt.SetVariable":
+                    name = $"{((SetVariable)ge).defaultValues["name"]} [Set Variable: {((SetVariable)ge).kind}]";
+                    break;
+                /*case "Bolt.SetVariable":
                     name = $"{defaultValues.name.content} [Set Variable: {kind}]";
-                    break;
+                    break;*/
                 case "Unity.VisualScripting.CustomEvent":
-                case "Bolt.CustomEvent":
+                    name = $"{((CustomEvent)ge).defaultValues["name"]} [CustomEvent]";
+                    break;
+                /*case "Bolt.CustomEvent":
                     name = $"{defaultValues.name.content} [CustomEvent]";
-                    break;
+                    break;*/
                 case "Unity.VisualScripting.TriggerCustomEvent":
-                case "Bolt.TriggerCustomEvent":
+                    name = $"{((TriggerCustomEvent)ge).defaultValues["name"]} [TriggerCustomEvent]";
+                    break;
+               /* case "Bolt.TriggerCustomEvent":
                     name = $"{defaultValues.name.content} [TriggerCustomEvent]";
-                    break;
+                    break;*/
                 case "Unity.VisualScripting.Literal":
-                case "Bolt.Literal":
+                    name = $"{((Literal)ge).type.ToString().Split('.').Last()} {((Literal)ge).value} [Literal]";
+                    break;
+                /*case "Bolt.Literal":
                     name = $"{value.type.Split('.').Last()} \"{value.content}\" [Literal]";
-                    break;
+                    break;*/
                 case "Unity.VisualScripting.GraphGroup":
-                case "Bolt.GraphGroup":
-                    name = $"\"{label}\" [Group]";
+                    name = $"{((GraphGroup)ge).label} [Group]";
                     break;
+                /*case "Bolt.GraphGroup":
+                    name = $"\"{label}\" [Group]";
+                    break;*/
+                case "Unity.VisualScripting.FlowState":
+                    {
+                        var flow = (FlowState)ge;
+                        name = "[FlowState]";
+
+                        if (!string.IsNullOrEmpty(flow.graph.title))
+                        {
+                            name = $"{flow.graph.title} [FlowState]";
+                        }
+                        if (flow.isStart)
+                        {
+                            name = $"{name} [Start]";
+                        }
+                        break;
+                    }
+                case "Unity.VisualScripting.FlowStateTransition":
+                    {
+                        var flow = (FlowStateTransition)ge;
+                        name = "[FlowStateTransition]";
+                        if (!string.IsNullOrEmpty(flow.graph.title))
+                        {
+                            name = $"{flow.graph.title} [FlowGraphTransition]";
+                        }
+                        break;
+                    }
+                case "Unity.VisualScripting.AnyState":
+                    {
+                        var flow = (AnyState)ge;
+                        name = "[AnyState]";
+                        if (!string.IsNullOrEmpty(flow.graph.title))
+                        {
+                            name = $"{flow.graph.title} [FlowGraphTransition]";
+                        }
+                        break;
+                    }
                 case "Unity.VisualScripting.SubgraphUnit":
-                case "Bolt.SuperUnit":
+                    {
+                        var subgraph = (SubgraphUnit)ge;
+                        if (subgraph.nest.source == GraphSource.Macro)
+                        {
+                            name = $"{subgraph.nest.macro.name} [SubGraph]";
+                        } 
+                        else
+                        {
+                            name = $"{subgraph.nest.embed.title} [SubGraph Embed]";
+                        }
+                        break;
+                    }
+                /*case "Bolt.SuperUnit":
                     {
                         if (nest.source == "Macro")
                         {
-                            //TBD Find what is the GUID
                             name = $"{type.Split('.').Last()} [SubGraph]";
                         }
                         else
@@ -66,13 +112,13 @@ namespace Unity.VisualScripting.UVSFinder
                             name = $"{nest.embed.title} [SubGraph Embed]";
                         }
                         break;
-                    }
+                    }*/
                 default:
-                    name = type.Split('.').Last();
+                    name = ge.GetType().ToString().Split('.').Last();
                     break;
             }
 
-            if (member != null)
+            /*if (member != null)
             {
                 var memberName = member.name;
                 if(member.name == ".ctor")
@@ -87,29 +133,29 @@ namespace Unity.VisualScripting.UVSFinder
                 {
                     name = $"{member.targetType.Split('.').Last()} {memberName}";
                 }
-            }
+            }*/
 
-            if (nest != null && !string.IsNullOrEmpty(nest.embed?.title))
+            /*if (nest != null && !string.IsNullOrEmpty(nest.embed?.title))
             {
                 if (nest.source == "Macro")
                 {
-                    //TBD Find what is the GUID
+                    //TODO Find what script it is with the GUID
                     name = type.Split('.').Last();
                 }
                 else
                 {
                     name = nest.embed.title;
                 }
-            }
+            }*/
 
-            if (type.StartsWith("Bolt.")) {
+            if (ge.GetType().ToString().StartsWith("Bolt.")) {
                 name = $"Bolt {name}";
             }
 
             return name;
         }
 
-        public string GetElementType()
+        /*public string GetElementType()
         {
             if (member != null)
             {
@@ -126,7 +172,7 @@ namespace Unity.VisualScripting.UVSFinder
             }
 
             return type;
-        }
+        }*/
     }
 }
 

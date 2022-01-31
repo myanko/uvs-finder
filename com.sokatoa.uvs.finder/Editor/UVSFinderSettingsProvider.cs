@@ -9,7 +9,7 @@ namespace Unity.VisualScripting.UVSFinder
     internal class UVSFinderSettingsProvider : SettingsProvider
     {
         private const string PreferencePath = "Preferences/Visual Scripting/UVS Finder";
-        private static string UIPath = new UVSFinderPaths().findRootPackagePath()+ "UI/";
+        private static string UIPath = new UVSFinderPaths().findRootPackagePath()+ "/UI/";
 
         private static UVSFinderSettingsProvider provider;
         private static UVSFinderPreferences preferences;
