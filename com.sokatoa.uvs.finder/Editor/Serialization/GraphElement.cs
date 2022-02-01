@@ -15,6 +15,15 @@ namespace Unity.VisualScripting.UVSFinder
 
             switch (ge.GetType().ToString())
             {
+                case "Unity.VisualScripting.GetMember":
+                    name = $"{((GetMember)ge).member.targetTypeName.Split('.').Last()} Get {((GetMember)ge).member.name}";
+                    break;
+                case "Unity.VisualScripting.SetMember":
+                    name = $"{((SetMember)ge).member.targetTypeName.Split('.').Last()} Set {((SetMember)ge).member.name}";
+                    break;
+                case "Unity.VisualScripting.InvokeMember":
+                    name = $"{((InvokeMember)ge).member.targetTypeName.Split('.').Last()} {((InvokeMember)ge).member.name}";
+                    break;
                 case "Unity.VisualScripting.GetVariable":
                     name = $"{((GetVariable)ge).defaultValues["name"]} [Get Variable: {((GetVariable)ge).kind}]";
                     break;
@@ -60,7 +69,13 @@ namespace Unity.VisualScripting.UVSFinder
 
                         if (!string.IsNullOrEmpty(flow.graph.title))
                         {
-                            name = $"{flow.graph.title} [FlowState]";
+                            name = $"{flow.graph.title} {name}";
+                        }
+                        // this depends on the bread crumb and where I am...
+                        // TODO: test with more than one level of pathing
+                        if (!string.IsNullOrEmpty(flow.nest.graph.title))
+                        {
+                            name = $"{flow.nest.graph.title} {name}";
                         }
                         if (flow.isStart)
                         {
@@ -74,7 +89,11 @@ namespace Unity.VisualScripting.UVSFinder
                         name = "[FlowStateTransition]";
                         if (!string.IsNullOrEmpty(flow.graph.title))
                         {
-                            name = $"{flow.graph.title} [FlowGraphTransition]";
+                            name = $"{flow.graph.title} {name}";
+                        }
+                        if (!string.IsNullOrEmpty(flow.nest.graph.title))
+                        {
+                            name = $"{flow.nest.graph.title} {name}";
                         }
                         break;
                     }
@@ -84,7 +103,7 @@ namespace Unity.VisualScripting.UVSFinder
                         name = "[AnyState]";
                         if (!string.IsNullOrEmpty(flow.graph.title))
                         {
-                            name = $"{flow.graph.title} [FlowGraphTransition]";
+                            name = $"{flow.graph.title} {name}";
                         }
                         break;
                     }
@@ -93,7 +112,14 @@ namespace Unity.VisualScripting.UVSFinder
                         var subgraph = (SubgraphUnit)ge;
                         if (subgraph.nest.source == GraphSource.Macro)
                         {
-                            name = $"{subgraph.nest.macro.name} [SubGraph]";
+                            if (!string.IsNullOrEmpty(subgraph.graph?.title))
+                            {
+                                name = $"{subgraph.nest.macro.name} {subgraph.graph.title} [SubGraph]";
+                            }
+                            else
+                            {
+                                name = $"{subgraph.nest.macro.name} [SubGraph]";
+                            }
                         } 
                         else
                         {

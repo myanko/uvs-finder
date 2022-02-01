@@ -109,6 +109,8 @@ namespace Unity.VisualScripting.UVSFinder
                             type = typeof(ScriptGraphAsset)
                         });
                     }
+
+                    // TODO: recurse somewhere here
                 }
             }
 
@@ -122,8 +124,10 @@ namespace Unity.VisualScripting.UVSFinder
             var assetPath = AssetDatabase.GUIDToAssetPath(guid);
             var sga = AssetDatabase.LoadAssetAtPath<StateGraphAsset>(assetPath);
             var searchItems = new List<ResultItem>();
+            // this picks up only the first "layer" of a state graph asset
             if (sga?.graph?.elements.Count() > 0)
             {
+                Debug.Log($"stategraphasset {sga.name} has {sga.graph?.elements.Count()} elements");
                 foreach (var a in sga.graph.elements)
                 {
                     var embedElementNameLowerInvariant = GraphElement.GetElementName(a).ToLowerInvariant();
@@ -139,7 +143,31 @@ namespace Unity.VisualScripting.UVSFinder
                         });
                     }
                 }
-                
+            }
+            if (sga?.graph?.states.Count() > 0)
+            {
+                foreach (var state in sga.graph.states)
+                {
+                    if (state is INesterState && ((INesterState)state).childGraph?.elements.Count() > 0)
+                    {
+                        Debug.Log($"sga {sga.name} state {state.guid} {((INesterState)state).childGraph.title} has {((INesterState)state).childGraph.elements.Count()} elements");
+                        foreach (var e in ((INesterState)state).childGraph?.elements)
+                        {
+                            var embedElementNameLowerInvariant = GraphElement.GetElementName(e).ToLowerInvariant();
+                            if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant))
+                            {
+                                searchItems.Add(new ResultItem()
+                                {
+                                    itemName = $"{GraphElement.GetElementName(e)}",
+                                    assetPath = assetPath,
+                                    guid = e.guid.ToString(),
+                                    graphElement = e,
+                                    type = typeof(StateGraphAsset)
+                                });
+                            }
+                        }
+                    }
+                }
             }
             return searchItems;
         }

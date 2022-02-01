@@ -227,6 +227,7 @@ namespace Unity.VisualScripting.UVSFinder
 
         private void OnSearchAction()
         {
+            resultListview.Clear();
             ResetResultItems();
             PerformSearch();
             setWindowTitle();
@@ -274,22 +275,19 @@ namespace Unity.VisualScripting.UVSFinder
             VisualScriptingCanvas<FlowGraph> canvas = (VisualScriptingCanvas<FlowGraph>)graphWindow.context.canvas;
             // pick up the "real element" in the canvas directly
             // because my GraphElement class cannot decorate the Widget for some reason...
-            var realElement = canvas.graph.elements.Where(i => i.guid == resultItem.graphElement.guid).FirstOrDefault();
             var panPosition = new Vector2();
             if (resultItem.graphElement.GetType().ToString() == "Unity.VisualScripting.GraphGroup" || resultItem.graphElement.GetType().ToString() == "Bolt.GraphGroup")
             {
-                var realGroup = canvas.graph.groups.Where(u => u.guid == resultItem.graphElement.guid).FirstOrDefault();
-                panPosition = new Vector2(realGroup.position.xMin + (canvas.viewport.width/2) - 10, realGroup.position.yMin + (canvas.viewport.height/2) - 10);
+                panPosition = new Vector2(((GraphGroup)resultItem.graphElement).position.xMin + (canvas.viewport.width/2) - 10, ((GraphGroup)resultItem.graphElement).position.yMin + (canvas.viewport.height/2) - 10);
             }
             else
             {
-                var realNode = canvas.graph.units.Where(u => u.guid == resultItem.graphElement.guid).FirstOrDefault();
-                if(realNode != null) panPosition = new Vector2(realNode.position.x, realNode.position.y);
+                panPosition = new Vector2(((Unit)resultItem.graphElement).position.x, ((Unit)resultItem.graphElement).position.y);
             }
-            graphWindow.context.selection.Select(realElement);
             graphWindow.context.graph.zoom = 1f;
             graphWindow.context.graph.pan = panPosition;
-            //canvas.ViewElements(new[] { realElement });
+            graphWindow.context.selection.Select(resultItem.graphElement);
+            //canvas.ViewElements(new List<IGraphElement>(){ resultItem.graphElement });
             //canvas.TweenViewport(panPosition, 1f, 0.5f);
         }
         private void SelectElementInStateGraph(ResultItem resultItem)
@@ -299,61 +297,11 @@ namespace Unity.VisualScripting.UVSFinder
             var substateRef = FindSubStateReference(resultItem, graphWindow, canvas);
             OpenSubStateWindow(substateRef);
 
-            // pick up the "real element" in the canvas directly or child graphs
-            // because my GraphElement class cannot decorate the Widget for some reason...
-            //I suck at linq
-            //IGraphElement realElement = canvas.graph.states.Where(s => ((INesterState)s).childGraph.elements.Select(e => e).Where(e => e.guid.ToString() == resultItem.guid)));
-            IGraphElement realElement = null;
-            foreach (INesterState s in canvas.graph.states)
+            if(resultItem.graphElement is Unit)
             {
-                foreach(IGraphElement e in s.childGraph.elements)
-                {
-                    if(e.guid.ToString() == resultItem.guid)
-                    {
-                        realElement = e;
-                        break;
-                    }
-                }
-                if (realElement != null) { break; }
-            }
-            if (realElement == null)
-            {
-                foreach (INesterStateTransition s in canvas.graph.transitions)
-                {
-                    foreach (IGraphElement e in s.childGraph.elements)
-                    {
-                        if (e.guid.ToString() == resultItem.guid)
-                        {
-                            realElement = e;
-                            break;
-                        }
-                    }
-                    if (realElement != null) { break; }
-                }
-            }
-            if (realElement == null)
-            {
-                realElement = canvas.graph.groups.Where(u => u.guid == resultItem.graphElement.guid).FirstOrDefault();
-            }
-
-            if (realElement != null)
-            {
-                var panPosition = new Vector2();
-                if (resultItem.graphElement.GetType().ToString() == "Unity.VisualScripting.GraphGroup" || resultItem.graphElement.GetType().ToString() == "Bolt.GraphGroup")
-                {
-                    panPosition = new Vector2(((GraphGroup)realElement).position.xMin + (canvas.viewport.width / 2) - 10, ((GraphGroup)realElement).position.yMin + (canvas.viewport.height / 2) - 10);
-                } 
-                else
-                {
-                    panPosition = new Vector2(((Unit)resultItem.graphElement).position.x, ((Unit)resultItem.graphElement).position.y);
-                }
-                graphWindow.context.selection.Select(realElement);
-                graphWindow.context.graph.zoom = 1f;
-                graphWindow.context.graph.pan = panPosition;
-                //canvas.TweenViewport(panPosition, 1f, 0.5f);
-            } else
-            {
-                Debug.Log("Could not find the real element in the state graph's first embed level");
+                // the selected element itself can be the state graph, which we cannot select...
+                graphWindow.context.selection.Select(resultItem.graphElement);
+                canvas.ViewElements(new List<IGraphElement>() { resultItem.graphElement });
             }
         }
 
@@ -363,7 +311,7 @@ namespace Unity.VisualScripting.UVSFinder
             // sub graphs contains states and transitions
             // states can use INesterState
             //graph.elements = graph.states + graph.transitions
-            var state = (INesterState)canvas.graph.states.FirstOrDefault(s => ((INesterState)s).childGraph.elements.FirstOrDefault(e => e.guid.ToString() == resultItem.guid) != null);
+            var state = (INesterState)canvas.graph.states.FirstOrDefault(s => s.guid.ToString() == resultItem.guid || ((INesterState)s).childGraph.elements.FirstOrDefault(e => e.guid.ToString() == resultItem.guid) != null);
             if (state == null)
             {
                 var transitionstate = (INesterStateTransition)canvas.graph.transitions.FirstOrDefault(s => ((INesterStateTransition)s).childGraph.elements.FirstOrDefault(e => e.guid.ToString() == resultItem.guid) != null);
