@@ -141,7 +141,7 @@ namespace Unity.VisualScripting.UVSFinder
             //find the type full name with assembly
             Type objectType = (from asm in AppDomain.CurrentDomain.GetAssemblies()
                                from type in asm.GetTypes()
-                               where type.IsClass && type.Name == ((GraphElement)resultItem.graphElement).GetType().ToString().Split('.').Last()
+                               where type.IsClass && type.Name == resultItem.graphElement.GetType().ToString().Split('.').Last()
                                select type).FirstOrDefault();
             //Debug.Log(((GraphElement)searchItems[i].graphElement).type + " = " + objectType);
             var texture = objectType.Icon()?[IconSize.Small];
