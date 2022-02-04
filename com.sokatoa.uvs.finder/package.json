@@ -5,7 +5,6 @@
   "unity": "2020.3",
   "description": "Adds search capabilities to Visual Scripting",
   "dependencies": {
-    "com.unity.visualscripting": "1.5.2",
-    "com.unity.nuget.newtonsoft-json": "2.0.2"
+    "com.unity.visualscripting": "1.5.2"
   }
 }

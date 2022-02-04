@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using UnityObject = UnityEngine.Object;
 using System.Linq;
-using System.IO;
 
 namespace Unity.VisualScripting.UVSFinder
 {

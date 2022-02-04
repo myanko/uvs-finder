@@ -1,17 +1,8 @@
 using System.Collections.Generic;
 using System;
-using System.IO;
-using System.Runtime.Serialization;
-#if VS_YAML_RENAMED
-using Unity.VisualScripting.YamlDotNet.RepresentationModel;
-#else
-using YamlDotNet.RepresentationModel;
-#endif
 using System.Linq;
-using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
-using UnityObject = UnityEngine.Object;
 
 namespace Unity.VisualScripting.UVSFinder
 {
@@ -55,6 +46,7 @@ namespace Unity.VisualScripting.UVSFinder
         // finds all the results nodes from the asset files
         // TODO:
         // - search for embeded scripts in scenes
+        // - process the files async to speed up the lookup
         public static List<ResultItem> PerformSearchAll(string keyword)
         {
             var searchItems = new List<ResultItem>();
@@ -109,7 +101,7 @@ namespace Unity.VisualScripting.UVSFinder
                             type = typeof(ScriptGraphAsset)
                         });
                     }
-
+                    
                     // TODO: recurse somewhere here
                 }
             }
