@@ -127,19 +127,40 @@ namespace Unity.VisualScripting.UVSFinder
                         }
                         break;
                     }
-                /*case "Bolt.SuperUnit":
+                case "Unity.VisualScripting.StateUnit":
                     {
-                        if (nest.source == "Macro")
+                        var stateUnit = (StateUnit)ge;
+                        if (stateUnit.nest.source == GraphSource.Macro)
                         {
-                            name = $"{type.Split('.').Last()} [SubGraph]";
+                            if (!string.IsNullOrEmpty(stateUnit.graph?.title))
+                            {
+                                name = $"{stateUnit.nest.macro.name} {stateUnit.graph.title} [State Unit]";
+                            }
+                            else
+                            {
+                                name = $"{stateUnit.nest.macro.name} [State Unit]";
+                            }
                         }
                         else
                         {
-                            name = $"{nest.embed.title} [SubGraph Embed]";
+                            name = $"{stateUnit.nest.embed.title} [State Unit Embed]";
                         }
                         break;
-                    }*/
-                default:
+                    }
+
+                        /*case "Bolt.SuperUnit":
+                            {
+                                if (nest.source == "Macro")
+                                {
+                                    name = $"{type.Split('.').Last()} [SubGraph]";
+                                }
+                                else
+                                {
+                                    name = $"{nest.embed.title} [SubGraph Embed]";
+                                }
+                                break;
+                            }*/
+                        default:
                     name = ge.GetType().ToString().Split('.').Last();
                     break;
             }
