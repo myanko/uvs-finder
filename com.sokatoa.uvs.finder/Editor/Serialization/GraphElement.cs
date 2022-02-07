@@ -69,13 +69,17 @@ namespace Unity.VisualScripting.UVSFinder
 
                         if (!string.IsNullOrEmpty(flow.graph.title))
                         {
-                            name = $"{flow.graph.title} {name}";
+                            name = $"{flow.graph.title} [FlowState]";
                         }
                         // this depends on the bread crumb and where I am...
                         // TODO: test with more than one level of pathing
                         if (!string.IsNullOrEmpty(flow.nest.graph.title))
                         {
-                            name = $"{flow.nest.graph.title} {name}";
+                            name = $"{flow.nest.graph.title} [FlowState]";
+                        }
+                        if(flow.nest.source == GraphSource.Embed)
+                        {
+                            name = name.Replace("[FlowState]", "[FlowState Embed]");
                         }
                         if (flow.isStart)
                         {
@@ -89,11 +93,15 @@ namespace Unity.VisualScripting.UVSFinder
                         name = "[FlowStateTransition]";
                         if (!string.IsNullOrEmpty(flow.graph.title))
                         {
-                            name = $"{flow.graph.title} {name}";
+                            name = $"{flow.graph.title} [FlowStateTransition]";
                         }
                         if (!string.IsNullOrEmpty(flow.nest.graph.title))
                         {
-                            name = $"{flow.nest.graph.title} {name}";
+                            name = $"{flow.nest.graph.title} [FlowStateTransition]";
+                        }
+                        if (flow.nest.source == GraphSource.Embed)
+                        {
+                            name = name.Replace("[FlowStateTransition]", "[FlowStateTransition Embed]");
                         }
                         break;
                     }
@@ -134,16 +142,16 @@ namespace Unity.VisualScripting.UVSFinder
                         {
                             if (!string.IsNullOrEmpty(stateUnit.graph?.title))
                             {
-                                name = $"{stateUnit.nest.macro.name} {stateUnit.graph.title} [State Unit]";
+                                name = $"{stateUnit.nest.macro.name} {stateUnit.graph.title} [State]";
                             }
                             else
                             {
-                                name = $"{stateUnit.nest.macro.name} [State Unit]";
+                                name = $"{stateUnit.nest.macro.name} [State]";
                             }
                         }
                         else
                         {
-                            name = $"{stateUnit.nest.embed.title} [State Unit Embed]";
+                            name = $"{stateUnit.nest.embed.title} [State Embed]";
                         }
                         break;
                     }

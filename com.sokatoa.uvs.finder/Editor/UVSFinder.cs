@@ -269,6 +269,7 @@ namespace Unity.VisualScripting.UVSFinder
 
         private void SelectElementInScriptGraph(ResultItem resultItem)
         {
+            //Debug.Log("select item in script graph");
             var graphWindow = GetWindow<GraphWindow>();
             VisualScriptingCanvas<FlowGraph> canvas = (VisualScriptingCanvas<FlowGraph>)graphWindow.context.canvas;
             // pick up the "real element" in the canvas directly
@@ -290,33 +291,164 @@ namespace Unity.VisualScripting.UVSFinder
         }
         private void SelectElementInStateGraph(ResultItem resultItem)
         {
+            //Debug.Log("select item in state graph");
             var graphWindow = GetWindow<GraphWindow>();
             var canvas = (VisualScriptingCanvas<StateGraph>)graphWindow.context.canvas;
             var substateRef = FindSubStateReference(resultItem, graphWindow, canvas);
             OpenSubStateWindow(substateRef);
-
-            if(resultItem.graphElement is Unit)
-            {
-                // the selected element itself can be the state graph, which we cannot select...
-                graphWindow.context.selection.Select(resultItem.graphElement);
-                canvas.ViewElements(new List<IGraphElement>() { resultItem.graphElement });
-            }
+            
+            //if (resultItem.graphElement is Unit && !(resultItem.graphElement is StateUnit))
+            //{
+                try
+                {
+                    // the select does not work when the object is not visible (the substate is not properly selected)
+                    // and it spams the console even though I try catch it...
+                    // unless I use widget(graphelement).canselect
+                    graphWindow.context.selection.Select(new List<IGraphElement>() { resultItem.graphElement }.Where(element => canvas.Widget(element).canSelect));
+                    canvas.ViewElements(new List<IGraphElement>() { resultItem.graphElement });
+                }
+                catch (Exception e)
+                {
+                    Debug.Log("Could not pan to element " + resultItem.graphElement.GetType() + " because of: " + e);
+                }
+            //}
         }
 
         private GraphReference FindSubStateReference(ResultItem resultItem, GraphWindow graphWindow, VisualScriptingCanvas<StateGraph> canvas)
         {
-            //TODO: search in sub-subgraphs (make this recursive)
-            // sub graphs contains states and transitions
-            // states can use INesterState
-            //graph.elements = graph.states + graph.transitions
-            var state = (INesterState)canvas.graph.states.FirstOrDefault(s => s.guid.ToString() == resultItem.guid || ((INesterState)s).childGraph.elements.FirstOrDefault(e => e.guid.ToString() == resultItem.guid) != null);
-            if (state == null)
+            if ((INesterState)canvas.graph.states.FirstOrDefault(s => s.guid.ToString() == resultItem.guid) != null)
             {
-                var transitionstate = (INesterStateTransition)canvas.graph.transitions.FirstOrDefault(s => ((INesterStateTransition)s).childGraph.elements.FirstOrDefault(e => e.guid.ToString() == resultItem.guid) != null);
-                if(transitionstate != null) return graphWindow.reference.ChildReference(transitionstate, false);
-
+                // it is one of the states in the first layer. Return the first layer
+                return graphWindow.reference;
             }
-            return graphWindow.reference.ChildReference(state, false);
+            if (canvas.graph.groups.FirstOrDefault(g => g.guid.ToString() == resultItem.guid) != null)
+            {
+                // it is one of the states in the first layer. Return the first layer
+                return graphWindow.reference;
+            }
+            foreach (INesterState s in canvas.graph.states)
+            {
+                if (s.childGraph.elements.Count() > 0)
+                {
+                    foreach (var e in s.childGraph.elements)
+                    {
+                        if (e.guid.ToString() == resultItem.guid)
+                        {
+                            return graphWindow.reference.ChildReference(s, false);
+                        }
+
+                        if (e is StateUnit)
+                        {
+                            foreach (var ge in ((StateUnit)e).graph.elements)
+                            {
+                                if (ge.guid.ToString() == resultItem.guid)
+                                {
+                                    return graphWindow.reference.ChildReference(s, false);
+                                }
+                            }
+
+                            if (((StateUnit)e).nest?.embed != null)
+                            {
+                                // root of the state unit
+                                foreach (var ne in ((StateUnit)e).nest.embed.elements)
+                                {
+                                    if (ne.guid.ToString() == resultItem.guid)
+                                    {
+                                        // TODO: fix this! figure out how to pass the root of a state unit's states
+                                        var rootState = (INesterState)((StateUnit)e).nest.embed.states.FirstOrDefault(embedStates => ((INesterState)embedStates).isSerializationRoot);
+                                        if(rootState != null)
+                                        {
+                                            return graphWindow.reference.ChildReference(rootState, false);
+                                        }
+                                        return graphWindow.reference.ChildReference((StateUnit)e, false);//(INesterState)((StateUnit)e).nest.embed, false);
+                                    }
+                                }
+
+                                // states of the state unit
+                                foreach (INesterState es in ((StateUnit)e).nest.embed.states)
+                                {
+                                    foreach (var se in es.graph.elements)
+                                    {
+                                        if (se.guid.ToString() == resultItem.guid)
+                                        {
+                                            // I need to figure out the state I am in from the sub element here...
+                                            // only the canvas seems to know about the states... even though I am in a stateunit
+                                            return graphWindow.reference.ChildReference(es, false);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            var transitionstate = (INesterStateTransition)canvas.graph.transitions.FirstOrDefault(s => ((INesterStateTransition)s).childGraph.elements.FirstOrDefault(e => e.guid.ToString() == resultItem.guid) != null);
+            if (transitionstate != null) return graphWindow.reference.ChildReference(transitionstate, false);
+
+            // if we reach here, it means that we were not able to find the element...
+            //Debug.Log("oh no");
+            return graphWindow.reference;
+        }
+
+        // return the parent of the childgraph containing the element
+        private static IGraphParentElement FindSubStateInState(IState state, string guid)
+        {
+            if (state.guid.ToString() == guid) {
+                //Debug.Log("guid is the state itself");
+                return (INesterState)state;
+            }
+
+            foreach (var e in ((INesterState)state).childGraph.elements)
+            {
+                if (e.guid.ToString() == guid)
+                {
+                    //Debug.Log($"guid in the childgraph elements {((INesterState)state).childGraph}");
+                    return (IGraphParentElement)((INesterState)state).childGraph;
+                }
+
+
+                if (e is INesterStateTransition)
+                {
+                    if (e.guid.ToString() == guid)
+                    {
+                        //Debug.Log("guid is a state transition");
+                        return (INesterState)e;
+                    }
+                    //return FindSubStateInStateTransition((INesterStateTransition)e, guid);
+                }
+
+                if (e is INesterState)
+                {
+                    //Debug.Log("recurse");
+                    return FindSubStateInState((INesterState)e, guid);
+                }
+            }
+            
+
+            return null;
+        }
+
+        private static INesterState FindSubStateInStateTransition(IStateTransition transition, string guid)
+        {
+            if (transition.guid.ToString() == guid)
+            {
+                return (INesterState)transition;
+            }
+            /*foreach (var e in ((INesterState)transition).childGraph.elements)
+            {
+                if (e.guid.ToString() == guid)
+                {
+                    return (INesterState)transition;
+                }
+
+                if (e is INesterStateTransition)
+                {
+                    return FindSubStateInStateTransition((INesterStateTransition)e, guid);
+                }
+            }*/
+
+            return null;
         }
 
         private void OpenSubStateWindow(GraphReference substateReference)

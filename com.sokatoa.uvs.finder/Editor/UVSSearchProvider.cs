@@ -19,21 +19,21 @@ namespace Unity.VisualScripting.UVSFinder
                 var assetPath = AssetDatabase.GetAssetPath(graphWindow.reference.serializedObject);
                 var assetType = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
                 var guid = AssetDatabase.GUIDFromAssetPath(assetPath);
-                List<ResultItem> itemsFound;
+                ResultItemList itemsFound = new ResultItemList();
                 if (assetType != typeof(StateGraphAsset))
                 {
                     assetType = typeof(ScriptGraphAsset);
-                    itemsFound = FindNodesFromScriptGraphAssetGuid(guid.ToString(), keyword);
+                    itemsFound = FindNodesFromScriptGraphAssetGuid(guid.ToString(), keyword, itemsFound);
                     if (itemsFound != null)
                     {
-                        return itemsFound;
+                        return itemsFound.list;
                     }
                 }
                 
-                itemsFound = FindNodesFromScriptGraphAssetGuid(guid.ToString(), keyword);
+                itemsFound = FindNodesFromStateGraphAssetGuid(guid.ToString(), keyword, itemsFound);
                 if (itemsFound != null)
                 {
-                    return itemsFound;
+                    return itemsFound.list;
                 }
             } catch (Exception e)
             {
@@ -45,46 +45,37 @@ namespace Unity.VisualScripting.UVSFinder
 
         // finds all the results nodes from the asset files
         // TODO:
-        // - search for embeded scripts in scenes
+        // - search for embedded scripts in scenes
         // - process the files async to speed up the lookup
         public static List<ResultItem> PerformSearchAll(string keyword)
         {
-            var searchItems = new List<ResultItem>();
+            var searchItems = new ResultItemList();
             try {
                 string[] guids = AssetDatabase.FindAssets("t:ScriptGraphAsset");
-                Debug.Log($"found {guids.Length} script graph assets");
+                //Debug.Log($"found {guids.Length} script graph assets");
                 foreach (string guid in guids)
                 {
-                    var itemsFound = FindNodesFromScriptGraphAssetGuid(guid, keyword);
-                    if (itemsFound != null)
-                    {
-                        searchItems = searchItems.Concat(itemsFound).ToList();
-                    }
+                    searchItems = FindNodesFromScriptGraphAssetGuid(guid, keyword, searchItems);
                 }
                 // I can't seem to distinguish a stategraph from a scriptgraph from the json data
                 guids = AssetDatabase.FindAssets("t:StateGraphAsset");
-                Debug.Log($"found {guids.Length} state graph assets");
+                //Debug.Log($"found {guids.Length} state graph assets");
                 foreach (string guid in guids)
                 {
-                    var itemsFound = FindNodesFromStateGraphAssetGuid(guid, keyword);
-                    if (itemsFound != null)
-                    {
-                        searchItems = searchItems.Concat(itemsFound).ToList();
-                    }
+                    searchItems = FindNodesFromStateGraphAssetGuid(guid, keyword, searchItems);
                 }
             } catch(Exception e){
-                Debug.Log("encountered an error while searching in all scripts " + e.Message);
+                Debug.Log($"encountered an error while searching in all scripts {e.Message} {e.StackTrace}");
             }
-            return searchItems;
+
+            return searchItems.list;
         }
 
-        // TODO: missing some recursion to dig into embedded elements
-        private static List<ResultItem> FindNodesFromScriptGraphAssetGuid(string guid, string keyword)
+        private static ResultItemList FindNodesFromScriptGraphAssetGuid(string guid, string keyword, ResultItemList searchItems)
         {
             var searchTermLowerInvariant = keyword.ToLowerInvariant().Replace(" ", "").Replace(".", "");
             var assetPath = AssetDatabase.GUIDToAssetPath(guid);
             var sga = AssetDatabase.LoadAssetAtPath<ScriptGraphAsset>(assetPath);
-            var searchItems = new List<ResultItem>();
             if (sga?.graph?.elements.Count() > 0)
             {
                 foreach (var a in sga.graph.elements)
@@ -92,7 +83,7 @@ namespace Unity.VisualScripting.UVSFinder
                     var embedElementNameLowerInvariant = GraphElement.GetElementName(a).ToLowerInvariant();
                     if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant))
                     {
-                        searchItems.Add(new ResultItem()
+                        searchItems.AddDistinct(new ResultItem()
                         {
                             itemName = GraphElement.GetElementName(a),
                             assetPath = assetPath,
@@ -102,60 +93,88 @@ namespace Unity.VisualScripting.UVSFinder
                         });
                     }
                     
-                    // TODO: recurse somewhere here
+                    // TODO: recurse in embedded elements somewhere here
                 }
             }
 
             return searchItems;
         }
 
-        // TODO: missing some recursion to dig into embedded elements
-        private static List<ResultItem> FindNodesFromStateGraphAssetGuid(string guid, string keyword)
+        private static ResultItemList FindNodesFromStateGraphAssetGuid(string guid, string keyword, ResultItemList searchItems)
         {
             var searchTermLowerInvariant = keyword.ToLowerInvariant().Replace(" ", "").Replace(".", "");
             var assetPath = AssetDatabase.GUIDToAssetPath(guid);
             var sga = AssetDatabase.LoadAssetAtPath<StateGraphAsset>(assetPath);
-            var searchItems = new List<ResultItem>();
-            // this picks up only the first "layer" of a state graph asset
+            // pick up the first layer's elements
             if (sga?.graph?.elements.Count() > 0)
             {
-                Debug.Log($"stategraphasset {sga.name} has {sga.graph?.elements.Count()} elements");
-                foreach (var a in sga.graph.elements)
+                //Debug.Log($"stategraphasset {sga.name} has {sga.graph?.elements.Count()} elements");
+                GetElementsFromStateGraph(sga.graph, assetPath, searchTermLowerInvariant, searchItems);
+            }
+            
+            return searchItems;
+        }
+
+        private static ResultItemList GetElementsFromIGraph(IGraph graph, string assetPath, string searchTermLowerInvariant, ResultItemList searchItems)
+        {
+            foreach (var a in graph.elements)
+            {
+                var embedElementNameLowerInvariant = GraphElement.GetElementName(a).ToLowerInvariant();
+                if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant))
                 {
-                    var embedElementNameLowerInvariant = GraphElement.GetElementName(a).ToLowerInvariant();
-                    if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant))
+                    searchItems.AddDistinct(new ResultItem()
                     {
-                        searchItems.Add(new ResultItem()
-                        {
-                            itemName = $"{GraphElement.GetElementName(a)}",
-                            assetPath = assetPath,
-                            guid = a.guid.ToString(),
-                            graphElement = a,
-                            type = typeof(StateGraphAsset)
-                        });
-                    }
+                        itemName = $"{GraphElement.GetElementName(a)}",
+                        assetPath = assetPath,
+                        guid = a.guid.ToString(),
+                        graphElement = a,
+                        type = typeof(StateGraphAsset)
+                    });
                 }
             }
-            if (sga?.graph?.states.Count() > 0)
+            return searchItems;
+        }
+
+        private static ResultItemList GetElementsFromStateGraph(StateGraph graph, string assetPath, string searchTermLowerInvariant, ResultItemList searchItems)
+        {
+            // get this layer's elements
+            searchItems = GetElementsFromIGraph(graph, assetPath, searchTermLowerInvariant, searchItems);
+            
+            // get this layer's sublayers elements
+            if (graph.states.Count() > 0)
             {
-                foreach (var state in sga.graph.states)
+                foreach (var state in graph.states)
                 {
                     if (state is INesterState && ((INesterState)state).childGraph?.elements.Count() > 0)
                     {
-                        Debug.Log($"sga {sga.name} state {state.guid} {((INesterState)state).childGraph.title} has {((INesterState)state).childGraph.elements.Count()} elements");
-                        foreach (var e in ((INesterState)state).childGraph?.elements)
+                        //Debug.Log($"state {state.guid} {((INesterState)state).childGraph.title} has {((INesterState)state).childGraph.elements.Count()} elements");
+                        foreach (var e in ((INesterState)state).childGraph.elements)
                         {
-                            var embedElementNameLowerInvariant = GraphElement.GetElementName(e).ToLowerInvariant();
-                            if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant))
+                            // recurse
+                            if (e is StateUnit)
                             {
-                                searchItems.Add(new ResultItem()
+                                if (((StateUnit)e).nest?.source == GraphSource.Embed && ((StateUnit)e).nest?.graph?.elements.Count() > 0)
                                 {
-                                    itemName = $"{GraphElement.GetElementName(e)}",
-                                    assetPath = assetPath,
-                                    guid = e.guid.ToString(),
-                                    graphElement = e,
-                                    type = typeof(StateGraphAsset)
-                                });
+                                    searchItems = GetElementsFromIGraph(((StateUnit)e).graph, assetPath, searchTermLowerInvariant, searchItems);
+                                    searchItems = GetElementsFromIGraph(((StateUnit)e).nest.graph, assetPath, searchTermLowerInvariant, searchItems);
+                                    searchItems = GetElementsFromStateGraph(((StateUnit)e).nest.graph, assetPath, searchTermLowerInvariant, searchItems);
+                                }
+                            }
+                            else
+                            {
+                                var embedElementNameLowerInvariant = GraphElement.GetElementName(e).ToLowerInvariant();
+                                if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant))
+                                {
+                                    //Debug.Log($"Adding {GraphElement.GetElementName(e)} with state {state.graph.title} {state.guid} {((INesterState)state).childGraph?.title}");
+                                    searchItems.AddDistinct(new ResultItem()
+                                    {
+                                        itemName = $"{GraphElement.GetElementName(e)}",
+                                        assetPath = assetPath,
+                                        guid = e.guid.ToString(),
+                                        graphElement = e,
+                                        type = typeof(StateGraphAsset)
+                                    });
+                                }
                             }
                         }
                     }
@@ -179,12 +198,35 @@ namespace Unity.VisualScripting.UVSFinder
         }
     }
 
+    // this is used to have a list of distinct items only
+    // it might be covering the fact that I seem to search more than once on the same items
+    // but let's go with this for now.
+    public class ResultItemList
+    {
+        public List<ResultItem> list = new List<ResultItem>();
+        public void AddDistinct(ResultItem item)
+        {
+            bool isInList = false;
+            foreach (var i in list)
+            {
+                if (i.guid == item.guid)
+                {
+                    isInList = true;
+                }
+            }
+            if (!isInList)
+            {
+                list.Add(item);
+            }
+        }
+    }
     public class ResultItem{
         public string guid;
         public string itemName;
         public IGraphElement graphElement;
         public string assetPath;
         public Type type; //The type of the node
+        public IGraphParentElement graphParentElement;
         public string content; //the name of the event is in content
     }
 }
