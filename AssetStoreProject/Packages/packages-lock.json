@@ -1,11 +1,12 @@
 {
   "dependencies": {
-    "com.unity.nuget.newtonsoft-json": {
-      "version": "2.0.2",
+    "com.sokatoa.uvs.finder": {
+      "version": "file:../../com.sokatoa.uvs.finder",
       "depth": 0,
-      "source": "registry",
-      "dependencies": {},
-      "url": "https://packages.unity.com"
+      "source": "local",
+      "dependencies": {
+        "com.unity.visualscripting": "1.5.2"
+      }
     },
     "com.unity.ugui": {
       "version": "1.0.0",

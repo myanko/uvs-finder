@@ -115,6 +115,8 @@ namespace Unity.VisualScripting.UVSFinder
                         }
                         break;
                     }
+
+#if VISUAL_SCRIPTING_RENAME
                 case "Unity.VisualScripting.SubgraphUnit":
                     {
                         var subgraph = (SubgraphUnit)ge;
@@ -135,6 +137,7 @@ namespace Unity.VisualScripting.UVSFinder
                         }
                         break;
                     }
+#endif
                 case "Unity.VisualScripting.StateUnit":
                     {
                         var stateUnit = (StateUnit)ge;
@@ -156,19 +159,19 @@ namespace Unity.VisualScripting.UVSFinder
                         break;
                     }
 
-                        /*case "Bolt.SuperUnit":
-                            {
-                                if (nest.source == "Macro")
-                                {
-                                    name = $"{type.Split('.').Last()} [SubGraph]";
-                                }
-                                else
-                                {
-                                    name = $"{nest.embed.title} [SubGraph Embed]";
-                                }
-                                break;
-                            }*/
-                        default:
+                /*case "Bolt.SuperUnit":
+                    {
+                        if (nest.source == "Macro")
+                        {
+                            name = $"{type.Split('.').Last()} [SubGraph]";
+                        }
+                        else
+                        {
+                            name = $"{nest.embed.title} [SubGraph Embed]";
+                        }
+                        break;
+                    }*/
+                default:
                     name = ge.GetType().ToString().Split('.').Last();
                     break;
             }
