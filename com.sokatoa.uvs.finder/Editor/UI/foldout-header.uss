@@ -31,9 +31,9 @@
 }
 
 .unity-foldout .unity-toggle__text {
-    padding-left: 2;
-    bottom: 2;
-    font-size: 13;
+    padding-left: 2px;
+    bottom: 2px;
+    font-size: 13px;
     -unity-font-style: bold;
 }
 
