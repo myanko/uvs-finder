@@ -13,7 +13,13 @@ namespace Unity.VisualScripting.UVSFinder
         public static List<ResultItem> PerformSearchInCurrentScript(string keyword)
         {
             var graphWindow = EditorWindow.GetWindow<GraphWindow>();
-            var searchTermLowerInvariant = keyword.ToLowerInvariant().Replace(" ", "").Replace(".", "");
+
+            // no graph opened to search in...
+            if (graphWindow?.reference?.serializedObject == null)
+            {
+                return new List<ResultItem>();
+            }
+
             try
             {
                 var assetPath = AssetDatabase.GetAssetPath(graphWindow.reference.serializedObject);
@@ -29,12 +35,13 @@ namespace Unity.VisualScripting.UVSFinder
                         return itemsFound.list;
                     }
                 }
-                
+
                 itemsFound = FindNodesFromStateGraphAssetGuid(guid.ToString(), keyword, itemsFound);
                 if (itemsFound != null)
                 {
                     return itemsFound.list;
                 }
+                
             } catch (Exception e)
             {
                 Debug.Log($"encountered an error while searching in current script: {e}");
