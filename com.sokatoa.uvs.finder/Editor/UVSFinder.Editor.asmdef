@@ -21,7 +21,7 @@
     "versionDefines": [
         {
             "name": "com.unity.visualscripting",
-            "expression": ">= 1.6.1",
+            "expression": "1.6.1",
             "define": "VISUAL_SCRIPTING_RENAME"
         }
     ],
