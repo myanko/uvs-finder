@@ -1,4 +1,5 @@
 using System.Linq;
+using Unity.VisualScripting.UVSFinder.ExtensionMethods;
 
 namespace Unity.VisualScripting.UVSFinder
 {
@@ -12,168 +13,12 @@ namespace Unity.VisualScripting.UVSFinder
         public static string GetElementName(IGraphElement ge)
         {
             var name = "";
-
-            switch (ge.GetType().ToString())
+            // trying to generalize this a bit...
+            //name = GetElementNameFromDefaultValues(ge);
+            
+            if (name == "")
             {
-                case "Unity.VisualScripting.GetMember":
-                    name = $"{((GetMember)ge).member.targetTypeName.Split('.').Last()} Get {((GetMember)ge).member.name}";
-                    break;
-                case "Unity.VisualScripting.SetMember":
-                    name = $"{((SetMember)ge).member.targetTypeName.Split('.').Last()} Set {((SetMember)ge).member.name}";
-                    break;
-                case "Unity.VisualScripting.InvokeMember":
-                    name = $"{((InvokeMember)ge).member.targetTypeName.Split('.').Last()} {((InvokeMember)ge).member.name}";
-                    break;
-                case "Unity.VisualScripting.GetVariable":
-                    name = $"{((GetVariable)ge).defaultValues["name"]} [Get Variable: {((GetVariable)ge).kind}]";
-                    break;
-                /*case "Bolt.GetVariable":
-                    var t = new Bolt.GetVariable();
-                    name = $"{t.name} [Get Variable: {t.kind}]";
-                    //name = $"{defaultValues.name.content} [Get Variable: {kind}]";
-                    break;*/
-                case "Unity.VisualScripting.SetVariable":
-                    name = $"{((SetVariable)ge).defaultValues["name"]} [Set Variable: {((SetVariable)ge).kind}]";
-                    break;
-                /*case "Bolt.SetVariable":
-                    name = $"{defaultValues.name.content} [Set Variable: {kind}]";
-                    break;*/
-                case "Unity.VisualScripting.CustomEvent":
-                    name = $"{((CustomEvent)ge).defaultValues["name"]} [CustomEvent]";
-                    break;
-                /*case "Bolt.CustomEvent":
-                    name = $"{defaultValues.name.content} [CustomEvent]";
-                    break;*/
-                case "Unity.VisualScripting.TriggerCustomEvent":
-                    name = $"{((TriggerCustomEvent)ge).defaultValues["name"]} [TriggerCustomEvent]";
-                    break;
-               /* case "Bolt.TriggerCustomEvent":
-                    name = $"{defaultValues.name.content} [TriggerCustomEvent]";
-                    break;*/
-                case "Unity.VisualScripting.Literal":
-                    name = $"{((Literal)ge).type.ToString().Split('.').Last()} {((Literal)ge).value} [Literal]";
-                    break;
-                /*case "Bolt.Literal":
-                    name = $"{value.type.Split('.').Last()} \"{value.content}\" [Literal]";
-                    break;*/
-                case "Unity.VisualScripting.GraphGroup":
-                    name = $"{((GraphGroup)ge).label} [Group]";
-                    break;
-                /*case "Bolt.GraphGroup":
-                    name = $"\"{label}\" [Group]";
-                    break;*/
-                case "Unity.VisualScripting.FlowState":
-                    {
-                        var flow = (FlowState)ge;
-                        name = "[FlowState]";
-
-                        if (!string.IsNullOrEmpty(flow.graph.title))
-                        {
-                            name = $"{flow.graph.title} [FlowState]";
-                        }
-                        // this depends on the bread crumb and where I am...
-                        // TODO: test with more than one level of pathing
-                        if (!string.IsNullOrEmpty(flow.nest.graph.title))
-                        {
-                            name = $"{flow.nest.graph.title} [FlowState]";
-                        }
-                        if(flow.nest.source == GraphSource.Embed)
-                        {
-                            name = name.Replace("[FlowState]", "[FlowState Embed]");
-                        }
-                        if (flow.isStart)
-                        {
-                            name = $"{name} [Start]";
-                        }
-                        break;
-                    }
-                case "Unity.VisualScripting.FlowStateTransition":
-                    {
-                        var flow = (FlowStateTransition)ge;
-                        name = "[FlowStateTransition]";
-                        if (!string.IsNullOrEmpty(flow.graph.title))
-                        {
-                            name = $"{flow.graph.title} [FlowStateTransition]";
-                        }
-                        if (!string.IsNullOrEmpty(flow.nest.graph.title))
-                        {
-                            name = $"{flow.nest.graph.title} [FlowStateTransition]";
-                        }
-                        if (flow.nest.source == GraphSource.Embed)
-                        {
-                            name = name.Replace("[FlowStateTransition]", "[FlowStateTransition Embed]");
-                        }
-                        break;
-                    }
-                case "Unity.VisualScripting.AnyState":
-                    {
-                        var flow = (AnyState)ge;
-                        name = "[AnyState]";
-                        if (!string.IsNullOrEmpty(flow.graph.title))
-                        {
-                            name = $"{flow.graph.title} {name}";
-                        }
-                        break;
-                    }
-
-#if VISUAL_SCRIPTING_RENAME
-                case "Unity.VisualScripting.SubgraphUnit":
-                    {
-                        var subgraph = (SubgraphUnit)ge;
-                        if (subgraph.nest.source == GraphSource.Macro)
-                        {
-                            if (!string.IsNullOrEmpty(subgraph.graph?.title))
-                            {
-                                name = $"{subgraph.nest.macro.name} {subgraph.graph.title} [SubGraph]";
-                            }
-                            else
-                            {
-                                name = $"{subgraph.nest.macro.name} [SubGraph]";
-                            }
-                        } 
-                        else
-                        {
-                            name = $"{subgraph.nest.embed.title} [SubGraph Embed]";
-                        }
-                        break;
-                    }
-#endif
-                case "Unity.VisualScripting.StateUnit":
-                    {
-                        var stateUnit = (StateUnit)ge;
-                        if (stateUnit.nest.source == GraphSource.Macro)
-                        {
-                            if (!string.IsNullOrEmpty(stateUnit.graph?.title))
-                            {
-                                name = $"{stateUnit.nest.macro.name} {stateUnit.graph.title} [State]";
-                            }
-                            else
-                            {
-                                name = $"{stateUnit.nest.macro.name} [State]";
-                            }
-                        }
-                        else
-                        {
-                            name = $"{stateUnit.nest.embed.title} [State Embed]";
-                        }
-                        break;
-                    }
-
-                /*case "Bolt.SuperUnit":
-                    {
-                        if (nest.source == "Macro")
-                        {
-                            name = $"{type.Split('.').Last()} [SubGraph]";
-                        }
-                        else
-                        {
-                            name = $"{nest.embed.title} [SubGraph Embed]";
-                        }
-                        break;
-                    }*/
-                default:
-                    name = ge.GetType().ToString().Split('.').Last();
-                    break;
+                name = GetNameFromSpecificTypes(ge);
             }
 
             /*if (member != null)
@@ -231,6 +76,199 @@ namespace Unity.VisualScripting.UVSFinder
 
             return type;
         }*/
+        public static string GetElementNameFromDefaultValues(IGraphElement ge)
+        {
+            if (ge.HasMember("defaultValues"))
+            {
+                var memberInfo = ge.GetType().GetMember("defaultValues");
+                var value = memberInfo.GetValue(0);
+                if (value != null)
+                {
+                    return $"{value.GetType().GetMember("name")} [{ge.GetType().ToString().Split('.').Last()}]";
+                }
+            }
+            if (ge.HasProperty("defaultValues"))
+            {
+                var propertyInfo = ge.GetType().GetProperty("defaultValues");
+                var value = propertyInfo.GetValue(ge, null);
+                if (value != null)
+                {
+                    return $"{value.GetType().GetMember("name")} [{ge.GetType().ToString().Split('.').Last()}]";
+                }
+            }
+
+            return "";
+        }
+
+        public static string GetNameFromSpecificTypes(IGraphElement ge)
+        {
+            switch (ge.GetType().ToString())
+            {
+                case "Unity.VisualScripting.GetMember":
+                    return $"{((GetMember)ge).member.targetTypeName.Split('.').Last()} Get {((GetMember)ge).member.name}";
+                case "Unity.VisualScripting.SetMember":
+                    return $"{((SetMember)ge).member.targetTypeName.Split('.').Last()} Set {((SetMember)ge).member.name}";
+                case "Unity.VisualScripting.InvokeMember":
+                    return $"{((InvokeMember)ge).member.targetTypeName.Split('.').Last()} {((InvokeMember)ge).member.name}";
+                case "Unity.VisualScripting.GetVariable":
+                case "Bolt.GetVariable":
+                    return $"{((GetVariable)ge).defaultValues["name"]} [Get Variable: {((GetVariable)ge).kind}]";
+                case "Unity.VisualScripting.SetVariable":
+                case "Bolt.SetVariable":
+                    return $"{((SetVariable)ge).defaultValues["name"]} [Set Variable: {((SetVariable)ge).kind}]";
+                case "Unity.VisualScripting.BoltUnityEvent":
+                case "Bolt.BoltUnityEvent":
+                    var bue = ge as BoltUnityEvent;
+                    return $"{bue.defaultValues["name"]} [BoltUnityEvent]";
+                case "Unity.VisualScripting.CustomEvent":
+                case "Bolt.CustomEvent":
+                    return $"{((CustomEvent)ge).defaultValues["name"]} [CustomEvent]";
+                case "Unity.VisualScripting.TriggerCustomEvent":
+                case "Bolt.TriggerCustomEvent":
+                    return $"{((TriggerCustomEvent)ge).defaultValues["name"]} [TriggerCustomEvent]";
+                case "Unity.VisualScripting.Literal":
+                case "Bolt.Literal":
+                    return $"{((Literal)ge).type.ToString().Split('.').Last()} {((Literal)ge).value} [Literal]";
+                case "Unity.VisualScripting.GraphGroup":
+                case "Bolt.GraphGroup":
+                    return $"{((GraphGroup)ge).label} [Group]";
+                case "Unity.VisualScripting.FlowState":
+                    {
+                        var flow = (FlowState)ge;
+                        var name = "[FlowState]";
+
+                        if (!string.IsNullOrEmpty(flow.graph.title))
+                        {
+                            name = $"{flow.graph.title} [FlowState]";
+                        }
+                        // this depends on the bread crumb and where I am...
+                        // TODO: test with more than one level of pathing
+                        if (!string.IsNullOrEmpty(flow.nest.graph.title))
+                        {
+                            name = $"{flow.nest.graph.title} [FlowState]";
+                        }
+                        if (flow.nest.source == GraphSource.Embed)
+                        {
+                            name = name.Replace("[FlowState]", "[FlowState Embed]");
+                        }
+                        if (flow.isStart)
+                        {
+                            name = $"{name} [Start]";
+                        }
+                        return name;
+                    }
+                case "Unity.VisualScripting.FlowStateTransition":
+                    {
+                        var flow = (FlowStateTransition)ge;
+                        var name = "[FlowStateTransition]";
+                        if (!string.IsNullOrEmpty(flow.graph.title))
+                        {
+                            name = $"{flow.graph.title} [FlowStateTransition]";
+                        }
+                        if (!string.IsNullOrEmpty(flow.nest.graph.title))
+                        {
+                            name = $"{flow.nest.graph.title} [FlowStateTransition]";
+                        }
+                        if (flow.nest.source == GraphSource.Embed)
+                        {
+                            name = name.Replace("[FlowStateTransition]", "[FlowStateTransition Embed]");
+                        }
+                        return name;
+                    }
+                case "Unity.VisualScripting.AnyState":
+                    {
+                        var flow = (AnyState)ge;
+                        var name  = "[AnyState]";
+                        if (!string.IsNullOrEmpty(flow.graph.title))
+                        {
+                            name = $"{flow.graph.title} {name}";
+                        }
+                        return name;
+                    }
+#if VISUAL_SCRIPTING_RENAME
+                case "Unity.VisualScripting.SubgraphUnit":
+                    {
+                        var subgraph = (SubgraphUnit)ge;
+                        var name = "";
+                        if (subgraph.nest.source == GraphSource.Macro)
+                        {
+                            if (!string.IsNullOrEmpty(subgraph.graph?.title))
+                            {
+                                name = $"{subgraph.nest.macro.name} {subgraph.graph.title} [SubGraph]";
+                            }
+                            else
+                            {
+                                name = $"{subgraph.nest.macro.name} [SubGraph]";
+                            }
+                        } 
+                        else
+                        {
+                            name = $"{subgraph.nest.embed.title} [SubGraph Embed]";
+                        }
+                        return name;
+                    }
+#endif
+                case "Unity.VisualScripting.StateUnit":
+                    {
+                        var stateUnit = (StateUnit)ge;
+                        var name = "";
+                        if (stateUnit.nest.source == GraphSource.Macro)
+                        {
+                            if (!string.IsNullOrEmpty(stateUnit.graph?.title))
+                            {
+                                name = $"{stateUnit.nest.macro.name} {stateUnit.graph.title} [State]";
+                            }
+                            else
+                            {
+                                name = $"{stateUnit.nest.macro.name} [State]";
+                            }
+                        }
+                        else
+                        {
+                            name = $"{stateUnit.nest.embed.title} [State Embed]";
+                        }
+                        return name;
+                    }
+                /*case "Bolt.SuperUnit":
+                    {
+                        var superUnit = (SuperUnit)ge;
+                        if (nest.source == "Macro")
+                        {
+                            return $"{type.Split('.').Last()} [SubGraph]";
+                        }
+                        else
+                        {
+                            return $"{nest.embed.title} [SubGraph Embed]";
+                        }
+                    }*/
+                default:
+                    return ge.GetType().ToString();//.Split('.').Last();
+            }
+        }
+    }
+    
+}
+
+namespace Unity.VisualScripting.UVSFinder.ExtensionMethods
+{
+    public static class MyExtensions
+    {
+        public static bool HasMethod(this object objectToCheck, string methodName)
+        {
+            var type = objectToCheck.GetType();
+            return type.GetMethod(methodName) != null;
+        }
+
+        public static bool HasMember(this object objectToCheck, string memberName)
+        {
+            var type = objectToCheck.GetType();
+            return type.GetMember(memberName) != null;
+        }
+        public static bool HasProperty(this object objectToCheck, string propertyName)
+        {
+            var type = objectToCheck.GetType();
+            return type.GetProperty(propertyName) != null;
+        }
     }
 }
 

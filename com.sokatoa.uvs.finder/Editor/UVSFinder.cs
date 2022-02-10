@@ -272,8 +272,6 @@ namespace Unity.VisualScripting.UVSFinder
             //Debug.Log("select item in script graph");
             var graphWindow = GetWindow<GraphWindow>();
             VisualScriptingCanvas<FlowGraph> canvas = (VisualScriptingCanvas<FlowGraph>)graphWindow.context.canvas;
-            // pick up the "real element" in the canvas directly
-            // because my GraphElement class cannot decorate the Widget for some reason...
             var panPosition = new Vector2();
             if (resultItem.graphElement.GetType().ToString() == "Unity.VisualScripting.GraphGroup" || resultItem.graphElement.GetType().ToString() == "Bolt.GraphGroup")
             {
@@ -299,18 +297,19 @@ namespace Unity.VisualScripting.UVSFinder
             
             //if (resultItem.graphElement is Unit && !(resultItem.graphElement is StateUnit))
             //{
-                try
-                {
-                    // the select does not work when the object is not visible (the substate is not properly selected)
-                    // and it spams the console even though I try catch it...
-                    // unless I use widget(graphelement).canselect
-                    graphWindow.context.selection.Select(new List<IGraphElement>() { resultItem.graphElement }.Where(element => canvas.Widget(element).canSelect));
-                    canvas.ViewElements(new List<IGraphElement>() { resultItem.graphElement });
-                }
-                catch (Exception e)
-                {
-                    Debug.Log("Could not pan to element " + resultItem.graphElement.GetType() + " because of: " + e);
-                }
+            try
+            {
+            // the select does not work when the object is not visible (the substate is not properly selected)
+            // and it spams the console even though I try catch it...
+            // unless I use widget(graphelement).canselect
+                graphWindow.context.graph.zoom = 1f;
+                graphWindow.context.selection.Select(new List<IGraphElement>() { resultItem.graphElement }.Where(element => canvas.Widget(element).canSelect));
+                canvas.ViewElements(new List<IGraphElement>() { resultItem.graphElement });
+            }
+            catch (Exception e)
+            {
+                Debug.Log("Could not pan to element " + resultItem.graphElement.GetType() + " because of: " + e);
+            }
             //}
         }
 
