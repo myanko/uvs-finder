@@ -12,7 +12,7 @@ namespace Unity.VisualScripting.UVSFinder
     {
         internal static UVSFinderPreferences prefs => UVSFinderSettingsProvider.Preferences;
         
-        [MenuItem("Tools/VisualScripting/UVS Find in All Graphs %#f")]
+        [MenuItem("Tools/VisualScripting/UVS Find in All Graphs &F")]
         public static void ShowUVSFinder()
         {
             UVSFinder wnd = GetWindow<UVSFinder>();
