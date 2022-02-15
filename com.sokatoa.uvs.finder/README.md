@@ -1,6 +1,6 @@
 # Node Finder for Unity Visual Scripting
 
-This package adds searching functionalities to Visual Scripting, by letting you simply press Ctrl+Shift+f and start to browse for nodes in graphs, so you always know where your events are used in the project, or where your variables or subgraphs are used in your super huge graph.
+This package adds searching functionalities to Visual Scripting, by letting you simply press Alt+F and start to browse for nodes in graphs, so you always know where your events are used in the project, or where your variables or subgraphs are used in your super huge graph.
 
 # **Features:**
 
@@ -19,8 +19,6 @@ This package adds searching functionalities to Visual Scripting, by letting you 
 # **Dependencies**
 
 - **com.unity.visualscripting:** 1.5.x, 1.6.x, 1.7.x
-- **com.unity.nuget.newtonsoft-json:** "2.0.2", 
-
 
 
 # **Supported OS:**
@@ -43,7 +41,6 @@ This package adds searching functionalities to Visual Scripting, by letting you 
   - Not all titles are searchable as it work by types. (Ex: To find **Add** node search for **generic sum**)
 - Can search only at one level of deepness in subgraphs.
 - Some Icons make the list super slow. (Add operator, multiply operator,...)
-- Search Color highlight don't apply.
 
 
 
@@ -53,21 +50,13 @@ This package adds searching functionalities to Visual Scripting, by letting you 
 
 ## How to Open the Tool
 
-To open the node finder, you can simply press ctrl+shif+f.
-
-The current shortcut should enter in conflic with unity **Main Menu/GameObject/Align With View**, you can from this window define if you want to change the shortcut or keep it.
-
-Or you can click on the menu **Tools/VisualScripting/UVS Find in All Graph** item, to open the tool.
+To open the node finder, you can simply press alt+f.
 
 
 
 ## Default ShortCuts
 
-**CTRL+Shift+F** :Open the node finder and search in all graphs in the project.
-
-You should see this Shortcut Conflict panel, up to you, to change the shortcut or overide the **Align With View** default shortcut to the **UVS Find in All Graphs**.
-
-![Conflict](Conflict.png)
+**Alt+F** :Open the node finder and search in all graphs in the project.
 
 
 
@@ -88,6 +77,7 @@ After opening the node finding tool, simply type in the search field and press E
 Some Usefull Keywords
 
 - Event
+- trigger
 - Variable
 - Bolt
 - Subgraph
