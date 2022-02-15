@@ -142,12 +142,59 @@ namespace Unity.VisualScripting.UVSFinder
             return searchItems;
         }
 
-        private static ResultItemList GetElementsFromStateGraph(StateGraph graph, string assetPath, string searchTermLowerInvariant, ResultItemList searchItems)
+        private static ResultItemList GetElementsFromSubGraph(FlowGraph graph, string assetPath, string searchTermLowerInvariant, ResultItemList searchItems)
+        {
+            // get this layer's elements
+            searchItems = GetElementsFromIGraph(graph, assetPath, searchTermLowerInvariant, searchItems);
+
+            // get the subgraph's elements
+            if (graph.elements.Count() > 0)
+            {
+                foreach (var e in graph.elements)
+                {
+                    if (e is StateUnit)
+                    {
+                        if (((StateUnit)e).nest?.source == GraphSource.Embed && ((StateUnit)e).nest?.graph?.elements.Count() > 0)
+                        {
+                            searchItems = GetElementsFromIGraph(((StateUnit)e).graph, assetPath, searchTermLowerInvariant, searchItems);
+                            searchItems = GetElementsFromStateGraph(((StateUnit)e).nest.graph, assetPath, searchTermLowerInvariant, searchItems);
+                        }
+                    }
+                    else if (e is SubgraphUnit)
+                    {
+                        if (((SubgraphUnit)e).nest?.source == GraphSource.Embed && ((SubgraphUnit)e).nest?.graph?.elements.Count() > 0)
+                        {
+                            searchItems = GetElementsFromIGraph(((SubgraphUnit)e).graph, assetPath, searchTermLowerInvariant, searchItems);
+                            searchItems = GetElementsFromSubGraph(((SubgraphUnit)e).nest.graph, assetPath, searchTermLowerInvariant, searchItems);
+                        }
+                    }
+                    else
+                    {
+                        var embedElementNameLowerInvariant = GraphElement.GetElementName(e).ToLowerInvariant();
+                        if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant))
+                        {
+                            //Debug.Log($"Adding {GraphElement.GetElementName(e)} with state {state.graph.title} {state.guid} {((INesterState)state).childGraph?.title}");
+                            searchItems.AddDistinct(new ResultItem()
+                            {
+                                itemName = $"{GraphElement.GetElementName(e)}",
+                                assetPath = assetPath,
+                                guid = e.guid.ToString(),
+                                graphElement = e,
+                                type = typeof(StateGraphAsset)
+                            });
+                        }
+                    }
+                }
+            }
+
+            return searchItems;
+        }
+            private static ResultItemList GetElementsFromStateGraph(StateGraph graph, string assetPath, string searchTermLowerInvariant, ResultItemList searchItems)
         {
             // get this layer's elements
             searchItems = GetElementsFromIGraph(graph, assetPath, searchTermLowerInvariant, searchItems);
             
-            // get this layer's sublayers elements
+            // get each states' elements
             if (graph.states.Count() > 0)
             {
                 foreach (var state in graph.states)
@@ -163,8 +210,15 @@ namespace Unity.VisualScripting.UVSFinder
                                 if (((StateUnit)e).nest?.source == GraphSource.Embed && ((StateUnit)e).nest?.graph?.elements.Count() > 0)
                                 {
                                     searchItems = GetElementsFromIGraph(((StateUnit)e).graph, assetPath, searchTermLowerInvariant, searchItems);
-                                    searchItems = GetElementsFromIGraph(((StateUnit)e).nest.graph, assetPath, searchTermLowerInvariant, searchItems);
                                     searchItems = GetElementsFromStateGraph(((StateUnit)e).nest.graph, assetPath, searchTermLowerInvariant, searchItems);
+                                }
+                            }
+                            else if(e is SubgraphUnit)
+                            {
+                                if (((SubgraphUnit)e).nest?.source == GraphSource.Embed && ((SubgraphUnit)e).nest?.graph?.elements.Count() > 0)
+                                {
+                                    searchItems = GetElementsFromIGraph(((SubgraphUnit)e).graph, assetPath, searchTermLowerInvariant, searchItems);
+                                    searchItems = GetElementsFromSubGraph(((SubgraphUnit)e).nest.graph, assetPath, searchTermLowerInvariant, searchItems);
                                 }
                             }
                             else
