@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using System.Linq;
+using UnityObject = UnityEngine.Object;
 
 namespace Unity.VisualScripting.UVSFinder
 {
@@ -294,32 +295,27 @@ namespace Unity.VisualScripting.UVSFinder
             var graphWindow = GetWindow<GraphWindow>();
             var canvas = (VisualScriptingCanvas<StateGraph>)graphWindow.context.canvas;
             var substateRef = FindSubStateReferenceAndElement(resultItem, graphWindow, canvas);
-            if (substateRef != null)
+            if (substateRef.Item1 != null)
             {
                 OpenSubStateWindow(substateRef.Item1);
-            } else
+            }
+            else
             {
                 Debug.Log("no substate to open!");
             }
-            
-            //if (resultItem.graphElement is Unit && !(resultItem.graphElement is StateUnit))
-            //{
-            try
-            {
-                // the select does not work when the object is not visible (the substate is not properly selected)
-                // and it spams the console even though I try catch it...
-                // unless I use widget(graphelement).canselect
-                graphWindow.context.graph.zoom = 1f;
-                //graphWindow.context.selection.Select(new List<IGraphElement>() { resultItem.graphElement }.Where(element => canvas.Widget(element).canSelect));
-                // select the canvas' element instead of just any element
-                graphWindow.context.selection.Select(new List<IGraphElement>() { substateRef.Item2 });
+            //graphWindow.reference = graphWindow.reference.ChildReference((IGraphNesterElement)resultItem, false);
+            //LudiqGraphsEditorUtility.editedContext.value.reference.ChildReference((IGraphNesterElement)resultItem, false);
+
+
+            graphWindow.context.graph.zoom = 1f;
+            graphWindow.context.selection.Select(new List<IGraphElement>() { substateRef.Item2 });
+            try {
                 canvas.ViewElements(new List<IGraphElement>() { substateRef.Item2 });
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Debug.Log("Could not pan to element " + resultItem.graphElement.GetType() + " because of: " + e);
+                //Debug.Log("Could not pan to element " + resultItem.graphElement.GetType() + " because of: " + e);
             }
-            //}
         }
 
         private Tuple<GraphReference, IGraphElement> FindSubStateReferenceAndElement(ResultItem resultItem, GraphWindow graphWindow, VisualScriptingCanvas<StateGraph> canvas)
@@ -353,6 +349,8 @@ namespace Unity.VisualScripting.UVSFinder
                             {
                                 if (ge.guid.ToString() == resultItem.guid)
                                 {
+                                    // furet 2, furet 4?
+                                    // s = current state part of the root of the graph
                                     return new Tuple<GraphReference, IGraphElement>(graphWindow.reference.ChildReference(s, false), ge);
                                 }
                             }
@@ -364,26 +362,27 @@ namespace Unity.VisualScripting.UVSFinder
                                 {
                                     if (ne.guid.ToString() == resultItem.guid)
                                     {
-                                        // TODO: fix this! figure out how to pass the root of a state unit's states
-                                        var rootState = (INesterState)((StateUnit)e).nest.embed.states.First();
-                                        if (rootState != null)
-                                        {
-                                            return new Tuple<GraphReference, IGraphElement>(graphWindow.reference.ChildReference(rootState, false), rootState);
-                                        }
-                                        return new Tuple<GraphReference, IGraphElement>(graphWindow.reference.ChildReference((StateUnit)e, false), ne);//(INesterState)((StateUnit)e).nest.embed, false);
+                                        // e = furet 2
+                                        // ne = furet 3
+                                        graphWindow.reference = graphWindow.reference.ChildReference(s, false); // add furet 1 before being able to see furet 2
+                                        graphWindow.reference = graphWindow.reference.ChildReference((e as StateUnit), true);// go into furet 2
+                                        return new Tuple<GraphReference, IGraphElement>(graphWindow.reference, ne);
                                     }
                                 }
 
                                 // states of the state unit
                                 foreach (INesterState es in ((StateUnit)e).nest.embed.states)
                                 {
-                                    foreach (var se in es.graph.elements)
+                                    foreach (var se in es.childGraph.elements)
                                     {
                                         if (se.guid.ToString() == resultItem.guid)
                                         {
                                             // I need to figure out the state I am in from the sub element here...
                                             // only the canvas seems to know about the states... even though I am in a stateunit
-                                            return new Tuple<GraphReference, IGraphElement>(graphWindow.reference.ChildReference(es, false), se);
+                                            graphWindow.reference = graphWindow.reference.ChildReference(s, false); // add furet 1 before being able to see furet 2
+                                            graphWindow.reference = graphWindow.reference.ChildReference((e as StateUnit), true);// go into furet 2
+                                            graphWindow.reference = graphWindow.reference.ChildReference(es, true);// go into furet 3
+                                            return new Tuple<GraphReference, IGraphElement>(graphWindow.reference, se);
                                         }
                                     }
                                 }
@@ -475,14 +474,16 @@ namespace Unity.VisualScripting.UVSFinder
             {
                 var sga = AssetDatabase.LoadAssetAtPath<ScriptGraphAsset>(resultItem.assetPath);
                 //sga.graph.Instantiate(sga.GetReference().AsReference());
-                graphReference = sga.GetReference().AsReference();
+                //graphReference = sga.GetReference().AsReference();
                 //graphReference = GraphReference.New(sga.GetReference().root, true);
+                graphReference = GraphReference.New(sga, true);
             } 
             else
             {
                 var sga = AssetDatabase.LoadAssetAtPath<StateGraphAsset>(resultItem.assetPath);
                 //graphReference = GraphReference.New(sga.GetReference().root, true);
-                graphReference = sga.GetReference().AsReference();
+                //graphReference = sga.GetReference().AsReference();
+                graphReference = GraphReference.New(sga, true);
             }
             // open the window
             GraphWindow.OpenActive(graphReference);
