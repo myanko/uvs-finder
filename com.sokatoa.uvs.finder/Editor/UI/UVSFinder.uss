@@ -17,7 +17,7 @@
     border-bottom-right-radius: 0;
 }
 
-TemplateContainer{
+TemplateContainer {
     flex-grow: 1;
 }
 
@@ -30,7 +30,8 @@ TemplateContainer{
     flex-direction: row;
     padding-right: 10px;
 }
-#Description Label{
+
+#Description Label {
     padding-left: 0;
     padding-right: 0;
     margin-left: 0;
