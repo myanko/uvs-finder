@@ -192,14 +192,7 @@ namespace Unity.VisualScripting.UVSFinder
                         var name = "";
                         if (subgraph.nest.source == GraphSource.Macro)
                         {
-                            if (!string.IsNullOrEmpty(subgraph.graph?.title))
-                            {
-                                name = $"{subgraph.nest.macro.name} {subgraph.graph.title} [SubGraph]";
-                            }
-                            else
-                            {
-                                name = $"{subgraph.nest.macro.name} [SubGraph]";
-                            }
+                            name = $"{subgraph.nest.macro.name} [SubGraph]";
                         } 
                         else
                         {
@@ -214,14 +207,7 @@ namespace Unity.VisualScripting.UVSFinder
                         var name = "";
                         if (stateUnit.nest.source == GraphSource.Macro)
                         {
-                            if (!string.IsNullOrEmpty(stateUnit.graph?.title))
-                            {
-                                name = $"{stateUnit.nest.macro.name} {stateUnit.graph.title} [State]";
-                            }
-                            else
-                            {
-                                name = $"{stateUnit.nest.macro.name} [State]";
-                            }
+                            name = $"{stateUnit.nest.macro.name} [State]";
                         }
                         else
                         {
