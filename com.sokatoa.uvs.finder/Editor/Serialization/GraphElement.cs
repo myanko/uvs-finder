@@ -74,29 +74,6 @@ namespace Unity.VisualScripting.UVSFinder
 
             return type;
         }*/
-        public static string GetElementNameFromDefaultValues(IGraphElement ge)
-        {
-            if (ge.HasMember("defaultValues"))
-            {
-                var memberInfo = ge.GetType().GetMember("defaultValues");
-                var value = memberInfo.GetValue(0);
-                if (value != null)
-                {
-                    return $"{value.GetType().GetMember("name")} [{ge.GetType().ToString().Split('.').Last()}]";
-                }
-            }
-            if (ge.HasProperty("defaultValues"))
-            {
-                var propertyInfo = ge.GetType().GetProperty("defaultValues");
-                var value = propertyInfo.GetValue(ge, null);
-                if (value != null)
-                {
-                    return $"{value.GetType().GetMember("name")} [{ge.GetType().ToString().Split('.').Last()}]";
-                }
-            }
-
-            return "";
-        }
 
         public static string GetNameFromSpecificTypes(IGraphElement ge)
         {
@@ -107,7 +84,13 @@ namespace Unity.VisualScripting.UVSFinder
                 case "Unity.VisualScripting.SetMember":
                     return $"{((SetMember)ge).member.targetTypeName.Split('.').Last()} Set {((SetMember)ge).member.name}";
                 case "Unity.VisualScripting.InvokeMember":
-                    return $"{((InvokeMember)ge).member.targetTypeName.Split('.').Last()} {((InvokeMember)ge).member.name}";
+                    {
+                        if (((InvokeMember)ge).member.name == ".ctor")
+                        {
+                            return $"{((InvokeMember)ge).member.targetTypeName.Split('.').Last()} Create";
+                        }
+                        return $"{((InvokeMember)ge).member.targetTypeName.Split('.').Last()} {((InvokeMember)ge).member.name}";
+                    }
                 case "Unity.VisualScripting.GetVariable":
                 case "Bolt.GetVariable":
                     return $"{((GetVariable)ge).defaultValues["name"]} [Get Variable: {((GetVariable)ge).kind}]";
