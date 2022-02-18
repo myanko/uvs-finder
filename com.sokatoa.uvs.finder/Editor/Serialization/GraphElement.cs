@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Unity.VisualScripting.UVSFinder.ExtensionMethods;
 
@@ -13,13 +14,10 @@ namespace Unity.VisualScripting.UVSFinder
         public static string GetElementName(IGraphElement ge)
         {
             var name = "";
-            // trying to generalize this a bit...
-            //name = GetElementNameFromDefaultValues(ge);
+         
+            name = GetNameFromSpecificTypes(ge);
             
-            if (name == "")
-            {
-                name = GetNameFromSpecificTypes(ge);
-            }
+
 
             /*if (member != null)
             {
@@ -128,10 +126,10 @@ namespace Unity.VisualScripting.UVSFinder
                     return $"{((TriggerCustomEvent)ge).defaultValues["name"]} [TriggerCustomEvent]";
                 case "Unity.VisualScripting.Literal":
                 case "Bolt.Literal":
-                    return $"{((Literal)ge).type.ToString().Split('.').Last()} {((Literal)ge).value} [Literal]";
+                    return $"{((Literal)ge).type.ToString().Split('.').Last()} \"{((Literal)ge).value}\" [Literal]";
                 case "Unity.VisualScripting.GraphGroup":
                 case "Bolt.GraphGroup":
-                    return $"{((GraphGroup)ge).label} [Group]";
+                    return $"\"{((GraphGroup)ge).label}\" [Group]";
                 case "Unity.VisualScripting.FlowState":
                     {
                         var flow = (FlowState)ge;
@@ -228,11 +226,21 @@ namespace Unity.VisualScripting.UVSFinder
                         }
                     }*/
                 default:
-                    return ge.GetType().ToString();//.Split('.').Last();
+                    {
+                        var name = BoltFlowNameUtility.UnitTitle(ge.GetType(), false, true);
+                        if (name == "")
+                        {
+                            name = BoltFlowNameUtility.UnitTitle(ge.GetType(), true, true);
+                        }
+                        if (name == "")
+                        {
+                            return ge.GetType().ToString();//.Split('.').Last();
+                        }
+                        return name;
+                    }
             }
         }
     }
-    
 }
 
 namespace Unity.VisualScripting.UVSFinder.ExtensionMethods

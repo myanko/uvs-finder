@@ -11,7 +11,7 @@ namespace Unity.VisualScripting.UVSFinder
         // finds all the results nodes from the current script opened
         // sets the searchItems with the nodes found as a GraphItem
         public static List<ResultItem> PerformSearchInCurrentScript(string keyword)
-        {
+        { 
             var graphWindow = EditorWindow.GetWindow<GraphWindow>();
 
             // no graph opened to search in...
@@ -80,15 +80,15 @@ namespace Unity.VisualScripting.UVSFinder
 
         private static ResultItemList FindNodesFromScriptGraphAssetGuid(string guid, string keyword, ResultItemList searchItems)
         {
-            var searchTermLowerInvariant = keyword.ToLowerInvariant().Replace(" ", "").Replace(".", "");
+            var searchTermLowerInvariant = CleanString(keyword);
             var assetPath = AssetDatabase.GUIDToAssetPath(guid);
             var sga = AssetDatabase.LoadAssetAtPath<ScriptGraphAsset>(assetPath);
             if (sga?.graph?.elements.Count() > 0)
             {
                 foreach (var a in sga.graph.elements)
                 {
-                    var embedElementNameLowerInvariant = GraphElement.GetElementName(a).ToLowerInvariant();
-                    if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant))
+                    var embedElementNameLowerInvariant = CleanString(GraphElement.GetElementName(a));
+                    if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant) && !IsIgnoreElement(a))
                     {
                         searchItems.AddDistinct(new ResultItem()
                         {
@@ -109,7 +109,7 @@ namespace Unity.VisualScripting.UVSFinder
 
         private static ResultItemList FindNodesFromStateGraphAssetGuid(string guid, string keyword, ResultItemList searchItems)
         {
-            var searchTermLowerInvariant = keyword.ToLowerInvariant().Replace(" ", "").Replace(".", "");
+            var searchTermLowerInvariant = CleanString(keyword);
             var assetPath = AssetDatabase.GUIDToAssetPath(guid);
             var sga = AssetDatabase.LoadAssetAtPath<StateGraphAsset>(assetPath);
             // pick up the first layer's elements
@@ -126,8 +126,8 @@ namespace Unity.VisualScripting.UVSFinder
         {
             foreach (var a in graph.elements)
             {
-                var embedElementNameLowerInvariant = GraphElement.GetElementName(a).ToLowerInvariant();
-                if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant))
+                var embedElementNameLowerInvariant = CleanString(GraphElement.GetElementName(a));
+                if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant) && !IsIgnoreElement(a))
                 {
                     searchItems.AddDistinct(new ResultItem()
                     {
@@ -170,8 +170,8 @@ namespace Unity.VisualScripting.UVSFinder
                     }
                     else
                     {
-                        var embedElementNameLowerInvariant = GraphElement.GetElementName(e).ToLowerInvariant();
-                        if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant))
+                        var embedElementNameLowerInvariant = CleanString(GraphElement.GetElementName(e));
+                        if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant) && !IsIgnoreElement(e))
                         {
                             //Debug.Log($"Adding {GraphElement.GetElementName(e)} with state {state.graph.title} {state.guid} {((INesterState)state).childGraph?.title}");
                             searchItems.AddDistinct(new ResultItem()
@@ -223,8 +223,8 @@ namespace Unity.VisualScripting.UVSFinder
                             }
                             else
                             {
-                                var embedElementNameLowerInvariant = GraphElement.GetElementName(e).ToLowerInvariant();
-                                if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant))
+                                var embedElementNameLowerInvariant = CleanString(GraphElement.GetElementName(e));
+                                if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant) && !IsIgnoreElement(e))
                                 {
                                     //Debug.Log($"Adding {GraphElement.GetElementName(e)} with state {state.graph.title} {state.guid} {((INesterState)state).childGraph?.title}");
                                     searchItems.AddDistinct(new ResultItem()
@@ -244,7 +244,7 @@ namespace Unity.VisualScripting.UVSFinder
             return searchItems;
         }
 
-        private static bool IsIgnoreElement(GraphElement graphElement)
+        private static bool IsIgnoreElement(IGraphElement graphElement)
         {
             switch (graphElement.GetType().ToString())
             {
@@ -256,6 +256,11 @@ namespace Unity.VisualScripting.UVSFinder
             }
 
             return false;
+        }
+
+        private static string CleanString(string keyword)
+        {
+            return keyword.ToLowerInvariant().Replace(" ", "").Replace(".", "");
         }
     }
 
