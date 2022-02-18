@@ -5,6 +5,9 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using System.Linq;
 using UnityObject = UnityEngine.Object;
+#if !SUBGRAPH_RENAME
+using SubgraphUnit = Unity.VisualScripting.SuperUnit;
+#endif
 
 namespace Unity.VisualScripting.UVSFinder
 {

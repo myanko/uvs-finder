@@ -24,6 +24,11 @@
             "name": "com.unity.visualscripting",
             "expression": "1.6.1",
             "define": "VISUAL_SCRIPTING_RENAME"
+        },
+        {
+            "name": "com.unity.visualscripting",
+            "expression": "1.7.0",
+            "define": "SUBGRAPH_RENAME"
         }
     ],
     "noEngineReferences": false
