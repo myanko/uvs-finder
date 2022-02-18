@@ -245,7 +245,11 @@ namespace Unity.VisualScripting.UVSFinder
         private void DisplayResultsItems()
         {
             resultListview.itemsSource = searchItems[selectedTab];
+#if UNITY_2021_2_OR_NEWER
+            resultListview.Rebuild();
+#else
             resultListview.Refresh();
+#endif
         }
 
         private void SelectElement(ResultItem resultItem)
