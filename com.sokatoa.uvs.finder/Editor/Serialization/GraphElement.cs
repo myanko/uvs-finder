@@ -166,7 +166,7 @@ namespace Unity.VisualScripting.UVSFinder
                         }
                         return name;
                     }
-#if VISUAL_SCRIPTING_RENAME
+#if SUBGRAPH_RENAME
                 case "Unity.VisualScripting.SubgraphUnit":
                     {
                         var subgraph = (SubgraphUnit)ge;
