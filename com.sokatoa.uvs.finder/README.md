@@ -18,7 +18,7 @@ This package adds searching functionalities to Visual Scripting, by letting you 
 
 # **Dependencies**
 
-- **com.unity.visualscripting:** 1.5.x, 1.6.x, 1.7.x
+- **com.unity.visualscripting:** 1.5.x, 1.6.x, 1.7.x, 1.8.x
 
 
 # **Supported OS:**
@@ -35,12 +35,7 @@ This package adds searching functionalities to Visual Scripting, by letting you 
 
 # **Known Issues:**
 
-- Search in prefabs and scenes is not done.
-- 1.5.x integration is not completed.
-  - List items may break.
-  - Not all titles are searchable as it work by types. (Ex: To find **Add** node search for **generic sum**)
-- Can search only at one level of deepness in subgraphs.
-- Some Icons make the list super slow. (Add operator, multiply operator,...)
+- https://github.com/myanko/uvs-finder/issues
 
 
 
@@ -72,6 +67,12 @@ After opening the node finding tool, simply type in the search field and press E
 
 
 
+## How to Update
+
+Delete the folder com.sokatoa.uvs.finder and import the node finder from the asset store.
+
+
+
 ## Find special types of nodes
 
 Some Usefull Keywords
@@ -83,3 +84,4 @@ Some Usefull Keywords
 - Subgraph
 - State
 - Group
+- Deprecated
