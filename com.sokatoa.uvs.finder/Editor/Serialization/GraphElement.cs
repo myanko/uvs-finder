@@ -181,6 +181,21 @@ namespace Unity.VisualScripting.UVSFinder
                         }
                         return name;
                     }
+#else
+                case "Unity.VisualScripting.SuperUnit":
+                    {
+                        var subgraph = (SuperUnit)ge;
+                        var name = "";
+                        if (subgraph.nest.source == GraphSource.Macro)
+                        {
+                            name = $"{subgraph.nest.macro.name} [SuperUnit]";
+                        }
+                        else
+                        {
+                            name = $"{subgraph.nest.embed.title} [SuperUnit Embed]";
+                        }
+                        return name;
+                    }
 #endif
                 case "Unity.VisualScripting.StateUnit":
                     {
