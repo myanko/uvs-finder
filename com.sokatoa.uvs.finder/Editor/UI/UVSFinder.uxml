@@ -13,7 +13,7 @@
             <ui:Button text="Project" display-tooltip-when-elided="true" name="ProjectGraphButton" class="tab" style="display: none;" />
         </ui:VisualElement>
         <ui:VisualElement style="flex-grow: 1;">
-            <ui:ListView focusable="true" show-alternating-row-backgrounds="All" horizontal-scrolling="true" name="results-list" selection-type="Single" reorderable="false" usage-hints="DynamicTransform" text="TMP Focus In Graph" value="false" show-bound-collection-size="true" show-border="true" style="justify-content: flex-start; align-items: stretch; flex-grow: 1; flex-shrink: 0; min-width: 128px; min-height: 250px; height: 297.4px; margin-left: 0; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0;" />
+            <ui:ListView focusable="true" show-alternating-row-backgrounds="All" horizontal-scrolling="true" name="results-list" selection-type="Single" reorderable="false" usage-hints="DynamicTransform" text="TMP Focus In Graph" value="false" show-bound-collection-size="true" show-border="true" style="justify-content: flex-start; align-items: stretch; flex-grow: 1; flex-shrink: 0; min-width: 128px; height: auto; margin-left: 0; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0;" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

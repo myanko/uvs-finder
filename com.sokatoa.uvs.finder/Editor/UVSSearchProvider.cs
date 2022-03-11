@@ -68,7 +68,6 @@ namespace Unity.VisualScripting.UVSFinder
                 {
                     searchItems = FindNodesFromScriptGraphAssetGuid(guid, keyword, searchItems);
                 }
-                // I can't seem to distinguish a stategraph from a scriptgraph from the json data
                 guids = AssetDatabase.FindAssets("t:StateGraphAsset");
                 //Debug.Log($"found {guids.Length} state graph assets");
                 foreach (string guid in guids)
