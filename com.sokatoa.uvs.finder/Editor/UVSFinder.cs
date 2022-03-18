@@ -86,6 +86,7 @@ namespace Unity.VisualScripting.UVSFinder
             // will recycle elements created by the "makeItem"
             // and invoke the "bindItem" callback to associate
             // the element with the matching data item (specified as an index in the list)
+            // consider it as dirty when modifying it
             Action<VisualElement, int> bindItem = (e, i) =>
             {
                 //TODO: Case Current/All/FindReplace/Other
@@ -98,12 +99,15 @@ namespace Unity.VisualScripting.UVSFinder
                     typeIcon.style.backgroundImage = sb;
                 }
                 var description = e.Q<VisualElement>("Description");
-                if (!description.ClassListContains("highlightdone"))
+                if (description.ClassListContains("highlightdone"))
                 {
-                    //process only once
-                    TextHighlighter.HighlightTextBasedOnQuery(description, searchItems[selectedTab][i].itemName, searchField.text);
-                    description.AddToClassList("highlightdone");
+                    // clean up the text and redo it
+                    description.hierarchy.Clear();
                 }
+
+                TextHighlighter.HighlightTextBasedOnQuery(description, searchItems[selectedTab][i].itemName, searchField.text);
+                description.AddToClassList("highlightdone");
+                
 
                 var filePath = e.Q<Label>("FilePath");
                 filePath.text = searchItems[selectedTab][i].assetPath;
