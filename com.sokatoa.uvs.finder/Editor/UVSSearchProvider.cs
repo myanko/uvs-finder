@@ -32,7 +32,7 @@ namespace Unity.VisualScripting.UVSFinder
                 var assetType = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
                 var guid = AssetDatabase.GUIDFromAssetPath(assetPath);
                 ResultItemList itemsFound = new ResultItemList();
-                if (assetType != typeof(StateGraphAsset))
+                if (assetType == typeof(ScriptGraphAsset))
                 {
                     assetType = typeof(ScriptGraphAsset);
                     itemsFound = FindNodesFromScriptGraphAssetGuid(guid.ToString(), keyword, itemsFound);
@@ -40,13 +40,23 @@ namespace Unity.VisualScripting.UVSFinder
                     {
                         return itemsFound.list;
                     }
+                } else if(assetType == typeof(StateGraphAsset))
+                {
+                    itemsFound = FindNodesFromStateGraphAssetGuid(guid.ToString(), keyword, itemsFound);
+                    if (itemsFound != null)
+                    {
+                        return itemsFound.list;
+                    }
+                } else if(assetType == typeof(GameObject))
+                {
+                    itemsFound = GetElementsFromScriptMachine(graphWindow.reference.machine as ScriptMachine, assetPath, keyword, itemsFound);
+                    if (itemsFound != null)
+                    {
+                        return itemsFound.list;
+                    }
                 }
 
-                itemsFound = FindNodesFromStateGraphAssetGuid(guid.ToString(), keyword, itemsFound);
-                if (itemsFound != null)
-                {
-                    return itemsFound.list;
-                }
+                
                 
             } catch (Exception e)
             {
