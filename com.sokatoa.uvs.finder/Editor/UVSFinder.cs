@@ -7,6 +7,7 @@ using System.Linq;
 using UnityObject = UnityEngine.Object;
 #if !SUBGRAPH_RENAME
 using SubgraphUnit = Unity.VisualScripting.SuperUnit;
+using ScriptMachine = Unity.VisualScripting.FlowMachine;
 #endif
 
 namespace Unity.VisualScripting.UVSFinder
@@ -268,10 +269,10 @@ namespace Unity.VisualScripting.UVSFinder
                 OpenWindow(resultItem);
             }
 
-            if (resultItem.type == typeof(ScriptGraphAsset)) //script graph
+            if (resultItem.type == typeof(ScriptGraphAsset) || resultItem.type == typeof(ScriptMachine)) //script graph
             {
                 SelectElementInScriptGraph(resultItem);
-            }
+            } 
             else // state graph
             {
                 SelectElementInStateGraph(resultItem);
@@ -453,7 +454,12 @@ namespace Unity.VisualScripting.UVSFinder
         {
             //Debug.Log($"Focusing in asset {graphItem.assetPath}, on {graphItem.itemName}");
             GraphReference graphReference;
-            if (resultItem.type == typeof(ScriptGraphAsset))
+            if(resultItem.graphReference != null)
+            {
+                GraphWindow.OpenActive(resultItem.graphReference);
+                return;
+            }
+            else if (resultItem.type == typeof(ScriptGraphAsset))
             {
                 var sga = AssetDatabase.LoadAssetAtPath<ScriptGraphAsset>(resultItem.assetPath);
                 graphReference = GraphReference.New(sga, true);

@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "com.sokatoa.uvs.finder": "file:../../com.sokatoa.uvs.finder",
+    "com.unity.ide.visualstudio": "2.0.14",
     "com.unity.visualscripting": "1.5.2",
     "com.unity.modules.ai": "1.0.0",
     "com.unity.modules.androidjni": "1.0.0",

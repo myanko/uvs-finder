@@ -3,9 +3,11 @@ using System;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using System.IO;
 
 #if !SUBGRAPH_RENAME
 using SubgraphUnit = Unity.VisualScripting.SuperUnit;
+using ScriptMachine = Unity.VisualScripting.FlowMachine;
 #endif
 
 namespace Unity.VisualScripting.UVSFinder
@@ -74,6 +76,33 @@ namespace Unity.VisualScripting.UVSFinder
                 {
                     searchItems = FindNodesFromStateGraphAssetGuid(guid, keyword, searchItems);
                 }
+
+                var validExtensions = new HashSet<string>() { ".prefab" }; // ".unity"
+                var paths = AssetDatabase.GetAllAssetPaths().Select(path => Path.Combine(Paths.project, path)).Where(File.Exists).Where(f => validExtensions.Contains(Path.GetExtension(f)));
+                var searchTermLowerInvariant = CleanString(keyword);
+                foreach (var p in paths)
+                {
+                    UnityEngine.Object o = AssetDatabase.LoadMainAssetAtPath(p.Remove(0, Paths.project.Length+1));
+                    if(o != null)
+                    {
+                        try
+                        {
+                            GameObject go = (GameObject)o;
+                            var scriptMachine = go.GetComponent<ScriptMachine>();
+                            if (scriptMachine?.nest?.source == GraphSource.Embed)
+                                searchItems = GetElementsFromScriptMachine(scriptMachine, p, searchTermLowerInvariant, searchItems);
+
+                            var stateMachine = go.GetComponent<StateMachine>();
+                            if (stateMachine?.nest?.source == GraphSource.Macro)
+                                searchItems = GetElementsFromStateGraph(stateMachine.graph, p, searchTermLowerInvariant, searchItems);
+                        } catch (Exception e)
+                        {
+                            Debug.Log($"Error while loading prefabs to search from them in path {p} {e.Message} {e.StackTrace}");
+                        }
+                    }
+                }
+
+
             } catch(Exception e){
                 Debug.Log($"encountered an error while searching in all scripts {e.Message} {e.StackTrace}");
             }
@@ -122,6 +151,30 @@ namespace Unity.VisualScripting.UVSFinder
                 GetElementsFromStateGraph(sga.graph, assetPath, searchTermLowerInvariant, searchItems);
             }
             
+            return searchItems;
+        }
+
+        private static ResultItemList GetElementsFromScriptMachine(ScriptMachine scriptMachine, string assetPath, string searchTermLowerInvariant, ResultItemList searchItems)
+        {
+            if(scriptMachine.IsPrefabDefinition() || scriptMachine.IsPrefabInstance())
+            {
+                foreach (var a in scriptMachine.graph.elements)
+                {
+                    var embedElementNameLowerInvariant = CleanString(GraphElement.GetElementName(a));
+                    if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant) && !IsIgnoreElement(a))
+                    {
+                        searchItems.AddDistinct(new ResultItem()
+                        {
+                            itemName = $"{GraphElement.GetElementName(a)}",
+                            assetPath = assetPath,
+                            graphReference = scriptMachine.GetReference().AsReference(),
+                            guid = a.guid.ToString(),
+                            graphElement = a,
+                            type = typeof(ScriptMachine)
+                        });
+                    }
+                }
+            }
             return searchItems;
         }
 
@@ -192,7 +245,7 @@ namespace Unity.VisualScripting.UVSFinder
 
             return searchItems;
         }
-            private static ResultItemList GetElementsFromStateGraph(StateGraph graph, string assetPath, string searchTermLowerInvariant, ResultItemList searchItems)
+        private static ResultItemList GetElementsFromStateGraph(StateGraph graph, string assetPath, string searchTermLowerInvariant, ResultItemList searchItems)
         {
             // get this layer's elements
             searchItems = GetElementsFromIGraph(graph, assetPath, searchTermLowerInvariant, searchItems);
@@ -296,6 +349,7 @@ namespace Unity.VisualScripting.UVSFinder
         public string assetPath;
         public Type type; //The type of the node
         public IGraphParentElement graphParentElement;
+        public GraphReference graphReference;
         public string content; //the name of the event is in content
     }
 }
