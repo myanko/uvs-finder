@@ -1,0 +1,12 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:ScrollView scroll-deceleration-rate="0,135" elasticity="0,1">
+        <ui:Foldout text="Filter Node type" name="nodeTypes">
+            <ui:Toggle label="Title" value="true" tooltip="Search in the header of the node at the title level." />
+            <ui:Toggle label="Summary" value="true" />
+            <ui:Toggle label="Subtitle" value="true" tooltip="Search in the header of the node at the subtitle level." />
+            <ui:Toggle label="Port Name" value="false" tooltip="Search in node ports name. " />
+            <ui:Toggle label="Port Value" value="false" tooltip="Search in ports with certain value. Example, you can search in ports with certain text or with certain  numerical values." />
+            <ui:Toggle label="Port Type" value="false" tooltip="Search for port type. Example, type string to find all nodes with port of type string." />
+        </ui:Foldout>
+    </ui:ScrollView>
+</ui:UXML>

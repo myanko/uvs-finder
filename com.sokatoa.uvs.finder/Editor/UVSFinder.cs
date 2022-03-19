@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEditor.UIElements;
 using System.Linq;
 using UnityObject = UnityEngine.Object;
 #if !SUBGRAPH_RENAME
@@ -25,7 +26,7 @@ namespace Unity.VisualScripting.UVSFinder
 
         public int searchCount = 0;
         public List<string> nodeList = new List<string>();
-        public TextField searchField;
+        public ToolbarPopupSearchField searchField;
         private enum UVSFinderTabs {
             current,
             all,
@@ -42,6 +43,14 @@ namespace Unity.VisualScripting.UVSFinder
         private Button tabAllGraphs;
         private Button tabHierarchyGraphButton;
         private UVSFinderTabs selectedTab;
+
+
+        bool m_findInTitle;
+        bool m_findInSumary;
+        bool m_findInSubtitle;
+        bool m_findInPortName;
+        bool m_findInPortValue;
+        bool m_findInPortType;
 
         public void OnEnable()
         {
@@ -63,7 +72,45 @@ namespace Unity.VisualScripting.UVSFinder
             root.RegisterCallback<KeyUpEvent>(OnKeyUp, TrickleDown.TrickleDown);
 
             // Get a reference to the Button from UXML and assign it its action.
-            searchField = root.Q<TextField>("search-field");
+            searchField = root.Q<ToolbarPopupSearchField>("ToolbarPopupSearchField");
+            searchField.RegisterValueChangedCallback(OnSearchTextChanged);
+            searchField.menu.AppendAction(
+                "Node Title",
+                a => m_findInTitle = !m_findInTitle,
+                a => m_findInTitle ?
+                DropdownMenuAction.Status.Checked :
+                DropdownMenuAction.Status.Normal);
+            searchField.menu.AppendAction(
+                "Node Sumary",
+                a => m_findInSumary = !m_findInSumary,
+                a => m_findInSumary ?
+                DropdownMenuAction.Status.Checked :
+                DropdownMenuAction.Status.Normal);
+            searchField.menu.AppendAction(
+                "Node Subtitle",
+                a => m_findInSubtitle = !m_findInSubtitle,
+                a => m_findInSubtitle ?
+                DropdownMenuAction.Status.Checked :
+                DropdownMenuAction.Status.Normal);
+            searchField.menu.AppendAction(
+                "Node Port Name",
+                a => m_findInPortName = !m_findInPortName,
+                a => m_findInPortName ?
+                DropdownMenuAction.Status.Checked :
+                DropdownMenuAction.Status.Normal);
+            searchField.menu.AppendAction(
+                "Node Port Value",
+                a => m_findInPortValue = !m_findInPortValue,
+                a => m_findInPortValue ?
+                DropdownMenuAction.Status.Checked :
+                DropdownMenuAction.Status.Normal);
+            searchField.menu.AppendAction(
+                "Node Port Type",
+                a => m_findInPortType = !m_findInPortType,
+                a => m_findInPortType ?
+                DropdownMenuAction.Status.Checked :
+                DropdownMenuAction.Status.Normal);
+
             var nodePathLabel = root.Q<Label>("node-path-label");
             var searchOptions = root.Q<Button>("searchOptions");
             //listItem
@@ -101,7 +148,7 @@ namespace Unity.VisualScripting.UVSFinder
                 if (!description.ClassListContains("highlightdone"))
                 {
                     //process only once
-                    TextHighlighter.HighlightTextBasedOnQuery(description, searchItems[selectedTab][i].itemName, searchField.text);
+                    TextHighlighter.HighlightTextBasedOnQuery(description, searchItems[selectedTab][i].itemName, searchField.value);
                     description.AddToClassList("highlightdone");
                 }
 
@@ -126,6 +173,8 @@ namespace Unity.VisualScripting.UVSFinder
                     SettingsService.OpenUserPreferences("Preferences/Visual Scripting/UVS Finder");
                 };
             }
+            GetWindow<UVSFinder>();
+            searchField.Focus();
         }
 
         private Texture2D GetIcon(ResultItem resultItem)
@@ -152,8 +201,8 @@ namespace Unity.VisualScripting.UVSFinder
 
         private void PerformSearch()
         {
-            searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.text);
-            searchItems[UVSFinderTabs.all] = UVSSearchProvider.PerformSearchAll(searchField.text);
+            searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value);
+            searchItems[UVSFinderTabs.all] = UVSSearchProvider.PerformSearchAll(searchField.value);
         }
 
         private void setWindowTitle()
@@ -221,10 +270,14 @@ namespace Unity.VisualScripting.UVSFinder
             // then we need to redo the "current graph" search
             if (selectedTab == UVSFinderTabs.all)
             {
-                searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.text);
+                searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value);
                 setTabsResults();
             }
-            GetWindow<UVSFinder>().Focus();
+            GetWindow<UVSFinder>();
+        }
+        void OnSearchTextChanged(ChangeEvent<string> evt)
+        {
+            OnSearchAction();
         }
 
         private void OnSearchAction()
@@ -235,7 +288,9 @@ namespace Unity.VisualScripting.UVSFinder
             setWindowTitle();
             setTabsResults();
             DisplayResultsItems();
-            searchField.ElementAt(0).Focus();
+            GetWindow<UVSFinder>();
+            searchField.Focus();
+
         }
 
         private void ResetResultItems()
