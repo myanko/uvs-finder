@@ -74,12 +74,13 @@ namespace Unity.VisualScripting.UVSFinder
             var scene = SceneManager.GetActiveScene();
             foreach (UnityEngine.Object o in GameObject.FindObjectsOfType(typeof(ScriptMachine)))
             {
-                if (!o.IsPrefabDefinition() && !o.IsPrefabInstance())
-                {
-                    var scriptMachine = o.GetComponent<ScriptMachine>();
-                    if (scriptMachine?.nest?.source == GraphSource.Embed)
-                        searchItems = GetElementsFromScriptMachine(scriptMachine, scene.path, searchTermLowerInvariant, searchItems);
-                }
+                var scriptMachine = o.GetComponent<ScriptMachine>();
+                if (scriptMachine?.nest?.source == GraphSource.Embed)
+                    searchItems = GetElementsFromScriptMachine(scriptMachine, scene.path, searchTermLowerInvariant, searchItems);
+
+                var stateMachine = o.GetComponent<StateMachine>();
+                if (stateMachine?.nest?.source == GraphSource.Macro)
+                    searchItems = GetElementsFromStateGraph(stateMachine.graph, scene.path, searchTermLowerInvariant, searchItems);
             }
 
             return searchItems.list;
@@ -111,7 +112,8 @@ namespace Unity.VisualScripting.UVSFinder
                 var paths = AssetDatabase.GetAllAssetPaths().Select(path => Path.Combine(Paths.project, path)).Where(File.Exists).Where(f => Path.GetExtension(f) == ".prefab");
                 foreach (var p in paths)
                 {
-                    UnityEngine.Object o = AssetDatabase.LoadMainAssetAtPath(p.Remove(0, Paths.project.Length+1));
+                    var assetPath = p.Remove(0, Paths.project.Length + 1);
+                    UnityEngine.Object o = AssetDatabase.LoadMainAssetAtPath(assetPath);
                     if(o != null)
                     {
                         try
@@ -119,14 +121,14 @@ namespace Unity.VisualScripting.UVSFinder
                             GameObject go = (GameObject)o;
                             var scriptMachine = go.GetComponent<ScriptMachine>();
                             if (scriptMachine?.nest?.source == GraphSource.Embed)
-                                searchItems = GetElementsFromScriptMachine(scriptMachine, p, searchTermLowerInvariant, searchItems);
+                                searchItems = GetElementsFromScriptMachine(scriptMachine, assetPath, searchTermLowerInvariant, searchItems);
 
                             var stateMachine = go.GetComponent<StateMachine>();
                             if (stateMachine?.nest?.source == GraphSource.Macro)
-                                searchItems = GetElementsFromStateGraph(stateMachine.graph, p, searchTermLowerInvariant, searchItems);
+                                searchItems = GetElementsFromStateGraph(stateMachine.graph, assetPath, searchTermLowerInvariant, searchItems);
                         } catch (Exception e)
                         {
-                            Debug.Log($"Error while loading prefabs to search from them in path {p} {e.Message} {e.StackTrace}");
+                            Debug.Log($"Error while loading prefabs to search from them in path {assetPath} {e.Message} {e.StackTrace}");
                         }
                     }
                 }
@@ -153,7 +155,7 @@ namespace Unity.VisualScripting.UVSFinder
                         {
                             itemName = GraphElement.GetElementName(a),
                             assetPath = assetPath,
-                            guid = a.guid.ToString(),
+                            graphGuid = a.guid.ToString(),
                             graphElement = a,
                             type = typeof(ScriptGraphAsset)
                         });
@@ -193,9 +195,10 @@ namespace Unity.VisualScripting.UVSFinder
                         itemName = $"{GraphElement.GetElementName(a)}",
                         assetPath = assetPath,
                         graphReference = scriptMachine.GetReference().AsReference(),
-                        guid = a.guid.ToString(),
+                        graphGuid = a.guid.ToString(),
                         graphElement = a,
-                        type = typeof(ScriptMachine)
+                        type = typeof(ScriptMachine),
+                        gameObject = scriptMachine.gameObject
                     });
                 }
             }
@@ -214,7 +217,7 @@ namespace Unity.VisualScripting.UVSFinder
                     {
                         itemName = $"{GraphElement.GetElementName(a)}",
                         assetPath = assetPath,
-                        guid = a.guid.ToString(),
+                        graphGuid = a.guid.ToString(),
                         graphElement = a,
                         type = typeof(StateGraphAsset)
                     });
@@ -259,7 +262,7 @@ namespace Unity.VisualScripting.UVSFinder
                             {
                                 itemName = $"{GraphElement.GetElementName(e)}",
                                 assetPath = assetPath,
-                                guid = e.guid.ToString(),
+                                graphGuid = e.guid.ToString(),
                                 graphElement = e,
                                 type = typeof(StateGraphAsset)
                             });
@@ -312,7 +315,7 @@ namespace Unity.VisualScripting.UVSFinder
                                     {
                                         itemName = $"{GraphElement.GetElementName(e)}",
                                         assetPath = assetPath,
-                                        guid = e.guid.ToString(),
+                                        graphGuid = e.guid.ToString(),
                                         graphElement = e,
                                         type = typeof(StateGraphAsset)
                                     });
@@ -351,12 +354,14 @@ namespace Unity.VisualScripting.UVSFinder
     public class ResultItemList
     {
         public List<ResultItem> list = new List<ResultItem>();
+        // Graphs can contain the same guids (especially if you duplicate things
+        // so we need the asset path too to discriminate
         public void AddDistinct(ResultItem item)
         {
             bool isInList = false;
             foreach (var i in list)
             {
-                if (i.guid == item.guid)
+                if (i.graphGuid == item.graphGuid && i.assetPath == item.assetPath)
                 {
                     isInList = true;
                 }
@@ -368,13 +373,12 @@ namespace Unity.VisualScripting.UVSFinder
         }
     }
     public class ResultItem{
-        public string guid;
+        public string graphGuid; // Visual scripting GUID (not file guid)
         public string itemName;
         public IGraphElement graphElement;
         public string assetPath;
         public Type type; //The type of the node
-        public IGraphParentElement graphParentElement;
         public GraphReference graphReference;
-        public string content; //the name of the event is in content
+        public GameObject gameObject;
     }
 }

@@ -222,7 +222,8 @@ namespace Unity.VisualScripting.UVSFinder
                 GraphWindow.OpenTab();
             }
 
-            SelectElement((ResultItem)resultListview.selectedItem);
+            var resultItem = (ResultItem)resultListview.selectedItem;
+            SelectElement(resultItem);
 
             // if we click on an item in the "all graphs" result list,
             // then we need to redo the "current graph" search
@@ -232,6 +233,11 @@ namespace Unity.VisualScripting.UVSFinder
                 setTabsResults();
             }
             GetWindow<UVSFinder>().Focus();
+
+            if (resultItem.gameObject != null)
+            {
+                EditorGUIUtility.PingObject(resultItem.gameObject);
+            }
         }
 
         private void OnSearchAction()
@@ -324,7 +330,7 @@ namespace Unity.VisualScripting.UVSFinder
         // find the element, but I also need all the graph references 
         private SearchInfo FindElementsInStateGraph(ResultItem resultItem, GraphWindow graphWindow, StateGraph stateGraph)
         {
-            var st = (INesterState)stateGraph.states.FirstOrDefault(s => s.guid.ToString() == resultItem.guid);
+            var st = (INesterState)stateGraph.states.FirstOrDefault(s => s.guid.ToString() == resultItem.graphGuid);
             if (st != null)
             {
                 // it is one of the states in the first layer. Return the first layer
@@ -336,7 +342,7 @@ namespace Unity.VisualScripting.UVSFinder
                 {
                     foreach (var e in s.childGraph.elements)
                     {
-                        if (e.guid.ToString() == resultItem.guid)
+                        if (e.guid.ToString() == resultItem.graphGuid)
                         {
                             graphWindow.reference = graphWindow.reference.ChildReference(s, false);
                             return new SearchInfo() { element = e, found = true };
@@ -368,7 +374,7 @@ namespace Unity.VisualScripting.UVSFinder
         {
             foreach (var ge in stateUnit.graph.elements)
             {
-                if (ge.guid.ToString() == resultItem.guid)
+                if (ge.guid.ToString() == resultItem.graphGuid)
                 {
                     return new SearchInfo() { element = ge, found = true };
                 }
@@ -379,7 +385,7 @@ namespace Unity.VisualScripting.UVSFinder
                 // root of the state unit
                 foreach (var ne in stateUnit.nest.embed.elements)
                 {
-                    if (ne.guid.ToString() == resultItem.guid)
+                    if (ne.guid.ToString() == resultItem.graphGuid)
                     {
                         graphWindow.reference = graphWindow.reference.ChildReference(stateUnit, true);// go into furet 2
                         return new SearchInfo() {element = ne, found = true };
@@ -391,7 +397,7 @@ namespace Unity.VisualScripting.UVSFinder
                 {
                     foreach (var se in es.childGraph.elements)
                     {
-                        if (se.guid.ToString() == resultItem.guid)
+                        if (se.guid.ToString() == resultItem.graphGuid)
                         {
                             graphWindow.reference = graphWindow.reference.ChildReference(stateUnit, true);// go into furet 2
                             graphWindow.reference = graphWindow.reference.ChildReference(es, true);// go into furet 3
@@ -426,7 +432,7 @@ namespace Unity.VisualScripting.UVSFinder
         {
             foreach (var e in subgraphUnit.nest.graph.elements)
             {
-                if (e.guid.ToString() == resultItem.guid)
+                if (e.guid.ToString() == resultItem.graphGuid)
                 {
                     graphWindow.reference = graphWindow.reference.ChildReference(subgraphUnit, false);
                     return new SearchInfo() { element = e, found = true };
