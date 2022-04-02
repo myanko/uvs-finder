@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using System.IO;
+using UnityEngine.SceneManagement;
 
 #if !SUBGRAPH_RENAME
 using SubgraphUnit = Unity.VisualScripting.SuperUnit;
@@ -66,6 +67,24 @@ namespace Unity.VisualScripting.UVSFinder
             return new List<ResultItem>();
         }
 
+        public static List<ResultItem> PerformSearchInHierarchy(string keyword)
+        {
+            var searchItems = new ResultItemList();
+            var searchTermLowerInvariant = CleanString(keyword);
+            var scene = SceneManager.GetActiveScene();
+            foreach (UnityEngine.Object o in GameObject.FindObjectsOfType(typeof(ScriptMachine)))
+            {
+                if (!o.IsPrefabDefinition() && !o.IsPrefabInstance())
+                {
+                    var scriptMachine = o.GetComponent<ScriptMachine>();
+                    if (scriptMachine?.nest?.source == GraphSource.Embed)
+                        searchItems = GetElementsFromScriptMachine(scriptMachine, scene.path, searchTermLowerInvariant, searchItems);
+                }
+            }
+
+            return searchItems.list;
+        }
+
         // finds all the results nodes from the asset files
         // TODO:
         // - search for embedded scripts in scenes
@@ -87,9 +106,9 @@ namespace Unity.VisualScripting.UVSFinder
                     searchItems = FindNodesFromStateGraphAssetGuid(guid, keyword, searchItems);
                 }
 
-                var validExtensions = new HashSet<string>() { ".prefab" }; // ".unity"
-                var paths = AssetDatabase.GetAllAssetPaths().Select(path => Path.Combine(Paths.project, path)).Where(File.Exists).Where(f => validExtensions.Contains(Path.GetExtension(f)));
+                // Search prefabs
                 var searchTermLowerInvariant = CleanString(keyword);
+                var paths = AssetDatabase.GetAllAssetPaths().Select(path => Path.Combine(Paths.project, path)).Where(File.Exists).Where(f => Path.GetExtension(f) == ".prefab");
                 foreach (var p in paths)
                 {
                     UnityEngine.Object o = AssetDatabase.LoadMainAssetAtPath(p.Remove(0, Paths.project.Length+1));
@@ -111,8 +130,6 @@ namespace Unity.VisualScripting.UVSFinder
                         }
                     }
                 }
-
-
             } catch(Exception e){
                 Debug.Log($"encountered an error while searching in all scripts {e.Message} {e.StackTrace}");
             }
@@ -166,25 +183,23 @@ namespace Unity.VisualScripting.UVSFinder
 
         private static ResultItemList GetElementsFromScriptMachine(ScriptMachine scriptMachine, string assetPath, string searchTermLowerInvariant, ResultItemList searchItems)
         {
-            if(scriptMachine.IsPrefabDefinition() || scriptMachine.IsPrefabInstance())
+            foreach (var a in scriptMachine.graph.elements)
             {
-                foreach (var a in scriptMachine.graph.elements)
+                var embedElementNameLowerInvariant = CleanString(GraphElement.GetElementName(a));
+                if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant) && !IsIgnoreElement(a))
                 {
-                    var embedElementNameLowerInvariant = CleanString(GraphElement.GetElementName(a));
-                    if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant) && !IsIgnoreElement(a))
+                    searchItems.AddDistinct(new ResultItem()
                     {
-                        searchItems.AddDistinct(new ResultItem()
-                        {
-                            itemName = $"{GraphElement.GetElementName(a)}",
-                            assetPath = assetPath,
-                            graphReference = scriptMachine.GetReference().AsReference(),
-                            guid = a.guid.ToString(),
-                            graphElement = a,
-                            type = typeof(ScriptMachine)
-                        });
-                    }
+                        itemName = $"{GraphElement.GetElementName(a)}",
+                        assetPath = assetPath,
+                        graphReference = scriptMachine.GetReference().AsReference(),
+                        guid = a.guid.ToString(),
+                        graphElement = a,
+                        type = typeof(ScriptMachine)
+                    });
                 }
             }
+            
             return searchItems;
         }
 

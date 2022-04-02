@@ -159,6 +159,7 @@ namespace Unity.VisualScripting.UVSFinder
         {
             searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.text);
             searchItems[UVSFinderTabs.all] = UVSSearchProvider.PerformSearchAll(searchField.text);
+            searchItems[UVSFinderTabs.hierarchy] = UVSSearchProvider.PerformSearchInHierarchy(searchField.text);
         }
 
         private void setWindowTitle()
@@ -171,6 +172,7 @@ namespace Unity.VisualScripting.UVSFinder
         {
             tabAllGraphs.text = ("All Graphs (" + searchItems[UVSFinderTabs.all]?.Count + ")");
             tabCurrentGraph.text = ("Current Graph (" + searchItems[UVSFinderTabs.current]?.Count + ")");
+            tabHierarchyGraphButton.text = ("Hierarchy (" + searchItems[UVSFinderTabs.hierarchy]?.Count + ")");
         }
         private void OnCurrentGraphClick()
         {

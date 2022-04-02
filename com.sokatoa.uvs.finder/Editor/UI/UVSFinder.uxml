@@ -9,7 +9,7 @@
         <ui:VisualElement text="Current Graph" style="flex-direction: row; border-bottom-color: rgb(0, 0, 0); border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 1px; background-color: rgb(40, 40, 40); max-height: 32px;">
             <ui:Button text="Current Graph" display-tooltip-when-elided="true" name="currentGraphButton" binding-path="tabCurrentGraph" class="tab" />
             <ui:Button text="All Graphs" display-tooltip-when-elided="true" name="allGraphsButton" binding-path="tabAllGraphs" class="tab selected" />
-            <ui:Button text="Hierarchy" display-tooltip-when-elided="true" name="hierarchyGraphButton" class="tab" style="display: none;" />
+            <ui:Button text="Hierarchy" display-tooltip-when-elided="true" name="hierarchyGraphButton" class="tab" style="display: flex;" />
             <ui:Button text="Project" display-tooltip-when-elided="true" name="ProjectGraphButton" class="tab" style="display: none;" />
         </ui:VisualElement>
         <ui:VisualElement style="flex-grow: 1;">
