@@ -112,6 +112,10 @@ namespace Unity.VisualScripting.UVSFinder
 
                 var filePath = e.Q<Label>("FilePath");
                 filePath.text = searchItems[selectedTab][i].assetPath;
+                if(searchItems[selectedTab][i].gameObject != null)
+                {
+                    filePath.text += $" ({searchItems[selectedTab][i].gameObject.name})";
+                }
             };
 
             resultListview = root.Q<ListView>("results-list");
