@@ -20,8 +20,7 @@ namespace Unity.VisualScripting.UVSFinder
         [MenuItem("Tools/VisualScripting/UVS Find in All Graphs &F")]
         public static void ShowUVSFinder()
         {
-            UVSFinder wnd = GetWindow<UVSFinder>();
-            wnd.titleContent = new GUIContent("UVSFinder");
+            GetWindow<UVSFinder>("UVSFinder");
         }
 
         public int searchCount = 0;
@@ -157,7 +156,7 @@ namespace Unity.VisualScripting.UVSFinder
                     case "Bolt.InvokeMember":
                         return ((InvokeMember)resultItem.graphElement).member.declaringType.Icon()?[IconSize.Small];
                 }
-            } catch (Exception e)
+            } catch (Exception)
             {
                 // let's just ignore this and move on then
                 // for now, I get the error on lookinput [getvariable: flow] and [setvariable: flow]
