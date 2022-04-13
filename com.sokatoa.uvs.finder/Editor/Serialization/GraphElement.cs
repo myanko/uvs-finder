@@ -232,7 +232,8 @@ namespace Unity.VisualScripting.UVSFinder
                         }
                         if (name == "")
                         {
-                            return ge.GetType().ToString();//.Split('.').Last();
+                            //return ge.GetType().ToString();//.Split('.').Last();
+                            return ge.GetType().HumanName();
                         }
                         return name;
                     }

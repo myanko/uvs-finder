@@ -88,20 +88,17 @@ namespace Unity.VisualScripting.UVSFinder
 
         // finds all the results nodes from the asset files
         // TODO:
-        // - search for embedded scripts in scenes
         // - process the files async to speed up the lookup
         public static List<ResultItem> PerformSearchAll(string keyword)
         {
             var searchItems = new ResultItemList();
             try {
                 string[] guids = AssetDatabase.FindAssets("t:ScriptGraphAsset");
-                //Debug.Log($"found {guids.Length} script graph assets");
                 foreach (string guid in guids)
                 {
                     searchItems = FindNodesFromScriptGraphAssetGuid(guid, keyword, searchItems);
                 }
                 guids = AssetDatabase.FindAssets("t:StateGraphAsset");
-                //Debug.Log($"found {guids.Length} state graph assets");
                 foreach (string guid in guids)
                 {
                     searchItems = FindNodesFromStateGraphAssetGuid(guid, keyword, searchItems);
@@ -300,7 +297,7 @@ namespace Unity.VisualScripting.UVSFinder
                             {
                                 itemName = $"{GraphElement.GetElementName(e)}",
                                 assetPath = assetPath,
-                                graphReference = stateMachine.GetReference().AsReference(),
+                                graphReference = stateMachine?.GetReference().AsReference(),
                                 graphGuid = e.guid.ToString(),
                                 graphElement = e,
                                 type = typeof(StateGraphAsset)

@@ -95,9 +95,7 @@ namespace Unity.VisualScripting.UVSFinder
                     (selectedTab == UVSFinderTabs.all && prefs.showTypeIconAll))
                 {
                     var icon = GetIcon(searchItems[selectedTab][i]);
-                    var typeIcon = e.Q<Label>("Icon");
-                    var sb = new StyleBackground(icon);
-                    typeIcon.style.backgroundImage = sb;
+                    e.Q<Label>("Icon").style.backgroundImage = new StyleBackground(icon);
                 }
                 var description = e.Q<VisualElement>("Description");
                 if (description.ClassListContains("highlightdone"))
@@ -139,22 +137,34 @@ namespace Unity.VisualScripting.UVSFinder
 
         private Texture2D GetIcon(ResultItem resultItem)
         {
-            switch (resultItem.graphElement.GetType().ToString())
+            try
             {
-                case "Unity.VisualScripting.GetVariable":
-                    return (BoltCore.Resources.icons.VariableKind(((GetVariable)resultItem.graphElement).kind))[IconSize.Small];
-                case "Unity.VisualScripting.SetVariable":
-                    return (BoltCore.Resources.icons.VariableKind(((SetVariable)resultItem.graphElement).kind))[IconSize.Small];
-                    /*case "Bolt.GetVariable":
-                    case "Bolt.SetVariable":*/
+                switch (resultItem.graphElement.GetType().ToString())
+                {
+                    case "Unity.VisualScripting.GetVariable":
+                    case "Bolt.GetVariable":
+                        return (BoltCore.Resources.icons.VariableKind(((GetVariable)resultItem.graphElement).kind))[IconSize.Small];
+                    case "Unity.VisualScripting.SetVariable":
+                    case "Bolt.SetVariable":
+                        return (BoltCore.Resources.icons.VariableKind(((SetVariable)resultItem.graphElement).kind))[IconSize.Small];
+                    case "Unity.VisualScripting.GetMember":
+                    case "Bolt.GetMember":
+                        return ((GetMember)resultItem.graphElement).member.declaringType.Icon()?[IconSize.Small];
+                    case "Unity.VisualScripting.SetMember":
+                    case "Bolt.SetMember":
+                        return ((SetMember)resultItem.graphElement).member.declaringType.Icon()?[IconSize.Small];
+                    case "Unity.VisualScripting.InvokeMember":
+                    case "Bolt.InvokeMember":
+                        return ((InvokeMember)resultItem.graphElement).member.declaringType.Icon()?[IconSize.Small];
+                }
+            } catch (Exception e)
+            {
+                // let's just ignore this and move on then
+                // for now, I get the error on lookinput [getvariable: flow] and [setvariable: flow]
+                //Debug.Log($" Could not get icon of {resultItem.graphElement.GetType()} on {GraphElement.GetElementName(resultItem.graphElement)} because of {e.Message} {e.StackTrace}");
             }
 
-            //find the type full name with assembly
-            Type objectType = (from asm in AppDomain.CurrentDomain.GetAssemblies()
-                               from type in asm.GetTypes()
-                               where type.IsClass && type.Name == resultItem.graphElement.GetType().ToString().Split('.').Last()
-                               select type).FirstOrDefault();
-            //Debug.Log(((GraphElement)searchItems[i].graphElement).type + " = " + objectType);
+            Type objectType = resultItem.graphElement.GetType();
             var texture = objectType.Icon()?[IconSize.Small];
             return texture;
         }
