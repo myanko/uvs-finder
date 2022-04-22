@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEditor.UIElements;
 using System.Linq;
 using UnityObject = UnityEngine.Object;
 #if !SUBGRAPH_RENAME
@@ -25,7 +26,7 @@ namespace Unity.VisualScripting.UVSFinder
 
         public int searchCount = 0;
         public List<string> nodeList = new List<string>();
-        public TextField searchField;
+        public ToolbarPopupSearchField searchField;
         private enum UVSFinderTabs {
             current,
             all,
@@ -63,7 +64,7 @@ namespace Unity.VisualScripting.UVSFinder
             root.RegisterCallback<KeyUpEvent>(OnKeyUp, TrickleDown.TrickleDown);
 
             // Get a reference to the Button from UXML and assign it its action.
-            searchField = root.Q<TextField>("search-field");
+            searchField = root.Q<ToolbarPopupSearchField>("search-field");
             var nodePathLabel = root.Q<Label>("node-path-label");
             var searchOptions = root.Q<Button>("searchOptions");
             //listItem
@@ -103,7 +104,7 @@ namespace Unity.VisualScripting.UVSFinder
                     description.hierarchy.Clear();
                 }
 
-                TextHighlighter.HighlightTextBasedOnQuery(description, searchItems[selectedTab][i].itemName, searchField.text);
+                TextHighlighter.HighlightTextBasedOnQuery(description, searchItems[selectedTab][i].itemName, searchField.value);
                 description.AddToClassList("highlightdone");
                 
 
@@ -132,6 +133,8 @@ namespace Unity.VisualScripting.UVSFinder
                     SettingsService.OpenUserPreferences("Preferences/Visual Scripting/UVS Finder");
                 };
             }
+            GetWindow<UVSFinder>();
+            searchField.Focus();
         }
 
         private Texture2D GetIcon(ResultItem resultItem)
@@ -170,9 +173,9 @@ namespace Unity.VisualScripting.UVSFinder
 
         private void PerformSearch()
         {
-            searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.text);
-            searchItems[UVSFinderTabs.all] = UVSSearchProvider.PerformSearchAll(searchField.text);
-            searchItems[UVSFinderTabs.hierarchy] = UVSSearchProvider.PerformSearchInHierarchy(searchField.text);
+            searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value);
+            searchItems[UVSFinderTabs.all] = UVSSearchProvider.PerformSearchAll(searchField.value);
+            searchItems[UVSFinderTabs.hierarchy] = UVSSearchProvider.PerformSearchInHierarchy(searchField.value);
         }
 
         private void setWindowTitle()
@@ -242,7 +245,7 @@ namespace Unity.VisualScripting.UVSFinder
             // then we need to redo the "current graph" search
             if (selectedTab == UVSFinderTabs.all)
             {
-                searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.text);
+                searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value);
                 setTabsResults();
             }
             GetWindow<UVSFinder>().Focus();
