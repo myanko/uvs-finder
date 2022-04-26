@@ -16,6 +16,12 @@
             <uie:EnumField label="Text highlighting color" binding-path="textHighlightingColor" tooltip="Define the action to do, when you double click on the item in the result list." value="#FF8000FF" style="flex-direction: row; display: none; visibility: hidden;" />
             <ui:Toggle label="Show graph path" binding-path="ShowGraphPathAll" tooltip="Will set the defaut result to show all nodes within graph by default." style="flex-direction: row; display: none; visibility: hidden;" />
         </ui:Foldout>
+        <ui:Foldout text="Find Hierarchy" name="Collections">
+            <ui:Toggle label="Show Type Icons" binding-path="showTypeIconHierarchy" focusable="true" tooltip="Display the icon type in the list view before the name of the node." style="margin-bottom: 3px;" />
+            <uie:EnumField label="Item Click" binding-path="itemClickAll" tooltip="Define the action to do, when you click on the item in the result list." style="display: none;" />
+            <uie:EnumField label="Text highlighting color" binding-path="textHighlightingColor" tooltip="Define the action to do, when you double click on the item in the result list." value="#FF8000FF" style="flex-direction: row; display: none; visibility: hidden;" />
+            <ui:Toggle label="Show graph path" binding-path="ShowGraphPathAll" tooltip="Will set the defaut result to show all nodes within graph by default." style="flex-direction: row; display: none; visibility: hidden;" />
+        </ui:Foldout>
         <ui:Foldout text="Find and Replace" name="ObjectsPreview" style="display: none; visibility: hidden;">
             <ui:Toggle label="Enable Preview" binding-path="enableHoverPreview" />
         </ui:Foldout>

@@ -92,7 +92,8 @@ namespace Unity.VisualScripting.UVSFinder
             {
                 //TODO: Case Current/All/FindReplace/Other
                 if ((selectedTab == UVSFinderTabs.current && prefs.showTypeIconCurrent) ||
-                    (selectedTab == UVSFinderTabs.all && prefs.showTypeIconAll))
+                    (selectedTab == UVSFinderTabs.all && prefs.showTypeIconAll)||
+                    (selectedTab == UVSFinderTabs.hierarchy && prefs.showTypeIconHierarchy))
                 {
                     var icon = GetIcon(searchItems[selectedTab][i]);
                     e.Q<Label>("Icon").style.backgroundImage = new StyleBackground(icon);
@@ -244,6 +245,11 @@ namespace Unity.VisualScripting.UVSFinder
             // if we click on an item in the "all graphs" result list,
             // then we need to redo the "current graph" search
             if (selectedTab == UVSFinderTabs.all)
+            {
+                searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value);
+                setTabsResults();
+            }
+            else if (selectedTab == UVSFinderTabs.hierarchy)
             {
                 searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value);
                 setTabsResults();
