@@ -1,7 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
     <ui:Label text="UVS Finder" name="Title" style="font-size: 19px; -unity-font-style: bold;" />
     <ui:ScrollView>
-        <ui:Foldout text="Global Settings" name="Collections" style="display: none; visibility: hidden;">
+        <ui:Foldout text="Global Settings" name="Collections" style="display: flex; visibility: visible;">
             <uie:ColorField label="Text Highlight" value="#FF8000FF" show-alpha="false" hdr="false" binding-path="testHighLightColor" />
         </ui:Foldout>
         <ui:Foldout text="Find Current Graph" name="Collections">

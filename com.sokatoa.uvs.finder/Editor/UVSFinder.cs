@@ -107,7 +107,7 @@ namespace Unity.VisualScripting.UVSFinder
 
                 TextHighlighter.HighlightTextBasedOnQuery(description, searchItems[selectedTab][i].itemName, searchField.value);
                 description.AddToClassList("highlightdone");
-                
+                OverwriteHighlightColor();
 
                 var filePath = e.Q<Label>("FilePath");
                 filePath.text = searchItems[selectedTab][i].assetPath;
@@ -142,6 +142,13 @@ namespace Unity.VisualScripting.UVSFinder
             searchField.Focus();
         }
 
+        private void OverwriteHighlightColor()
+        {
+            if(prefs.testHighLightColor != new Color(255, 128, 0))
+            {
+                rootVisualElement.Query<Label>(className: "Highlighted").ForEach( (e) => e.style.color = prefs.testHighLightColor);
+            }
+        }
         private Texture2D GetIcon(ResultItem resultItem)
         {
             try

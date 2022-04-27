@@ -12,7 +12,7 @@ namespace Unity.VisualScripting.UVSFinder
         public ItemAction itemClickCurrent = ItemAction.OpenInGraph;
         public ItemAction itemDoubleClickCurrent = ItemAction.OpenAndClose;
         //Find in all Graphs
-        public bool showTypeIconAll = false;
+        public bool showTypeIconAll = true;
         public bool ShowGraphPathAll = true;
         public bool ShowAllNodesInProjectAll = true;
         public ItemAction itemClickAll = ItemAction.OpenInGraph;
