@@ -2,7 +2,7 @@
     <ui:Label text="UVS Finder" name="Title" style="font-size: 19px; -unity-font-style: bold;" />
     <ui:ScrollView>
         <ui:Foldout text="Global Settings" name="Collections" style="display: flex; visibility: visible;">
-            <uie:ColorField label="Text Highlight" value="#FF8000FF" show-alpha="false" hdr="false" binding-path="testHighLightColor" />
+            <uie:ColorField label="Text Highlight" value="#FF8000FF" show-alpha="true" hdr="false" binding-path="testHighLightColor" />
         </ui:Foldout>
         <ui:Foldout text="Find Current Graph" name="Collections">
             <ui:Toggle label="Show Type Icons" binding-path="showTypeIconCurrent" focusable="true" tooltip="Display the icon type in the list view before the name of the node." style="margin-bottom: 3px;" />
