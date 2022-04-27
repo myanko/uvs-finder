@@ -1,5 +1,5 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
-    <ui:VisualElement style="flex-direction: row; align-items: center;">
+    <ui:VisualElement style="flex-direction: row; align-items: center; height: 24px;">
         <ui:Label display-tooltip-when-elided="true" name="Icon" style="min-width: 16px; min-height: 16px; display: flex; background-image: none; width: 16px; height: 16px; margin-left: 4px; margin-right: 4px;" />
         <ui:VisualElement display-tooltip-when-elided="true" name="Description" />
         <ui:Label display-tooltip-when-elided="true" name="FilePath" />

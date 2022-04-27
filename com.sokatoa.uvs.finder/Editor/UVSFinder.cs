@@ -111,7 +111,11 @@ namespace Unity.VisualScripting.UVSFinder
 
                 var filePath = e.Q<Label>("FilePath");
                 filePath.text = searchItems[selectedTab][i].assetPath;
-                if(searchItems[selectedTab][i].gameObject != null)
+                if (!String.IsNullOrEmpty(searchItems[selectedTab][i].stateName))
+                {
+                    filePath.text += $" > {searchItems[selectedTab][i].stateName}";
+                }
+                if (searchItems[selectedTab][i].gameObject != null)
                 {
                     filePath.text += $" ({searchItems[selectedTab][i].gameObject.name})";
                 }
@@ -292,13 +296,9 @@ namespace Unity.VisualScripting.UVSFinder
 
         private void SelectElement(ResultItem resultItem)
         {
-            // no asset path set means we are searching in the current graph,
-            // so no need to open it
-            if (!String.IsNullOrEmpty(resultItem.assetPath))
-            {
-                OpenWindow(resultItem);
-            }
 
+            OpenWindow(resultItem);
+            
             if (resultItem.type == typeof(ScriptGraphAsset) || resultItem.type == typeof(ScriptMachine)) //script graph
             {
                 SelectElementInScriptGraph(resultItem);
@@ -483,24 +483,26 @@ namespace Unity.VisualScripting.UVSFinder
         private void OpenWindow(ResultItem resultItem)
         {
             //Debug.Log($"Focusing in asset {graphItem.assetPath}, on {graphItem.itemName}");
-            GraphReference graphReference;
-            if(resultItem.graphReference != null)
+            if (resultItem.graphReference != null)
             {
                 GraphWindow.OpenActive(resultItem.graphReference);
                 return;
-            }
-            else if (resultItem.type == typeof(ScriptGraphAsset))
+            } else if (!String.IsNullOrEmpty(resultItem.assetPath))
             {
-                var sga = AssetDatabase.LoadAssetAtPath<ScriptGraphAsset>(resultItem.assetPath);
-                graphReference = GraphReference.New(sga, true);
+                GraphReference graphReference;
+                if (resultItem.type == typeof(ScriptGraphAsset))
+                {
+                    var sga = AssetDatabase.LoadAssetAtPath<ScriptGraphAsset>(resultItem.assetPath);
+                    graphReference = GraphReference.New(sga, true);
+                }
+                else
+                {
+                    var sga = AssetDatabase.LoadAssetAtPath<StateGraphAsset>(resultItem.assetPath);
+                    graphReference = GraphReference.New(sga, true);
+                }
+                // open the window
+                GraphWindow.OpenActive(graphReference);
             }
-            else
-            {
-                var sga = AssetDatabase.LoadAssetAtPath<StateGraphAsset>(resultItem.assetPath);
-                graphReference = GraphReference.New(sga, true);
-            }
-            // open the window
-            GraphWindow.OpenActive(graphReference);
         }
     }
 
