@@ -8,6 +8,8 @@ This package adds searching functionalities to Visual Scripting, by letting you 
 
 - Find nodes in all project graphs.
 
+- Find nodes in Hierachy **(New)**
+
 - Find groupes by title.
 
 - Find custom events nodes.
@@ -45,7 +47,7 @@ This package adds searching functionalities to Visual Scripting, by letting you 
 
 ## How to Open the Tool
 
-To open the node finder, you can simply press alt+f.
+To open the node finder, you can simply press Alt+F.
 
 
 
@@ -59,7 +61,7 @@ To open the node finder, you can simply press alt+f.
 
 To open the User Settings, click on the button on the side of the search field or open the Preference panel then go to **Visual Scripting/ UVS Finder**.
 
-
+### 
 
 ## How to find nodes
 
@@ -78,7 +80,7 @@ Delete the folder com.sokatoa.uvs.finder and import the node finder from the ass
 Some Usefull Keywords
 
 - Event
-- trigger
+- Trigger
 - Variable
 - Bolt
 - Subgraph
