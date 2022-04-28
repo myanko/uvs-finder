@@ -61,36 +61,6 @@ namespace Unity.VisualScripting.UVSFinder
                         return itemsFound.list;
                     }
                 }
-                /*var assetPath = AssetDatabase.GetAssetPath(graphWindow.reference.serializedObject);
-                var assetType = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
-                var guid = AssetDatabase.GUIDFromAssetPath(assetPath);
-                ResultItemList itemsFound = new ResultItemList();
-                if (assetType == typeof(ScriptGraphAsset))
-                {
-                    assetType = typeof(ScriptGraphAsset);
-                    itemsFound = FindNodesFromScriptGraphAssetGuid(guid.ToString(), keyword, itemsFound);
-                    if (itemsFound != null)
-                    {
-                        return itemsFound.list;
-                    }
-                } else if(assetType == typeof(StateGraphAsset))
-                {
-                    itemsFound = FindNodesFromStateGraphAssetGuid(guid.ToString(), keyword, itemsFound);
-                    if (itemsFound != null)
-                    {
-                        return itemsFound.list;
-                    }
-                } else if(assetType == typeof(GameObject))
-                {
-                    itemsFound = GetElementsFromScriptMachine(graphWindow.reference.machine as ScriptMachine, assetPath, keyword, itemsFound);
-                    if (itemsFound != null)
-                    {
-                        return itemsFound.list;
-                    }
-                }*/
-
-
-
             } catch (Exception e)
             {
                 Debug.Log($"encountered an error while searching in current script: {e}");
@@ -103,18 +73,17 @@ namespace Unity.VisualScripting.UVSFinder
         {
             var searchItems = new ResultItemList();
             var searchTermLowerInvariant = CleanString(keyword);
-            var scene = SceneManager.GetActiveScene();
-            foreach (UnityEngine.Object o in GameObject.FindObjectsOfType(typeof(ScriptMachine)))
+            foreach (UnityEngine.Object o in GameObject.FindObjectsOfType<ScriptMachine>())
             {
                 var scriptMachine = o.GetComponent<ScriptMachine>();
                 if (scriptMachine?.nest?.source == GraphSource.Embed)
-                    searchItems = GetElementsFromScriptMachine(scriptMachine, scene.path, searchTermLowerInvariant, searchItems);
+                    searchItems = GetElementsFromScriptMachine(scriptMachine, o.GameObject().scene.path, searchTermLowerInvariant, searchItems);
 
                 var stateMachine = o.GetComponent<StateMachine>();
                 if (stateMachine?.nest?.source == GraphSource.Embed)
-                    searchItems = GetElementsFromStateGraph(stateMachine.GetReference().AsReference(), stateMachine.graph, scene.path, searchTermLowerInvariant, searchItems);
+                    searchItems = GetElementsFromStateGraph(stateMachine.GetReference().AsReference(), stateMachine.graph, o.GameObject().scene.path, searchTermLowerInvariant, searchItems);
             }
-
+            
             return searchItems.list;
         }
 
