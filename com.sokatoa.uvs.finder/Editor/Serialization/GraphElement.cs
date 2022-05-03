@@ -94,6 +94,9 @@ namespace Unity.VisualScripting.UVSFinder
                 case "Unity.VisualScripting.GetVariable":
                 case "Bolt.GetVariable":
                     return $"{((GetVariable)ge).defaultValues["name"]} [Get Variable: {((GetVariable)ge).kind}]";
+                case "Unity.VisualScripting.IsVariableDefined":
+                case "Bolt.IsVariableDefined":
+                    return $"{((IsVariableDefined)ge).defaultValues["name"]} [Has Variable: {((IsVariableDefined)ge).kind}]";                    
                 case "Unity.VisualScripting.SetVariable":
                 case "Bolt.SetVariable":
                     return $"{((SetVariable)ge).defaultValues["name"]} [Set Variable: {((SetVariable)ge).kind}]";
