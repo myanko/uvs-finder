@@ -104,6 +104,10 @@ namespace Unity.VisualScripting.UVSFinder
                 case "Bolt.BoltUnityEvent":
                     var bue = ge as BoltUnityEvent;
                     return $"{bue.defaultValues["name"]} [BoltUnityEvent]";
+                case "Unity.VisualScripting.BoltNamedAnimationEvent":
+                case "Bolt.BoltNamedAnimationEvent":
+                    var buae = ge as BoltNamedAnimationEvent;
+                    return $"{buae.defaultValues["name"]} [BoltAnimationEvent]";
                 case "Unity.VisualScripting.CustomEvent":
                 case "Bolt.CustomEvent":
                     return $"{((CustomEvent)ge).defaultValues["name"]} [CustomEvent]";

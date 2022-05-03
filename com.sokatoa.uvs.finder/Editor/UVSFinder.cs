@@ -158,6 +158,9 @@ namespace Unity.VisualScripting.UVSFinder
                     case "Unity.VisualScripting.GetVariable":
                     case "Bolt.GetVariable":
                         return (BoltCore.Resources.icons.VariableKind(((GetVariable)resultItem.graphElement).kind))[IconSize.Small];
+                    case "Unity.VisualScripting.IsVariableDefined":
+                    case "Bolt.IsVariableDefined":
+                        return (BoltCore.Resources.icons.VariableKind(((IsVariableDefined)resultItem.graphElement).kind))[IconSize.Small];
                     case "Unity.VisualScripting.SetVariable":
                     case "Bolt.SetVariable":
                         return (BoltCore.Resources.icons.VariableKind(((SetVariable)resultItem.graphElement).kind))[IconSize.Small];
