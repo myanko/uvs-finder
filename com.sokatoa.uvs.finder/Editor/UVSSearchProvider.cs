@@ -40,7 +40,11 @@ namespace Unity.VisualScripting.UVSFinder
                     }
                 } else if (GraphWindow.active.reference.machine is StateMachine) // in a statemachine component (hierarchy/prefab)
                 {
-                    itemsFound = GetElementsFromStateGraph(GraphWindow.active.reference, graphWindow.reference.graph as StateGraph, null, keyword, itemsFound);
+                    // always graph everything = use graphWindow.reference.rootGraph
+                    // otherwise, graphWindow.reference.graph is a substate and not necessarily a stategraph
+                    // it can be a FlowGraph, for example
+                    itemsFound = GetElementsFromStateGraph(GraphWindow.active.reference, graphWindow.reference.rootGraph as StateGraph, null, keyword, itemsFound);
+                    
                     if (itemsFound != null)
                     {
                         return itemsFound.list;
