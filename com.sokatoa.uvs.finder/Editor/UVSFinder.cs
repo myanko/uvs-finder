@@ -312,8 +312,9 @@ namespace Unity.VisualScripting.UVSFinder
         {
 
             OpenWindow(resultItem);
-            
-            if (resultItem.type == typeof(ScriptGraphAsset) || resultItem.type == typeof(ScriptMachine)) //script graph
+
+            var graphWindow = GetWindow<GraphWindow>();
+            if (resultItem.type == typeof(ScriptGraphAsset) || resultItem.type == typeof(ScriptMachine) || graphWindow.context.canvas is VisualScriptingCanvas<FlowGraph>) //script graph
             {
                 SelectElementInScriptGraph(resultItem);
             } 
