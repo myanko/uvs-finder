@@ -146,7 +146,11 @@ namespace Unity.VisualScripting.UVSFinder
         {
             if(prefs.textHighLightColor != new Color(255, 128, 0))
             {
-                e.Q<Label>(className: "Highlighted").style.color = prefs.textHighLightColor;
+                var highlighted = e.Q<Label>(className: "Highlighted");
+                if (highlighted != null)
+                {
+                    highlighted.style.color = prefs.textHighLightColor;
+                }
             }
         }
         private Texture2D GetIcon(ResultItem resultItem)
