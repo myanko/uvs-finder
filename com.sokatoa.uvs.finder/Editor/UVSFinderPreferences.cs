@@ -5,7 +5,7 @@ namespace Unity.VisualScripting.UVSFinder
 {
     internal class UVSFinderPreferences : ScriptableObject
     {
-        public Color textHighLightColor = new Color(255, 128, 0, 1);
+        public Color textHighLightColor;
         //Find in Current Graph
         public bool showTypeIconCurrent = true;
         public bool ShowAllNodesInGraphCurrent = true;
