@@ -253,7 +253,7 @@ namespace Unity.VisualScripting.UVSFinder
             {
                 foreach (var state in graph.states)
                 {
-                    if (state is INesterState)
+                    if (state is INesterState) // TODO: deal with transitions too!
                     {
                         IGraph childGraph = ((INesterState)state).childGraph;
                         if (childGraph?.elements.Count() > 0)

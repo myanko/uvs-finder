@@ -372,32 +372,36 @@ namespace Unity.VisualScripting.UVSFinder
                 // it is one of the states in the first layer. Return the first layer
                 return new SearchInfo() { element = st, found = true };
             }
-            foreach (INesterState s in stateGraph.states)
+            foreach (var s in stateGraph.states)
             {
-                if (s.childGraph.elements.Count() > 0)
+                if (s is INesterState)
                 {
-                    foreach (var e in s.childGraph.elements)
+                    var nesterState = s as INesterState; // TODO: deal with transitions!
+                    if (nesterState.childGraph.elements.Count() > 0)
                     {
-                        if (e.guid.ToString() == resultItem.graphGuid)
+                        foreach (var e in nesterState.childGraph.elements)
                         {
-                            graphWindow.reference = graphWindow.reference.ChildReference(s, false);
-                            return new SearchInfo() { element = e, found = true };
-                        }
+                            if (e.guid.ToString() == resultItem.graphGuid)
+                            {
+                                graphWindow.reference = graphWindow.reference.ChildReference(nesterState, false);
+                                return new SearchInfo() { element = e, found = true };
+                            }
 
-                        if (e is StateUnit)
-                        {
-                            graphWindow.reference = graphWindow.reference.ChildReference(s, false);
-                            var result = FindElementsInStateUnit(resultItem, graphWindow, (StateUnit)e);
-                            if (result.found) { return result; }
-                            graphWindow.reference = graphWindow.reference.ParentReference(false);// move back up instead
-                        }
+                            if (e is StateUnit)
+                            {
+                                graphWindow.reference = graphWindow.reference.ChildReference(nesterState, false);
+                                var result = FindElementsInStateUnit(resultItem, graphWindow, (StateUnit)e);
+                                if (result.found) { return result; }
+                                graphWindow.reference = graphWindow.reference.ParentReference(false);// move back up instead
+                            }
 
-                        if (e is SubgraphUnit)
-                        {
-                            graphWindow.reference = graphWindow.reference.ChildReference(s, false);
-                            var result = FindElementsInSubGraphUnit(resultItem, graphWindow, (SubgraphUnit)e);
-                            if (result.found) { return result; }
-                            graphWindow.reference = graphWindow.reference.ParentReference(false);// move back up instead
+                            if (e is SubgraphUnit)
+                            {
+                                graphWindow.reference = graphWindow.reference.ChildReference(nesterState, false);
+                                var result = FindElementsInSubGraphUnit(resultItem, graphWindow, (SubgraphUnit)e);
+                                if (result.found) { return result; }
+                                graphWindow.reference = graphWindow.reference.ParentReference(false);// move back up instead
+                            }
                         }
                     }
                 }
