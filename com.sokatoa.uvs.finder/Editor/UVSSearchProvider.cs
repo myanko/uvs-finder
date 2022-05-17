@@ -253,14 +253,17 @@ namespace Unity.VisualScripting.UVSFinder
             {
                 foreach (var state in graph.states)
                 {
-                    IGraph childGraph = ((INesterState)state).childGraph;
-                    if (state is INesterState && childGraph?.elements.Count() > 0)
+                    if (state is INesterState)
                     {
-                        //Debug.Log($"state {state.guid} {((INesterState)state).childGraph.title} has {((INesterState)state).childGraph.elements.Count()} elements");
-                        foreach (var e in childGraph.elements)
+                        IGraph childGraph = ((INesterState)state).childGraph;
+                        if (childGraph?.elements.Count() > 0)
                         {
-                            var stateName = !String.IsNullOrEmpty(childGraph.title) ? childGraph.title : "Script State";
-                            searchItems = GrabElements(e, stateName, null, reference.ChildReference((INesterState)state, false), childGraph, assetPath, searchTermLowerInvariant, searchItems); 
+                            //Debug.Log($"state {state.guid} {((INesterState)state).childGraph.title} has {((INesterState)state).childGraph.elements.Count()} elements");
+                            foreach (var e in childGraph.elements)
+                            {
+                                var stateName = !String.IsNullOrEmpty(childGraph.title) ? childGraph.title : "Script State";
+                                searchItems = GrabElements(e, stateName, null, reference.ChildReference((INesterState)state, false), childGraph, assetPath, searchTermLowerInvariant, searchItems);
+                            }
                         }
                     }
                 }
