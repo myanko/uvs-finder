@@ -1,9 +1,9 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
-    <Style src="project://database/Packages/com.sokatoa.uvs.finder/Editor/UI/UVSFinder.uss?fileID=7433441132597879392&amp;guid=661f7c9dd00847545bb4612bc58d5aac&amp;type=3#UVSFinder" />
+    <Style src="UVSFinder.uss" />
     <ui:VisualElement name="Screen" style="flex-grow: 1; flex-shrink: 1; flex-direction: column; min-width: 100px; min-height: auto; justify-content: flex-end;">
         <ui:GroupBox style="flex-direction: row; align-items: stretch; justify-content: center; flex-grow: 0; margin-left: 0;">
             <uie:ToolbarPopupSearchField focusable="true" name="search-field" tooltip="Type name of nodes you want to search in graphs." style="flex-grow: 1; min-width: 1px; width: auto; max-width: 95%;" />
-            <ui:Button display-tooltip-when-elided="true" value="Search" label="Fin" name="searchOptions" tooltip="Open Preferences panel" style="white-space: nowrap; align-items: flex-end; display: flex; margin-left: 0; margin-right: 0; padding-left: 3px; padding-right: 3px; min-width: initial; min-height: initial;" />
+            <ui:Button display-tooltip-when-elided="true" value="Search" label="Fin" name="searchOptions" tooltip="Open Preferences panel" style="white-space: nowrap; align-items: flex-end; display: flex; margin-left: 0; margin-right: 0; padding-left: 3px; padding-right: 3px; min-width: initial; min-height: initial; background-color: rgba(40, 40, 40, 255);" />
             <ui:DropdownField index="-1" style="min-width: 12px; max-width: 50px; display: none;" />
         </ui:GroupBox>
         <ui:VisualElement text="Current Graph" style="flex-direction: row; border-bottom-color: rgb(0, 0, 0); border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 1px; background-color: rgb(40, 40, 40); max-height: 32px;">

@@ -314,8 +314,7 @@ namespace Unity.VisualScripting.UVSFinder
             OpenWindow(resultItem);
 
             var graphWindow = GetWindow<GraphWindow>();
-            if (resultItem.type == typeof(ScriptGraphAsset) || resultItem.type == typeof(ScriptMachine) || graphWindow.context.canvas is VisualScriptingCanvas<FlowGraph>) //script graph
-            {
+            if (graphWindow.context.canvas is VisualScriptingCanvas<FlowGraph>) { 
                 SelectElementInScriptGraph(resultItem);
             } 
             else // state graph
@@ -502,10 +501,12 @@ namespace Unity.VisualScripting.UVSFinder
             {
                 GraphWindow.OpenActive(resultItem.graphReference);
                 return;
-            } else if (!String.IsNullOrEmpty(resultItem.assetPath))
+            } 
+            else if (!String.IsNullOrEmpty(resultItem.assetPath))
             {
                 GraphReference graphReference;
-                if (resultItem.type == typeof(ScriptGraphAsset))
+                Type t = AssetDatabase.GetMainAssetTypeAtPath(resultItem.assetPath);
+                if (t == typeof(ScriptGraphAsset))
                 {
                     var sga = AssetDatabase.LoadAssetAtPath<ScriptGraphAsset>(resultItem.assetPath);
                     graphReference = GraphReference.New(sga, true);

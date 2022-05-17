@@ -17,8 +17,6 @@ namespace Unity.VisualScripting.UVSFinder
          
             name = GetNameFromSpecificTypes(ge);
             
-
-
             /*if (member != null)
             {
                 var memberName = member.name;
@@ -195,11 +193,13 @@ namespace Unity.VisualScripting.UVSFinder
                         var name = "";
                         if (subgraph.nest.source == GraphSource.Macro)
                         {
-                            name = $"{subgraph.nest.macro.name} [SuperUnit]";
+                            name = String.IsNullOrEmpty(subgraph.nest.macro.name) ? "SuperUnit" : subgraph.nest.macro.name;
+                            name = $"{name} [SuperUnit]";
                         }
                         else
                         {
-                            name = $"{subgraph.nest.embed.title} [SuperUnit Embed]";
+                            name = String.IsNullOrEmpty(subgraph.nest.embed.title) ? "SuperUnit" : subgraph.nest.embed.title;
+                            name = $"{name} [SuperUnit Embed]";
                         }
                         return name;
                     }
@@ -210,11 +210,13 @@ namespace Unity.VisualScripting.UVSFinder
                         var name = "";
                         if (stateUnit.nest.source == GraphSource.Macro)
                         {
-                            name = $"{stateUnit.nest.macro.name} [State]";
+                            name = String.IsNullOrEmpty(stateUnit.nest.macro.name) ? "State Unit" : stateUnit.nest.macro.name;
+                            name = $"{name} [State]";
                         }
                         else
                         {
-                            name = $"{stateUnit.nest.embed.title} [State Embed]";
+                            name = String.IsNullOrEmpty(stateUnit.nest.embed.title) ? "State Unit" : stateUnit.nest.embed.title;
+                            name = $"{name} [State Embed]";
                         }
                         return name;
                     }
