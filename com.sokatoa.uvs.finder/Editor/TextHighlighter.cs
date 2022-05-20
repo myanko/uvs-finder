@@ -19,7 +19,7 @@ namespace Unity.VisualScripting.UVSFinder
                 BuildHighlightLabels(container, text);
                 return;
             }
-            
+
             var formattedText = text;
             var queryParts = query.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
             var regex = string.Empty;
@@ -30,6 +30,7 @@ namespace Unity.VisualScripting.UVSFinder
                 if (index < queryParts.Length - 1)
                     regex += "|";
             }
+            regex = regex.Replace("[", "\\[").Replace("]", "\\]");
 
             var matches = Regex.Matches(formattedText, regex, RegexOptions.IgnoreCase);
             foreach (Match match in matches)
