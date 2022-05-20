@@ -27,20 +27,19 @@ namespace Unity.VisualScripting.UVSFinder {
         }
 
         [Test]
-        public void PerformSearchCurrent_State_Returns_All_Results()
-        {
-            OpenVisualScriptAsset("Assets/TestAsset/furetstategraph1.asset");
-            var results = UVSSearchProvider.PerformSearchInCurrentScript("");
-            Assert.AreEqual(2, results.Count);
-        }
-
-
-        [Test]
-        public void PerformSearchCurrent_Script_With_Keyword_Returns_Some_Results()
+        [TestCase("", 3)]
+        [TestCase("furet", 1)]
+        [TestCase("Furet", 1)]
+        [TestCase("FURET", 1)]
+        [TestCase("[", 2)]
+        [TestCase("notexisting", 0)]
+        [TestCase("(", 0)]
+        [TestCase("*", 0)]
+        public void PerformSearchCurrent_Script_With_Keyword_Returns_Some_Results(string keyword, int result)
         {
             OpenVisualScriptAsset("Assets/TestAsset/furetscriptgraph1.asset");
-            var results = UVSSearchProvider.PerformSearchInCurrentScript("furet");
-            Assert.AreEqual(1, results.Count);
+            var results = UVSSearchProvider.PerformSearchInCurrentScript(keyword);
+            Assert.AreEqual(result, results.Count);
         }
 
         [Test]
@@ -54,6 +53,8 @@ namespace Unity.VisualScripting.UVSFinder {
         [Test]
         [TestCase("", 55)]
         [TestCase("furet", 9)]
+        [TestCase("Furet", 9)]
+        [TestCase("FURET", 9)]
         [TestCase("[", 19)]
         [TestCase("notexisting", 0)]
         [TestCase("(", 0)]
@@ -65,19 +66,19 @@ namespace Unity.VisualScripting.UVSFinder {
         }
 
         [Test]
-        public void PerformSearchHierarchy_With_All_Scenes_Opened_Returns_All_Results()
+        [TestCase("", 27)]
+        [TestCase("furet", 4)]
+        [TestCase("Furet", 4)]
+        [TestCase("FURET", 4)]
+        [TestCase("[", 6)]
+        [TestCase("notexisting", 0)]
+        [TestCase("(", 0)]
+        [TestCase("*", 0)]
+        public void PerformSearchHierarchy_With_All_Scenes_Opened_And_Keyword_Returns_Some_Results(string keyword, int result)
         {
             OpenAllScenes();
-            var results = UVSSearchProvider.PerformSearchInHierarchy("");
-            Assert.AreEqual(27, results.Count);
-        }
-
-        [Test]
-        public void PerformSearchHierarchy_With_All_Scenes_Opened_And_Keyword_Returns_Some_Results()
-        {
-            OpenAllScenes();
-            var results = UVSSearchProvider.PerformSearchInHierarchy("furet");
-            Assert.AreEqual(4, results.Count);
+            var results = UVSSearchProvider.PerformSearchInHierarchy(keyword);
+            Assert.AreEqual(result, results.Count);
         }
 
         [Test]
