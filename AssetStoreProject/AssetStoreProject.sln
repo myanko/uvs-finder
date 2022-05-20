@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unity.VisualScripting.State
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unity.VisualScripting.Flow", "Unity.VisualScripting.Flow.csproj", "{DA170D11-36E2-D7D7-7B13-CC1310423439}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UVSFinder.Editor.Tests", "UVSFinder.Editor.Tests.csproj", "{F9D2A5C9-6E34-1665-10BE-0524B01FFFEC}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnityEditor.TestRunner", "UnityEditor.TestRunner.csproj", "{75BE2417-B772-0E64-3ADD-19E1FD593B50}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unity.VisualScripting.Core.Editor", "Unity.VisualScripting.Core.Editor.csproj", "{6CC8B3EB-D6D7-9BBA-DFE7-453284FE3200}"
@@ -45,6 +47,10 @@ Global
 		{DA170D11-36E2-D7D7-7B13-CC1310423439}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DA170D11-36E2-D7D7-7B13-CC1310423439}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DA170D11-36E2-D7D7-7B13-CC1310423439}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9D2A5C9-6E34-1665-10BE-0524B01FFFEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9D2A5C9-6E34-1665-10BE-0524B01FFFEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9D2A5C9-6E34-1665-10BE-0524B01FFFEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9D2A5C9-6E34-1665-10BE-0524B01FFFEC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{75BE2417-B772-0E64-3ADD-19E1FD593B50}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{75BE2417-B772-0E64-3ADD-19E1FD593B50}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{75BE2417-B772-0E64-3ADD-19E1FD593B50}.Release|Any CPU.ActiveCfg = Release|Any CPU

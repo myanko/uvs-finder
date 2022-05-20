@@ -1,0 +1,17 @@
+{
+    "name": "UVSFinder.Editor.Tests",
+    "references": [
+        "UVSFinder.Editor",
+		"Unity.VisualScripting.Core",
+		"Unity.VisualScripting.Core.Editor",
+		"Unity.VisualScripting.Flow",
+		"Unity.VisualScripting.State"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}
