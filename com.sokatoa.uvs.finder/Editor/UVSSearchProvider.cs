@@ -30,7 +30,8 @@ namespace Unity.VisualScripting.UVSFinder
             try
             {
                 ResultItemList itemsFound = new ResultItemList();
-                itemsFound = GetElementsFromCanvas(GraphWindow.active?.reference?.graph?.Canvas(), keyword, itemsFound);
+                var searchTermLowerInvariant = CleanString(keyword);
+                itemsFound = GetElementsFromCanvas(GraphWindow.active?.reference?.graph?.Canvas(), searchTermLowerInvariant, itemsFound);
                 return itemsFound.list;
             } catch (Exception e)
             {
