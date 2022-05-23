@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Unity.VisualScripting.UVSFinder.ExtensionMethods;
+using UnityEngine;
 
 namespace Unity.VisualScripting.UVSFinder
 {
@@ -114,7 +115,18 @@ namespace Unity.VisualScripting.UVSFinder
                     return $"{((TriggerCustomEvent)ge).defaultValues["name"]} [TriggerCustomEvent]";
                 case "Unity.VisualScripting.Literal":
                 case "Bolt.Literal":
-                    return $"{((Literal)ge).type.ToString().Split('.').Last()} \"{((Literal)ge).value}\" [Literal]";
+                    var literalType = ((Literal)ge).type.ToString();
+                    if (literalType == "System.Single")
+                    {
+                        return $"{"Float"} \"{((Literal)ge).value}\" [Literal]";
+                    }
+                    //Todo: Get the Layer value and convert it to a name
+                    /*else if (literalType == "UnityEngine.LayerMask")
+                    {
+                        Debug.Log(((Literal)ge).value).;
+                        //return $"{literalType.Split('.').Last()} \"{LayerMask.LayerToName((int)((Literal)ge).value)}\" [Literal]";
+                    }*/
+                    return $"{literalType.Split('.').Last()} \"{((Literal)ge).value}\" [Literal]";
                 case "Unity.VisualScripting.GraphGroup":
                 case "Bolt.GraphGroup":
                     return $"\"{((GraphGroup)ge).label}\" [Group]";
