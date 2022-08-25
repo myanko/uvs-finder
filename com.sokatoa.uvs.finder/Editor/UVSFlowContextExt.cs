@@ -17,6 +17,8 @@ namespace Unity.VisualScripting.UVSFinder
         public void OnFind(Vector2 vector)
         {
             UVSFinder.ShowUVSFinder();
+            UVSFinder window = (UVSFinder)UVSFinder.GetWindow(typeof(UVSFinder));
+            window.PerformSearchInCurrent("");
         }
 
         public void OnFindAndReplace(Vector2 vector)
@@ -26,8 +28,8 @@ namespace Unity.VisualScripting.UVSFinder
 
         protected virtual IEnumerable<GraphContextMenuItem> GetContextOptions()
         {
-            yield return new GraphContextMenuItem((Action<Vector2>)OnFind, "Find...");
-            /*if (nya)
+            yield return new GraphContextMenuItem((Action<Vector2>)OnFind, "Find all in current graph");
+           /* if (canvas.selection.Count > 0)
             {
                 yield return new GraphContextMenuItem((Action<Vector2>)OnFindAndReplace, "Find and replace");
             }*/

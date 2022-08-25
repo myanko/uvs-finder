@@ -14,7 +14,9 @@
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,
-    "precompiledReferences": [],
+    "precompiledReferences": [
+        "EditorPatching_0Harmony.dll"
+    ],
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [

@@ -24,6 +24,11 @@ namespace Unity.VisualScripting.UVSFinder
             GetWindow<UVSFinder>("UVSFinder");
         }
 
+        public static UVSFinder GetUVSFinder()
+        {
+            return GetWindow<UVSFinder>("UVSFinder");
+        }
+
         public int searchCount = 0;
         public List<string> nodeList = new List<string>();
         public ToolbarPopupSearchField searchField;
@@ -190,11 +195,23 @@ namespace Unity.VisualScripting.UVSFinder
             return texture;
         }
 
+        public void PerformSearchInCurrent(string keyword)
+        {
+            searchField.value = keyword;
+            OnCurrentGraphClick();
+            searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value);
+        }
+
         private void PerformSearch()
         {
             searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value);
             searchItems[UVSFinderTabs.all] = UVSSearchProvider.PerformSearchAll(searchField.value);
             searchItems[UVSFinderTabs.hierarchy] = UVSSearchProvider.PerformSearchInHierarchy(searchField.value);
+        }
+
+        private void PerformSearchCurrent()
+        {
+            searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value);
         }
 
         private void setWindowTitle()
@@ -215,6 +232,10 @@ namespace Unity.VisualScripting.UVSFinder
             tabAllGraphs.RemoveFromClassList("selected");
             tabHierarchyGraphButton.RemoveFromClassList("selected");
             selectedTab = UVSFinderTabs.current;
+            if(searchItems[UVSFinderTabs.current].Count == 0)
+            {
+                PerformSearchCurrent();
+            }
             DisplayResultsItems();
             setWindowTitle();
         }
