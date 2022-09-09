@@ -52,6 +52,9 @@ namespace Unity.VisualScripting.UVSFinder
             var dropdown = root.Q<DropdownField>("StateContext");
             dropdown.SetValueWithoutNotify(preferences.stateSearchContext.DisplayName());
             dropdown.RegisterValueChangedCallback((ChangeEvent<string> e) => SaveToJson());
+
+            var color = root.Q<ColorField>();
+            color.value = preferences.textHighLightColor;
         }
 
         public override void OnDeactivate()
