@@ -51,6 +51,7 @@ namespace Unity.VisualScripting.UVSFinder
             root.Bind(serializedObject);
             var dropdown = root.Q<DropdownField>("StateContext");
             dropdown.SetValueWithoutNotify(preferences.stateSearchContext.DisplayName());
+            dropdown.RegisterValueChangedCallback((ChangeEvent<string> e) => SaveToJson());
         }
 
         public override void OnDeactivate()

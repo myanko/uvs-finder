@@ -9,7 +9,6 @@ namespace Unity.VisualScripting.UVSFinder
         //Find in Current Graph
         public bool showTypeIconCurrent = true;
         public bool ShowAllNodesInGraphCurrent = true;
-        [SerializeField]
         public StateSearchContext stateSearchContext = StateSearchContext.All;
         public ItemAction itemClickCurrent = ItemAction.OpenInGraph;
         public ItemAction itemDoubleClickCurrent = ItemAction.OpenAndClose;
