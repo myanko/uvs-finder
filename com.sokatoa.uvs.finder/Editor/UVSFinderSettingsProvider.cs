@@ -3,6 +3,8 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
+using System.Collections.Generic;
+using UnityEngine.UI;
 
 namespace Unity.VisualScripting.UVSFinder
 {
@@ -38,7 +40,7 @@ namespace Unity.VisualScripting.UVSFinder
                 
             serializedObject = new SerializedObject(preferences);
             keywords = GetSearchKeywordsFromSerializedObject(serializedObject);
-            
+
             var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(UIPath + "UVSFinder_settings.uxml");
             visualTree.CloneTree(root);
             
@@ -47,6 +49,8 @@ namespace Unity.VisualScripting.UVSFinder
             
             ApplyStyling(root);
             root.Bind(serializedObject);
+            var dropdown = root.Q<DropdownField>("StateContext");
+            dropdown.SetValueWithoutNotify(preferences.stateSearchContext.DisplayName());
         }
 
         public override void OnDeactivate()

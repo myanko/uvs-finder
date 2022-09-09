@@ -5,19 +5,24 @@ using UnityEditor;
 using UnityEngine;
 using System.IO;
 using UnityEngine.SceneManagement;
+using Unity.VisualScripting;
 
 #if !SUBGRAPH_RENAME
 using SubgraphUnit = Unity.VisualScripting.SuperUnit;
 using ScriptMachine = Unity.VisualScripting.FlowMachine;
 #endif
 
+// Note:
+// StateMachine -> StateGraph -> FlowGraph/ScriptGraph
+// ScriptMachine -> ScriptGraph
 namespace Unity.VisualScripting.UVSFinder
 {
     public class UVSSearchProvider
     {
+        
         // finds all the results nodes from the current script opened
         // sets the searchItems with the nodes found as a GraphItem
-        public static List<ResultItem> PerformSearchInCurrentScript(string keyword)
+        public static List<ResultItem> PerformSearchInCurrentScript(string keyword, StateSearchContext stateSearchContext)
         {
             var graphWindow = EditorWindow.GetWindow<GraphWindow>();
 
@@ -31,13 +36,53 @@ namespace Unity.VisualScripting.UVSFinder
             {
                 ResultItemList itemsFound = new ResultItemList();
                 var searchTermLowerInvariant = CleanString(keyword);
-                itemsFound = GetElementsFromCanvas(GraphWindow.active?.reference?.graph?.Canvas(), searchTermLowerInvariant, itemsFound);
+                var canvas = GraphWindow.active?.reference?.graph?.Canvas();
+                if (GraphWindow.active?.reference.root.childGraph is StateGraph)
+                {
+                    Debug.Log(stateSearchContext.DisplayName());
+                    switch (stateSearchContext)
+                    {
+                        case StateSearchContext.All:
+                            {
+                                // Make sure to move the reference back to the root to grab all the children as well
+                                itemsFound = GetElementsFromStateGraph(GraphWindow.active?.reference.root.GetReference().AsReference(), (GraphWindow.active?.reference.root.childGraph as StateGraph), "", searchTermLowerInvariant, itemsFound);
+                                break;
+                            }
+                        case StateSearchContext.Children:
+                            {
+                                // Start at the current reference and go down
+                                itemsFound = GetElementsFromStateGraph(GraphWindow.active?.reference, (GraphWindow.active?.reference.graph as StateGraph), "", searchTermLowerInvariant, itemsFound);
+                                break;
+                            }
+                        case StateSearchContext.Parent:
+                            {
+                                // TODO:
+                                // Start where you are and recursively get the parent until you reach the root
+                                itemsFound = GetElementsFromStateGraph(GraphWindow.active?.reference.root.GetReference().AsReference(), (GraphWindow.active?.reference.root.childGraph as StateGraph), "", searchTermLowerInvariant, itemsFound);
+                                break;
+                            }
+                        case StateSearchContext.Current:
+                            {
+                                // only grab the elements of the current canvas
+                                itemsFound = GetElementsFromCanvas(canvas, searchTermLowerInvariant, itemsFound);
+                                break;
+                            }
+                    }
+                }
+                else
+                {
+                    // Also search in the canvas if the script is not a stategraph
+                    itemsFound = GetElementsFromCanvas(canvas, searchTermLowerInvariant, itemsFound);
+                }
+
                 return itemsFound.list;
             } catch (Exception e)
             {
                 Debug.Log($"encountered an error while searching in current script: {e}");
             }
 
+            
+            
             return new List<ResultItem>();
         }
 
@@ -248,7 +293,6 @@ namespace Unity.VisualScripting.UVSFinder
             }
             // get this layer's elements
             searchItems = GetElementsFromIGraph(reference, graph, assetPath, searchTermLowerInvariant, searchItems);
-            
             // get each states' elements
             if (graph.states.Count() > 0)
             {
