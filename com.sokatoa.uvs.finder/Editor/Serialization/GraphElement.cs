@@ -216,14 +216,39 @@ namespace Unity.VisualScripting.UVSFinder
                         return name;
                     }
 #endif
+                case "Unity.VisualScripting.SuperState":
+                    {
+                        var subgraph = (SuperState)ge;
+                        var name = "";
+                        if (subgraph.nest.source == GraphSource.Macro)
+                        {
+                            name = String.IsNullOrEmpty(subgraph.nest.macro.name) ? "SuperState" : subgraph.nest.macro.name;
+                            name = $"{name} [SuperState]";
+                        }
+                        else
+                        {
+                            name = String.IsNullOrEmpty(subgraph.nest.embed.title) ? "SuperState" : subgraph.nest.embed.title;
+                            name = $"{name} [SuperState Embed]";
+                        }
+                        return name;
+                    }
                 case "Unity.VisualScripting.StateUnit":
                     {
                         var stateUnit = (StateUnit)ge;
                         var name = "";
                         if (stateUnit.nest.source == GraphSource.Macro)
                         {
-                            name = String.IsNullOrEmpty(stateUnit.nest.macro.name) ? "State Unit" : stateUnit.nest.macro.name;
-                            name = $"{name} [State]";
+                            if (!String.IsNullOrEmpty(stateUnit.nest.graph.title))
+                            {
+                                name = stateUnit.nest.graph.title;
+                            } else if (!String.IsNullOrEmpty(stateUnit.nest.macro.name))
+                            {
+                                name = stateUnit.nest.macro.name;
+                            } else
+                            {
+                                name = "State Unit";
+                            }
+                            name = $"{name} [Macro State]";
                         }
                         else
                         {

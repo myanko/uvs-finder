@@ -192,7 +192,7 @@ namespace Unity.VisualScripting.UVSFinder
 
         private void PerformSearch()
         {
-            searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value);
+            searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value, prefs.stateSearchContext);
             searchItems[UVSFinderTabs.all] = UVSSearchProvider.PerformSearchAll(searchField.value);
             searchItems[UVSFinderTabs.hierarchy] = UVSSearchProvider.PerformSearchInHierarchy(searchField.value);
         }
@@ -264,12 +264,12 @@ namespace Unity.VisualScripting.UVSFinder
             // then we need to redo the "current graph" search
             if (selectedTab == UVSFinderTabs.all)
             {
-                searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value);
+                searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value, prefs.stateSearchContext);
                 setTabsResults();
             }
             else if (selectedTab == UVSFinderTabs.hierarchy)
             {
-                searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value);
+                searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value, prefs.stateSearchContext);
                 setTabsResults();
             }
             GetWindow<UVSFinder>().Focus();
