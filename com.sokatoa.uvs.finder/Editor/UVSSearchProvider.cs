@@ -39,19 +39,33 @@ namespace Unity.VisualScripting.UVSFinder
                 var canvas = GraphWindow.active?.reference?.graph?.Canvas();
                 if (GraphWindow.active?.reference.root.childGraph is StateGraph)
                 {
-                    Debug.Log(stateSearchContext.DisplayName());
                     switch (stateSearchContext)
                     {
                         case StateSearchContext.All:
                             {
                                 // Make sure to move the reference back to the root to grab all the children as well
-                                itemsFound = GetElementsFromStateGraph(GraphWindow.active?.reference.root.GetReference().AsReference(), (GraphWindow.active?.reference.root.childGraph as StateGraph), "", searchTermLowerInvariant, itemsFound);
+                                if (GraphWindow.active?.reference.root.childGraph is FlowGraph)
+                                {
+                                    itemsFound = GetElementsFromFlowGraph(GraphWindow.active?.reference.root.GetReference().AsReference(), (GraphWindow.active?.reference.root.childGraph as FlowGraph), "", searchTermLowerInvariant, itemsFound);
+                                }
+                                else
+                                {
+                                    itemsFound = GetElementsFromStateGraph(GraphWindow.active?.reference.root.GetReference().AsReference(), (GraphWindow.active?.reference.root.childGraph as StateGraph), "", searchTermLowerInvariant, itemsFound);
+                                }
                                 break;
                             }
                         case StateSearchContext.Children:
                             {
                                 // Start at the current reference and go down
-                                itemsFound = GetElementsFromStateGraph(GraphWindow.active?.reference, (GraphWindow.active?.reference.graph as StateGraph), "", searchTermLowerInvariant, itemsFound);
+                                if (GraphWindow.active?.reference.graph is FlowGraph)
+                                {
+                                    itemsFound = GetElementsFromFlowGraph(GraphWindow.active?.reference, (GraphWindow.active?.reference.graph as FlowGraph), "", searchTermLowerInvariant, itemsFound);
+                                }
+                                else
+                                {
+                                    // this will grab the current and child graph of the stategraph
+                                    itemsFound = GetElementsFromStateGraph(GraphWindow.active?.reference, (GraphWindow.active?.reference.graph as StateGraph), "", searchTermLowerInvariant, itemsFound);
+                                }
                                 break;
                             }
                         case StateSearchContext.Parent:
@@ -253,7 +267,8 @@ namespace Unity.VisualScripting.UVSFinder
                         assetPath = assetPath,
                         graphReference = reference,
                         graphGuid = e.guid.ToString(),
-                        graphElement = e
+                        graphElement = e,
+                        stateName = graph.title
                     });
                 }
             }
@@ -261,7 +276,7 @@ namespace Unity.VisualScripting.UVSFinder
             return searchItems;
         }
 
-        private static ResultItemList GetElementsFromSubGraph(GraphReference reference, FlowGraph graph, string assetPath, string searchTermLowerInvariant, ResultItemList searchItems)
+        private static ResultItemList GetElementsFromFlowGraph(GraphReference reference, FlowGraph graph, string assetPath, string searchTermLowerInvariant, ResultItemList searchItems)
         {
             // get this layer's elements
             searchItems = GetElementsFromIGraph(reference, graph, assetPath, searchTermLowerInvariant, searchItems);
@@ -307,7 +322,13 @@ namespace Unity.VisualScripting.UVSFinder
                             foreach (var e in childGraph.elements)
                             {
                                 var stateName = !String.IsNullOrEmpty(childGraph.title) ? childGraph.title : "Script State";
-                                searchItems = GrabElements(e, stateName, null, reference.ChildReference((INesterState)state, false), childGraph, assetPath, searchTermLowerInvariant, searchItems);
+                                if (childGraph is StateGraph)
+                                {
+                                    GetElementsFromStateGraph(reference.ChildReference((INesterState)state, false), (StateGraph)childGraph, assetPath, searchTermLowerInvariant, searchItems);
+                                } else
+                                {
+                                    searchItems = GrabElements(e, stateName, null, reference.ChildReference((INesterState)state, false), childGraph, assetPath, searchTermLowerInvariant, searchItems);
+                                }
                             }
                         }
                     }
@@ -327,18 +348,34 @@ namespace Unity.VisualScripting.UVSFinder
                     var embedElementNameLowerInvariant = CleanString(GraphElement.GetElementName(e));
                     if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant) && !IsIgnoreElement(e))
                     {
-                        //Debug.Log($"Adding {GraphElement.GetElementName(e)} with state {state.graph.title} {state.guid} {((INesterState)state).childGraph?.title}");
                         searchItems.AddDistinct(new ResultItem()
                         {
                             itemName = $"{GraphElement.GetElementName(e)}",
                             assetPath = assetPath,
                             graphReference = reference,
                             graphGuid = e.guid.ToString(),
-                            graphElement = e
+                            graphElement = e,
+                            stateName = stateName
                         });
                     }
                     // children
-                    searchItems = GetElementsFromStateGraph(reference.ChildReference((StateUnit)e, false), ((StateUnit)e).nest.graph, assetPath, searchTermLowerInvariant, searchItems);
+                    searchItems = GetElementsFromStateGraph(reference.ChildReference((StateUnit)e, false), ((StateUnit)e).nest?.graph, assetPath, searchTermLowerInvariant, searchItems);
+                } else if (((StateUnit)e).nest?.source == GraphSource.Macro)
+                {
+                    // just put this node, do not get inside it
+                    var embedElementNameLowerInvariant = CleanString(GraphElement.GetElementName(e));
+                    if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant) && !IsIgnoreElement(e))
+                    {
+                        searchItems.AddDistinct(new ResultItem()
+                        {
+                            itemName = $"{GraphElement.GetElementName(e)}",
+                            assetPath = assetPath,
+                            graphReference = reference,
+                            graphGuid = e.guid.ToString(),
+                            graphElement = e,
+                            stateName = stateName
+                        });
+                    }
                 }
             }
             else if (e is SubgraphUnit)
@@ -357,12 +394,30 @@ namespace Unity.VisualScripting.UVSFinder
                             assetPath = assetPath,
                             graphReference = reference,
                             graphGuid = e.guid.ToString(),
-                            graphElement = e
+                            graphElement = e,
+                            stateName = stateName
                         });
                     }
-                    searchItems = GetElementsFromSubGraph(reference.ChildReference(((SubgraphUnit)e), false), ((SubgraphUnit)e).nest.graph, assetPath, searchTermLowerInvariant, searchItems);
+                    searchItems = GetElementsFromFlowGraph(reference.ChildReference(((SubgraphUnit)e), false), ((SubgraphUnit)e).nest.graph, assetPath, searchTermLowerInvariant, searchItems);
                 }
-            }
+                else if (((SubgraphUnit)e).nest?.source == GraphSource.Macro)
+                {
+                    // just put this node, do not get inside it
+                    var embedElementNameLowerInvariant = CleanString(GraphElement.GetElementName(e));
+                    if (embedElementNameLowerInvariant.Contains(searchTermLowerInvariant) && !IsIgnoreElement(e))
+                    {
+                        searchItems.AddDistinct(new ResultItem()
+                        {
+                            itemName = $"{GraphElement.GetElementName(e)}",
+                            assetPath = assetPath,
+                            graphReference = reference,
+                            graphGuid = e.guid.ToString(),
+                            graphElement = e,
+                            stateName = stateName
+                        });
+                    }
+                }
+            } 
             else
             {
                 try
@@ -384,7 +439,7 @@ namespace Unity.VisualScripting.UVSFinder
                     }
                 } catch (Exception ex)
                 {
-                    Debug.Log($"Could not add element {e?.guid} {assetPath} {reference?.graph?.title}");
+                    Debug.Log($"Could not add element {e?.guid} {assetPath} {reference?.graph?.title} because of {ex}");
                 }
             }
 
@@ -424,7 +479,7 @@ namespace Unity.VisualScripting.UVSFinder
             bool isInList = false;
             foreach (var i in list)
             {
-                if (i.graphGuid == item.graphGuid && i.assetPath == item.assetPath)
+                if (i.graphGuid == item.graphGuid && i.assetPath == item.assetPath && i.stateName == item.stateName)
                 {
                     isInList = true;
                 }
