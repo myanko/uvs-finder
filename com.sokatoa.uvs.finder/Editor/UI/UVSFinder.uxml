@@ -1,6 +1,6 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
     <Style src="UVSFinder.uss" />
-    <ui:VisualElement name="Screen" style="flex-grow: 1; flex-shrink: 1; flex-direction: column; min-width: 100px; min-height: auto; justify-content: flex-end;">
+    <ui:VisualElement name="Screen" style="flex-grow: 1; flex-shrink: 1; flex-direction: column; min-width: 388px; min-height: auto; justify-content: flex-end;">
         <ui:VisualElement text="Current Graph" style="flex-direction: row; border-bottom-color: rgb(0, 0, 0); border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 1px; background-color: rgb(40, 40, 40); max-height: 32px; visibility: hidden; display: none;">
             <ui:Button text="Find" display-tooltip-when-elided="true" class="tab" />
             <ui:Button text="Replace" display-tooltip-when-elided="true" class="tab selected" />
@@ -11,14 +11,14 @@
             <ui:DropdownField index="-1" style="min-width: 12px; max-width: 50px; display: none;" />
         </ui:GroupBox>
         <ui:VisualElement text="Current Graph" style="flex-direction: row; border-bottom-color: rgb(0, 0, 0); border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 1px; background-color: rgb(40, 40, 40); max-height: 32px;">
-            <ui:Button text="      Current Graph" display-tooltip-when-elided="true" name="currentGraphButton" binding-path="tabCurrentGraph" enable-rich-text="true" class="tab" style="flex-grow: 0; -unity-text-align: middle-left; min-width: 110px;">
-                <ui:Toggle value="true" style="max-width: 14px; max-height: initial; min-width: 14px;" />
+            <ui:Button text="      Current Graph" display-tooltip-when-elided="true" name="currentGraphButton" binding-path="tabCurrentGraph" enable-rich-text="true" class="tab" style="flex-grow: 0; -unity-text-align: middle-left; min-width: 140px; flex-direction: row;">
+                <ui:Toggle value="true" binding-path="enableCurrentGraphSearch" name="toggleEnableCurrentGraphSearch" style="max-width: 14px; max-height: initial; min-width: 14px;" />
             </ui:Button>
-            <ui:Button text="      All Graphs" display-tooltip-when-elided="true" name="allGraphsButton" binding-path="tabAllGraphs" class="tab selected" style="min-width: 89px; -unity-text-align: middle-left;">
-                <ui:Toggle value="true" style="max-width: 14px; max-height: initial; min-width: 14px;" />
+            <ui:Button text="      All Graphs" display-tooltip-when-elided="true" name="allGraphsButton" binding-path="tabAllGraphs" class="tab selected" style="min-width: 120px; -unity-text-align: middle-left; flex-direction: row;">
+                <ui:Toggle value="true" binding-path="enableAllGraphsSearch" name="toggleEnableAllGraphsSearch" style="max-width: 14px; max-height: initial; min-width: 14px;" />
             </ui:Button>
-            <ui:Button text="      Hierarchy" display-tooltip-when-elided="true" name="hierarchyGraphButton" class="tab" style="display: flex; min-width: 85px; -unity-text-align: middle-left;">
-                <ui:Toggle value="true" style="max-width: 14px; max-height: initial; min-width: 14px;" />
+            <ui:Button text="      Hierarchy" display-tooltip-when-elided="true" name="hierarchyGraphButton" binding-path="tabHierarchy" class="tab" style="display: flex; min-width: 110px; -unity-text-align: middle-left; flex-direction: row;">
+                <ui:Toggle value="true" binding-path="enableHierarchySearch" name="toggleEnableHierarchySearch" style="max-width: 14px; max-height: initial; min-width: 14px;" />
             </ui:Button>
             <ui:Button text="Project" display-tooltip-when-elided="true" name="ProjectGraphButton" class="tab" style="display: none;">
                 <ui:Toggle value="true" style="max-width: 14px; max-height: initial; min-width: 14px;" />

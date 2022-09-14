@@ -40,8 +40,11 @@ namespace Unity.VisualScripting.UVSFinder
         public ListView resultListview;
 
         private Button tabCurrentGraph;
+        private Toggle enableCurrentGraphSearch;
         private Button tabAllGraphs;
+        private Toggle enableAllGraphsSearch;
         private Button tabHierarchyGraphButton;
+        private Toggle enableHierarchySearch;
         private UVSFinderTabs selectedTab;
 
         public void OnEnable()
@@ -73,10 +76,13 @@ namespace Unity.VisualScripting.UVSFinder
             // Tabs
             tabCurrentGraph = root.Q<Button>("currentGraphButton");
             tabCurrentGraph.clicked += OnCurrentGraphClick;
+            enableCurrentGraphSearch = root.Q<Toggle>("toggleEnableCurrentGraphSearch");
             tabAllGraphs = root.Q<Button>("allGraphsButton");
             tabAllGraphs.clicked += OnAllGraphsClick;
+            enableAllGraphsSearch = root.Q<Toggle>("toggleEnableAllGraphsSearch");
             tabHierarchyGraphButton = root.Q<Button>("hierarchyGraphButton");
             tabHierarchyGraphButton.clicked += OnHierarchyGraphClick;
+            enableHierarchySearch = root.Q<Toggle>("toggleEnableHierarchySearch");
             selectedTab = UVSFinderTabs.all;
 
             // The "makeItem" function will be called as needed
@@ -192,9 +198,19 @@ namespace Unity.VisualScripting.UVSFinder
 
         private void PerformSearch()
         {
-            searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value, prefs.stateSearchContext);
-            searchItems[UVSFinderTabs.all] = UVSSearchProvider.PerformSearchAll(searchField.value);
-            searchItems[UVSFinderTabs.hierarchy] = UVSSearchProvider.PerformSearchInHierarchy(searchField.value);
+            //Ici
+            if(enableCurrentGraphSearch.value == true)
+            {
+                searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value, prefs.stateSearchContext);
+            }
+            if (enableAllGraphsSearch.value == true)
+            {
+                searchItems[UVSFinderTabs.all] = UVSSearchProvider.PerformSearchAll(searchField.value);
+            }
+            if (enableHierarchySearch.value == true)
+            {
+                searchItems[UVSFinderTabs.hierarchy] = UVSSearchProvider.PerformSearchInHierarchy(searchField.value);
+            }
         }
 
         private void setWindowTitle()
@@ -205,9 +221,9 @@ namespace Unity.VisualScripting.UVSFinder
 
         private void setTabsResults()
         {
-            tabAllGraphs.text = ("All Graphs (" + searchItems[UVSFinderTabs.all]?.Count + ")");
-            tabCurrentGraph.text = ("Current Graph (" + searchItems[UVSFinderTabs.current]?.Count + ")");
-            tabHierarchyGraphButton.text = ("Hierarchy (" + searchItems[UVSFinderTabs.hierarchy]?.Count + ")");
+            tabAllGraphs.text = ("      All Graphs (" + searchItems[UVSFinderTabs.all]?.Count + ")");
+            tabCurrentGraph.text = ("      Current Graph (" + searchItems[UVSFinderTabs.current]?.Count + ")");
+            tabHierarchyGraphButton.text = ("      Hierarchy (" + searchItems[UVSFinderTabs.hierarchy]?.Count + ")");
         }
         private void OnCurrentGraphClick()
         {
