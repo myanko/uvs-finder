@@ -20,6 +20,9 @@ namespace Unity.VisualScripting.UVSFinder
         public ItemAction itemDoubleClickAll = ItemAction.OpenAndClose;
         //Find in Hierarchy
         public bool showTypeIconHierarchy = true;
+        public bool enableCurrentGraphSearch = true;
+        public bool enableAllGraphsSearch = true;
+        public bool enableHierarchySearch = true;
     }
 
     internal enum ItemAction

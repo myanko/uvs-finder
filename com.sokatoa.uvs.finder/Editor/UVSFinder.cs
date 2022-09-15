@@ -198,7 +198,6 @@ namespace Unity.VisualScripting.UVSFinder
 
         private void PerformSearch()
         {
-            //Ici
             if(enableCurrentGraphSearch.value == true)
             {
                 searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value, prefs.stateSearchContext);
