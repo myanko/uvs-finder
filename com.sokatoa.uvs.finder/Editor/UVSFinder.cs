@@ -77,12 +77,18 @@ namespace Unity.VisualScripting.UVSFinder
             tabCurrentGraph = root.Q<Button>("currentGraphButton");
             tabCurrentGraph.clicked += OnCurrentGraphClick;
             enableCurrentGraphSearch = root.Q<Toggle>("toggleEnableCurrentGraphSearch");
+            enableCurrentGraphSearch.value = prefs.enableCurrentGraphSearch;
+            enableCurrentGraphSearch.RegisterValueChangedCallback(OnEnableCurrentGraphSearchValueChanged);
             tabAllGraphs = root.Q<Button>("allGraphsButton");
             tabAllGraphs.clicked += OnAllGraphsClick;
             enableAllGraphsSearch = root.Q<Toggle>("toggleEnableAllGraphsSearch");
+            enableAllGraphsSearch.value = prefs.enableAllGraphsSearch;
+            enableAllGraphsSearch.RegisterValueChangedCallback(OnEnableAllGraphsSearchValueChanged);
             tabHierarchyGraphButton = root.Q<Button>("hierarchyGraphButton");
             tabHierarchyGraphButton.clicked += OnHierarchyGraphClick;
             enableHierarchySearch = root.Q<Toggle>("toggleEnableHierarchySearch");
+            enableHierarchySearch.value = prefs.enableHierarchySearch;
+            enableHierarchySearch.RegisterValueChangedCallback(OnEnableHierarchySearchValueChanged);
             selectedTab = UVSFinderTabs.all;
 
             // The "makeItem" function will be called as needed
@@ -254,6 +260,18 @@ namespace Unity.VisualScripting.UVSFinder
             setWindowTitle();
         }
 
+        private void OnEnableCurrentGraphSearchValueChanged(ChangeEvent<bool> evt)
+        {
+            prefs.enableCurrentGraphSearch = enableCurrentGraphSearch.value;
+        }
+        private void OnEnableAllGraphsSearchValueChanged(ChangeEvent<bool> evt)
+        {
+            prefs.enableAllGraphsSearch = enableAllGraphsSearch.value;
+        }
+        private void OnEnableHierarchySearchValueChanged(ChangeEvent<bool> evt)
+        {
+            prefs.enableHierarchySearch = enableHierarchySearch.value;
+        }
         private void OnKeyUp(KeyUpEvent evt)
         {
             if (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter)
