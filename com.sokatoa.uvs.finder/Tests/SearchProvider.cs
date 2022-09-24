@@ -76,10 +76,11 @@ namespace Unity.VisualScripting.UVSFinder {
         }
 
         [Test]
-        [TestCase("", 71)] 
-        [TestCase("furet", 14)]
-        [TestCase("Furet", 14)]
-        [TestCase("FURET", 14)]
+        [TestCase("", 75)] 
+        [TestCase("furet", 11)]
+        [TestCase("Furet", 11)]
+        [TestCase("FURET", 11)]
+        [TestCase("unnamed", 3)] // special naming
         [TestCase("[", 24)]
         [TestCase("notexisting", 0)]
         [TestCase("(", 0)]

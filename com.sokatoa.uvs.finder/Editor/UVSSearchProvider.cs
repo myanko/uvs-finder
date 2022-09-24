@@ -311,9 +311,32 @@ namespace Unity.VisualScripting.UVSFinder
             // get each states' elements
             if (graph.states.Count() > 0)
             {
+                foreach (var transition in graph.transitions)
+                {
+                    if (transition is INesterStateTransition)
+                    {
+                        IGraph childGraph = ((INesterStateTransition)transition).childGraph;
+                        if (childGraph?.elements.Count() > 0)
+                        {
+                            foreach (var e in childGraph.elements)
+                            {
+                                var stateName = !String.IsNullOrEmpty(childGraph.title) ? childGraph.title : "Script State";
+                                if (childGraph is StateGraph)
+                                {
+                                    searchItems = GetElementsFromStateGraph(reference.ChildReference((INesterStateTransition)transition, false), (StateGraph)childGraph, assetPath, searchTermLowerInvariant, searchItems);
+                                }
+                                else
+                                {
+                                    searchItems = GrabElements(e, stateName, null, reference.ChildReference((INesterStateTransition)transition, false), childGraph, assetPath, searchTermLowerInvariant, searchItems);
+                                }
+                            }
+                        }
+                    }
+                }
+
                 foreach (var state in graph.states)
                 {
-                    if (state is INesterState) // TODO: deal with transitions too!
+                    if (state is INesterState)
                     {
                         IGraph childGraph = ((INesterState)state).childGraph;
                         if (childGraph?.elements.Count() > 0)
@@ -324,7 +347,7 @@ namespace Unity.VisualScripting.UVSFinder
                                 var stateName = !String.IsNullOrEmpty(childGraph.title) ? childGraph.title : "Script State";
                                 if (childGraph is StateGraph)
                                 {
-                                    GetElementsFromStateGraph(reference.ChildReference((INesterState)state, false), (StateGraph)childGraph, assetPath, searchTermLowerInvariant, searchItems);
+                                    searchItems = GetElementsFromStateGraph(reference.ChildReference((INesterState)state, false), (StateGraph)childGraph, assetPath, searchTermLowerInvariant, searchItems);
                                 } else
                                 {
                                     searchItems = GrabElements(e, stateName, null, reference.ChildReference((INesterState)state, false), childGraph, assetPath, searchTermLowerInvariant, searchItems);
@@ -333,6 +356,7 @@ namespace Unity.VisualScripting.UVSFinder
                         }
                     }
                 }
+                
             }
             return searchItems;
         }

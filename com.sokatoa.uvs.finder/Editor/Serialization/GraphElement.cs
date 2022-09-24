@@ -135,15 +135,12 @@ namespace Unity.VisualScripting.UVSFinder
                         var flow = (FlowState)ge;
                         var name = "[FlowState]";
 
-                        if (!string.IsNullOrEmpty(flow.graph.title))
-                        {
-                            name = $"{flow.graph.title} [FlowState]";
-                        }
-                        // this depends on the bread crumb and where I am...
-                        // TODO: test with more than one level of pathing
-                        if (!string.IsNullOrEmpty(flow.nest.graph.title))
+                        if (!string.IsNullOrEmpty(flow.nest.nester.childGraph.title))
                         {
                             name = $"{flow.nest.graph.title} [FlowState]";
+                        } else
+                        {
+                            name = $"Unnamed [FlowState]";
                         }
                         if (flow.nest.source == GraphSource.Embed)
                         {
@@ -157,20 +154,33 @@ namespace Unity.VisualScripting.UVSFinder
                     }
                 case "Unity.VisualScripting.FlowStateTransition":
                     {
-                        var flow = (FlowStateTransition)ge;
+                        var transition = (FlowStateTransition)ge;
                         var name = "[FlowStateTransition]";
-                        if (!string.IsNullOrEmpty(flow.graph.title))
+                        if (!string.IsNullOrEmpty(transition.nest.nester.childGraph.title))
                         {
-                            name = $"{flow.graph.title} [FlowStateTransition]";
-                        }
-                        if (!string.IsNullOrEmpty(flow.nest.graph.title))
+                            name = $"{transition.nest.nester.childGraph.title} [FlowStateTransition]";
+                        } else
                         {
-                            name = $"{flow.nest.graph.title} [FlowStateTransition]";
+                            name = $"Unnamed [FlowStateTransition]";
                         }
-                        if (flow.nest.source == GraphSource.Embed)
+                        if (transition.nest.source == GraphSource.Embed)
                         {
                             name = name.Replace("[FlowStateTransition]", "[FlowStateTransition Embed]");
                         }
+                        return name;
+                    }
+                case "Unity.VisualScripting.StateTransition":
+                    {
+                        var transition = (StateTransition)ge;
+                        var name = "[StateTransition]";
+                        if (!string.IsNullOrEmpty(transition.graph.title))
+                        {
+                            name = $"{transition.graph.title} [StateTransition]";
+                        }
+                        /*if (transition.source.g == GraphSource.Embed)
+                        {
+                            name = name.Replace("[FlowStateTransition]", "[FlowStateTransition Embed]");
+                        }*/
                         return name;
                     }
                 case "Unity.VisualScripting.AnyState":

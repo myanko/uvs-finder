@@ -405,14 +405,22 @@ namespace Unity.VisualScripting.UVSFinder
                 // it is one of the states in the first layer. Return the first layer
                 return new SearchInfo() { element = st, found = true };
             }
-            foreach (var s in stateGraph.states)
+
+            var t = (INesterStateTransition)stateGraph.transitions.FirstOrDefault(s => s.guid.ToString() == resultItem.graphGuid);
+            if (t != null)
             {
-                if (s is INesterState)
+                // it is one of the states in the first layer. Return the first layer
+                return new SearchInfo() { element = t, found = true };
+            }
+
+            foreach (var s in stateGraph.transitions)
+            {
+                if (s is INesterStateTransition)
                 {
-                    var nesterState = s as INesterState; // TODO: deal with transitions!
-                    if (nesterState.childGraph.elements.Count() > 0)
+                    var nesterState = s as INesterStateTransition;
+                    if (nesterState.graph.elements.Count() > 0)
                     {
-                        foreach (var e in nesterState.childGraph.elements)
+                        foreach (var e in nesterState.graph.elements)
                         {
                             if (e.guid.ToString() == resultItem.graphGuid)
                             {
@@ -439,6 +447,50 @@ namespace Unity.VisualScripting.UVSFinder
                     }
                 }
             }
+
+            foreach (var s in stateGraph.states)
+            {
+                if (s is INesterState)
+                {
+                    var nesterState = s as INesterState; 
+                    if (nesterState.childGraph.elements.Count() > 0)
+                    {
+                        foreach (var e in nesterState.childGraph.elements)
+                        {
+                            if (e.guid.ToString() == resultItem.graphGuid)
+                            {
+                                graphWindow.reference = graphWindow.reference.ChildReference(nesterState, false);
+                                return new SearchInfo() { element = e, found = true };
+                            }
+
+                            if (e is StateUnit)
+                            {
+                                graphWindow.reference = graphWindow.reference.ChildReference(nesterState, false);
+                                var result = FindElementsInStateUnit(resultItem, graphWindow, (StateUnit)e);
+                                if (result.found) { return result; }
+                                graphWindow.reference = graphWindow.reference.ParentReference(false);// move back up instead
+                            }
+
+                            if (e is SubgraphUnit)
+                            {
+                                graphWindow.reference = graphWindow.reference.ChildReference(nesterState, false);
+                                var result = FindElementsInSubGraphUnit(resultItem, graphWindow, (SubgraphUnit)e);
+                                if (result.found) { return result; }
+                                graphWindow.reference = graphWindow.reference.ParentReference(false);// move back up instead
+                            }
+
+                            if(e is IStateTransition)
+                            {
+                                graphWindow.reference = graphWindow.reference.ChildReference(nesterState, false);
+                                var result = FindElementsInSubGraphUnit(resultItem, graphWindow, (SubgraphUnit)e);
+                                if (result.found) { return result; }
+                                graphWindow.reference = graphWindow.reference.ParentReference(false);// move back up instead
+                            }
+                        }
+                    }
+                }
+            }
+
             // if we reach here, it means that we were not able to find the element...
             return new SearchInfo() { element = resultItem.graphElement, found = false };
         }
