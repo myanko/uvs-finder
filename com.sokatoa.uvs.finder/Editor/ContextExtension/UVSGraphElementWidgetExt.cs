@@ -24,7 +24,7 @@ namespace Unity.VisualScripting.UVSFinder {
         [HarmonyPatch(typeof(GraphElementWidget<ICanvas, IGraphElement>), "contextOptions", MethodType.Getter)]
         static IEnumerable<DropdownOption> Postfix1(IEnumerable<DropdownOption> __result, GraphElementWidget<ICanvas, IGraphElement> __instance){ 
             // UnitWidget > NodeWidget > GraphElementWidget
-            // SUperUnitWidget > NesterUnitWidget > UnitWidget
+            // SuperUnitWidget > NesterUnitWidget > UnitWidget
             var canvasProp = __instance.GetType().GetProperty("canvas", BindingFlags.NonPublic | BindingFlags.Instance);
             ICanvas canvas = (ICanvas)canvasProp.GetValue(__instance);
 
