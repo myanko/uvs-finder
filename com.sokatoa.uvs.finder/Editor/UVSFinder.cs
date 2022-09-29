@@ -45,8 +45,11 @@ namespace Unity.VisualScripting.UVSFinder
         public ListView resultListview;
 
         private Button tabCurrentGraph;
+        private Toggle enableCurrentGraphSearch;
         private Button tabAllGraphs;
+        private Toggle enableAllGraphsSearch;
         private Button tabHierarchyGraphButton;
+        private Toggle enableHierarchySearch;
         private UVSFinderTabs selectedTab;
 
         public void OnEnable()
@@ -78,10 +81,19 @@ namespace Unity.VisualScripting.UVSFinder
             // Tabs
             tabCurrentGraph = root.Q<Button>("currentGraphButton");
             tabCurrentGraph.clicked += OnCurrentGraphClick;
+            enableCurrentGraphSearch = root.Q<Toggle>("toggleEnableCurrentGraphSearch");
+            enableCurrentGraphSearch.value = prefs.enableCurrentGraphSearch;
+            enableCurrentGraphSearch.RegisterValueChangedCallback(OnEnableCurrentGraphSearchValueChanged);
             tabAllGraphs = root.Q<Button>("allGraphsButton");
             tabAllGraphs.clicked += OnAllGraphsClick;
+            enableAllGraphsSearch = root.Q<Toggle>("toggleEnableAllGraphsSearch");
+            enableAllGraphsSearch.value = prefs.enableAllGraphsSearch;
+            enableAllGraphsSearch.RegisterValueChangedCallback(OnEnableAllGraphsSearchValueChanged);
             tabHierarchyGraphButton = root.Q<Button>("hierarchyGraphButton");
             tabHierarchyGraphButton.clicked += OnHierarchyGraphClick;
+            enableHierarchySearch = root.Q<Toggle>("toggleEnableHierarchySearch");
+            enableHierarchySearch.value = prefs.enableHierarchySearch;
+            enableHierarchySearch.RegisterValueChangedCallback(OnEnableHierarchySearchValueChanged);
             selectedTab = UVSFinderTabs.all;
 
             // The "makeItem" function will be called as needed
@@ -204,9 +216,18 @@ namespace Unity.VisualScripting.UVSFinder
 
         private void PerformSearch()
         {
-            searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value);
-            searchItems[UVSFinderTabs.all] = UVSSearchProvider.PerformSearchAll(searchField.value);
-            searchItems[UVSFinderTabs.hierarchy] = UVSSearchProvider.PerformSearchInHierarchy(searchField.value);
+            if(enableCurrentGraphSearch.value == true)
+            {
+                searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value, prefs.stateSearchContext);
+            }
+            if (enableAllGraphsSearch.value == true)
+            {
+                searchItems[UVSFinderTabs.all] = UVSSearchProvider.PerformSearchAll(searchField.value);
+            }
+            if (enableHierarchySearch.value == true)
+            {
+                searchItems[UVSFinderTabs.hierarchy] = UVSSearchProvider.PerformSearchInHierarchy(searchField.value);
+            }
         }
 
         private void PerformSearchCurrent()
@@ -222,9 +243,9 @@ namespace Unity.VisualScripting.UVSFinder
 
         private void setTabsResults()
         {
-            tabAllGraphs.text = ("All Graphs (" + searchItems[UVSFinderTabs.all]?.Count + ")");
-            tabCurrentGraph.text = ("Current Graph (" + searchItems[UVSFinderTabs.current]?.Count + ")");
-            tabHierarchyGraphButton.text = ("Hierarchy (" + searchItems[UVSFinderTabs.hierarchy]?.Count + ")");
+            tabAllGraphs.text = ("      All Graphs (" + searchItems[UVSFinderTabs.all]?.Count + ")");
+            tabCurrentGraph.text = ("      Current Graph (" + searchItems[UVSFinderTabs.current]?.Count + ")");
+            tabHierarchyGraphButton.text = ("      Hierarchy (" + searchItems[UVSFinderTabs.hierarchy]?.Count + ")");
         }
         private void OnCurrentGraphClick()
         {
@@ -260,6 +281,18 @@ namespace Unity.VisualScripting.UVSFinder
             setWindowTitle();
         }
 
+        private void OnEnableCurrentGraphSearchValueChanged(ChangeEvent<bool> evt)
+        {
+            prefs.enableCurrentGraphSearch = enableCurrentGraphSearch.value;
+        }
+        private void OnEnableAllGraphsSearchValueChanged(ChangeEvent<bool> evt)
+        {
+            prefs.enableAllGraphsSearch = enableAllGraphsSearch.value;
+        }
+        private void OnEnableHierarchySearchValueChanged(ChangeEvent<bool> evt)
+        {
+            prefs.enableHierarchySearch = enableHierarchySearch.value;
+        }
         private void OnKeyUp(KeyUpEvent evt)
         {
             if (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter)
@@ -285,12 +318,12 @@ namespace Unity.VisualScripting.UVSFinder
             // then we need to redo the "current graph" search
             if (selectedTab == UVSFinderTabs.all)
             {
-                searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value);
+                searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value, prefs.stateSearchContext);
                 setTabsResults();
             }
             else if (selectedTab == UVSFinderTabs.hierarchy)
             {
-                searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value);
+                searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value, prefs.stateSearchContext);
                 setTabsResults();
             }
             GetWindow<UVSFinder>().Focus();
@@ -393,14 +426,22 @@ namespace Unity.VisualScripting.UVSFinder
                 // it is one of the states in the first layer. Return the first layer
                 return new SearchInfo() { element = st, found = true };
             }
-            foreach (var s in stateGraph.states)
+
+            var t = (INesterStateTransition)stateGraph.transitions.FirstOrDefault(s => s.guid.ToString() == resultItem.graphGuid);
+            if (t != null)
             {
-                if (s is INesterState)
+                // it is one of the states in the first layer. Return the first layer
+                return new SearchInfo() { element = t, found = true };
+            }
+
+            foreach (var s in stateGraph.transitions)
+            {
+                if (s is INesterStateTransition)
                 {
-                    var nesterState = s as INesterState; // TODO: deal with transitions!
-                    if (nesterState.childGraph.elements.Count() > 0)
+                    var nesterState = s as INesterStateTransition;
+                    if (nesterState.graph.elements.Count() > 0)
                     {
-                        foreach (var e in nesterState.childGraph.elements)
+                        foreach (var e in nesterState.graph.elements)
                         {
                             if (e.guid.ToString() == resultItem.graphGuid)
                             {
@@ -427,6 +468,50 @@ namespace Unity.VisualScripting.UVSFinder
                     }
                 }
             }
+
+            foreach (var s in stateGraph.states)
+            {
+                if (s is INesterState)
+                {
+                    var nesterState = s as INesterState; 
+                    if (nesterState.childGraph.elements.Count() > 0)
+                    {
+                        foreach (var e in nesterState.childGraph.elements)
+                        {
+                            if (e.guid.ToString() == resultItem.graphGuid)
+                            {
+                                graphWindow.reference = graphWindow.reference.ChildReference(nesterState, false);
+                                return new SearchInfo() { element = e, found = true };
+                            }
+
+                            if (e is StateUnit)
+                            {
+                                graphWindow.reference = graphWindow.reference.ChildReference(nesterState, false);
+                                var result = FindElementsInStateUnit(resultItem, graphWindow, (StateUnit)e);
+                                if (result.found) { return result; }
+                                graphWindow.reference = graphWindow.reference.ParentReference(false);// move back up instead
+                            }
+
+                            if (e is SubgraphUnit)
+                            {
+                                graphWindow.reference = graphWindow.reference.ChildReference(nesterState, false);
+                                var result = FindElementsInSubGraphUnit(resultItem, graphWindow, (SubgraphUnit)e);
+                                if (result.found) { return result; }
+                                graphWindow.reference = graphWindow.reference.ParentReference(false);// move back up instead
+                            }
+
+                            if(e is IStateTransition)
+                            {
+                                graphWindow.reference = graphWindow.reference.ChildReference(nesterState, false);
+                                var result = FindElementsInSubGraphUnit(resultItem, graphWindow, (SubgraphUnit)e);
+                                if (result.found) { return result; }
+                                graphWindow.reference = graphWindow.reference.ParentReference(false);// move back up instead
+                            }
+                        }
+                    }
+                }
+            }
+
             // if we reach here, it means that we were not able to find the element...
             return new SearchInfo() { element = resultItem.graphElement, found = false };
         }

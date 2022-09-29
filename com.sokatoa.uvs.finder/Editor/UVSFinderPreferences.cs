@@ -5,10 +5,11 @@ namespace Unity.VisualScripting.UVSFinder
 {
     internal class UVSFinderPreferences : ScriptableObject
     {
-        public Color textHighLightColor;
+        public Color textHighLightColor = new Color(1, 0.5f, 0, 1);
         //Find in Current Graph
         public bool showTypeIconCurrent = true;
         public bool ShowAllNodesInGraphCurrent = true;
+        public StateSearchContext stateSearchContext = StateSearchContext.All;
         public ItemAction itemClickCurrent = ItemAction.OpenInGraph;
         public ItemAction itemDoubleClickCurrent = ItemAction.OpenAndClose;
         //Find in all Graphs
@@ -19,6 +20,9 @@ namespace Unity.VisualScripting.UVSFinder
         public ItemAction itemDoubleClickAll = ItemAction.OpenAndClose;
         //Find in Hierarchy
         public bool showTypeIconHierarchy = true;
+        public bool enableCurrentGraphSearch = true;
+        public bool enableAllGraphsSearch = true;
+        public bool enableHierarchySearch = true;
     }
 
     internal enum ItemAction

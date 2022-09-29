@@ -5,16 +5,14 @@ This package adds searching functionalities to Visual Scripting, by letting you 
 # **Features:**
 
 - Find nodes in current graph.
-
 - Find nodes in all project graphs.
-
-- Find nodes in Hierachy **(New)**
-
+- Find nodes in Hierachy.
 - Find groupes by title.
-
 - Find custom events nodes.
-
 - Focus on node in graph when clicking on the found item.
+- Enable and disable search scopes.
+- Search in embed graphs
+- Constraint search to children and current graph in current graph tab
 
   
 

@@ -1,7 +1,7 @@
 {
   "displayName": "UVS Finder",
   "name": "com.sokatoa.uvs.finder",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "unity": "2021.1",
   "description": "Adds search capabilities to Visual Scripting",
   "dependencies": {

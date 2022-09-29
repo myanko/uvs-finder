@@ -22,7 +22,7 @@ namespace Unity.VisualScripting.UVSFinder {
         public void PerformSearchCurrent_Script_Returns_All_Results()
         {
             OpenVisualScriptAsset("Assets/TestAsset/furetscriptgraph1.asset");
-            var results = UVSSearchProvider.PerformSearchInCurrentScript("");
+            var results = UVSSearchProvider.PerformSearchInCurrentScript("", StateSearchContext.All);
             Assert.AreEqual(3, results.Count);
         }
 
@@ -38,7 +38,7 @@ namespace Unity.VisualScripting.UVSFinder {
         public void PerformSearchCurrent_Script_With_Keyword_Returns_Some_Results(string keyword, int result)
         {
             OpenVisualScriptAsset("Assets/TestAsset/furetscriptgraph1.asset");
-            var results = UVSSearchProvider.PerformSearchInCurrentScript(keyword);
+            var results = UVSSearchProvider.PerformSearchInCurrentScript(keyword, StateSearchContext.All);
             Assert.AreEqual(result, results.Count);
         }
 
@@ -46,16 +46,42 @@ namespace Unity.VisualScripting.UVSFinder {
         public void PerformSearchCurrent_State_With_Keyword_Returns_Some_Results()
         {
             OpenVisualScriptAsset("Assets/TestAsset/furetscriptgraph1.asset");
-            var results = UVSSearchProvider.PerformSearchInCurrentScript("furet");
+            var results = UVSSearchProvider.PerformSearchInCurrentScript("furet", StateSearchContext.All);
             Assert.AreEqual(1, results.Count);
         }
 
         [Test]
-        [TestCase("", 55)]
-        [TestCase("furet", 9)]
-        [TestCase("Furet", 9)]
-        [TestCase("FURET", 9)]
-        [TestCase("[", 19)]
+        // Those are state -> Flow
+        [TestCase("furet42scriptstate", "", StateSearchContext.Children, 3)]
+        [TestCase("furet42scriptstate", "", StateSearchContext.All, 19)]
+        [TestCase("furet42scriptstate", "", StateSearchContext.Current, 3)]
+        [TestCase("furet42scriptstate", "furet", StateSearchContext.Children, 0)]
+        [TestCase("furet42scriptstate", "furet", StateSearchContext.All, 5)]
+        [TestCase("furet42scriptstate", "furet", StateSearchContext.Current, 0)]
+        // those are state -> state -> Flow
+        [TestCase("furet2embed", "", StateSearchContext.Children, 10)]
+        [TestCase("furet2embed", "", StateSearchContext.All, 19)]
+        [TestCase("furet2embed", "", StateSearchContext.Current, 2)]
+        [TestCase("furet2embed", "furet", StateSearchContext.Children, 3)]
+        [TestCase("furet2embed", "furet", StateSearchContext.All, 5)]
+        [TestCase("furet2embed", "furet", StateSearchContext.Current, 1)]
+        public void PerformSearchCurrent_State_With_StateContext_Returns_Some_Results(string childGraphTitle, string keyword, StateSearchContext context, int result)
+        {
+            var graphReference = OpenVisualScriptAsset("Assets/TestAsset/furetstategraph1.asset");
+            // open a substate
+            OpenSubGraph(graphReference, childGraphTitle);
+            
+            var results = UVSSearchProvider.PerformSearchInCurrentScript(keyword, context);
+            Assert.AreEqual(result, results.Count);
+        }
+
+        [Test]
+        [TestCase("", 75)] 
+        [TestCase("furet", 11)]
+        [TestCase("Furet", 11)]
+        [TestCase("FURET", 11)]
+        [TestCase("unnamed", 3)] // special naming
+        [TestCase("[", 24)]
         [TestCase("notexisting", 0)]
         [TestCase("(", 0)]
         [TestCase("*", 0)]
@@ -97,7 +123,7 @@ namespace Unity.VisualScripting.UVSFinder {
             Assert.AreEqual(2, results.Count);
         }
 
-        private void OpenVisualScriptAsset(string assetPath)
+        private GraphReference OpenVisualScriptAsset(string assetPath)
         {
             GraphReference graphReference;
             Type t = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
@@ -113,6 +139,26 @@ namespace Unity.VisualScripting.UVSFinder {
             }
             // open the window
             GraphWindow.OpenActive(graphReference);
+            return graphReference;
+        }
+
+        private GraphReference OpenSubGraph(GraphReference graphReference, string childGraphTitle)
+        {
+            GraphReference stateGraphReference = graphReference;
+            foreach (var state in (graphReference.graph as StateGraph).states)
+            {
+                if (state is INesterState)
+                {
+                    if ((state as INesterState).childGraph?.title == childGraphTitle || (state as INesterState).nest?.macro?.graph?.title == childGraphTitle)
+                    {
+                        stateGraphReference = graphReference.ChildReference((INesterState)state, false);
+                    }
+                }
+            }
+            // open the window
+            GraphWindow.OpenActive(stateGraphReference);
+            
+            return stateGraphReference;
         }
         private void OpenAllScenes()
         {

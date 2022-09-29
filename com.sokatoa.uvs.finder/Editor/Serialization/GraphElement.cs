@@ -107,6 +107,35 @@ namespace Unity.VisualScripting.UVSFinder
                 case "Bolt.BoltNamedAnimationEvent":
                     var buae = ge as BoltNamedAnimationEvent;
                     return $"{buae.defaultValues["name"]} [BoltAnimationEvent]";
+                
+                case "Unity.VisualScripting.OnCollisionEnter":
+                case "Bolt.OnCollisionEnter":
+                    return $"{"OnCollisionEnter"} [PhysicsEvent]";
+                case "Unity.VisualScripting.OnCollisionExit":
+                case "Bolt.OnCollisionExit":
+                    return $"{"OnCollisionExit"} [PhysicsEvent]";
+                case "Unity.VisualScripting.OnCollisionStay":
+                case "Bolt.OnCollisionStay":
+                    return $"{"OnCollisionStay"} [PhysicsEvent]";
+                case "Unity.VisualScripting.OnJointBreak":
+                case "Bolt.OnJointBreak":
+                    return $"{"OnJointBreak"} [PhysicsEvent]";
+                case "Unity.VisualScripting.OnControllerColliderHit":
+                case "Bolt.OnControllerColliderHit":
+                    return $"{"OnControllerColliderHit"} [PhysicsEvent]";
+                case "Unity.VisualScripting.OnParticleCollision":
+                case "Bolt.OnParticleCollision":
+                    return $"{"OnParticleCollision"} [PhysicsEvent]";
+                case "Unity.VisualScripting.OnTriggerEnter":
+                case "Bolt.OnTriggerEnter":
+                    return $"{"OnTriggerEnter"} [PhysicsEvent]";
+                case "Unity.VisualScripting.OnTriggerExit":
+                case "Bolt.OnTriggerExit":
+                    return $"{"OnTriggerExit"} [PhysicsEvent]";
+                case "Unity.VisualScripting.OnTriggerStay":
+                case "Bolt.OnTriggerStay":
+                    return $"{"OnTriggerStay"} [PhysicsEvent]";
+
                 case "Unity.VisualScripting.CustomEvent":
                 case "Bolt.CustomEvent":
                     return $"{((CustomEvent)ge).defaultValues["name"]} [CustomEvent]";
@@ -135,15 +164,12 @@ namespace Unity.VisualScripting.UVSFinder
                         var flow = (FlowState)ge;
                         var name = "[FlowState]";
 
-                        if (!string.IsNullOrEmpty(flow.graph.title))
-                        {
-                            name = $"{flow.graph.title} [FlowState]";
-                        }
-                        // this depends on the bread crumb and where I am...
-                        // TODO: test with more than one level of pathing
-                        if (!string.IsNullOrEmpty(flow.nest.graph.title))
+                        if (!string.IsNullOrEmpty(flow.nest.nester.childGraph.title))
                         {
                             name = $"{flow.nest.graph.title} [FlowState]";
+                        } else
+                        {
+                            name = $"Unnamed [FlowState]";
                         }
                         if (flow.nest.source == GraphSource.Embed)
                         {
@@ -157,20 +183,33 @@ namespace Unity.VisualScripting.UVSFinder
                     }
                 case "Unity.VisualScripting.FlowStateTransition":
                     {
-                        var flow = (FlowStateTransition)ge;
+                        var transition = (FlowStateTransition)ge;
                         var name = "[FlowStateTransition]";
-                        if (!string.IsNullOrEmpty(flow.graph.title))
+                        if (!string.IsNullOrEmpty(transition.nest.nester.childGraph.title))
                         {
-                            name = $"{flow.graph.title} [FlowStateTransition]";
-                        }
-                        if (!string.IsNullOrEmpty(flow.nest.graph.title))
+                            name = $"{transition.nest.nester.childGraph.title} [FlowStateTransition]";
+                        } else
                         {
-                            name = $"{flow.nest.graph.title} [FlowStateTransition]";
+                            name = $"Unnamed [FlowStateTransition]";
                         }
-                        if (flow.nest.source == GraphSource.Embed)
+                        if (transition.nest.source == GraphSource.Embed)
                         {
                             name = name.Replace("[FlowStateTransition]", "[FlowStateTransition Embed]");
                         }
+                        return name;
+                    }
+                case "Unity.VisualScripting.StateTransition":
+                    {
+                        var transition = (StateTransition)ge;
+                        var name = "[StateTransition]";
+                        if (!string.IsNullOrEmpty(transition.graph.title))
+                        {
+                            name = $"{transition.graph.title} [StateTransition]";
+                        }
+                        /*if (transition.source.g == GraphSource.Embed)
+                        {
+                            name = name.Replace("[FlowStateTransition]", "[FlowStateTransition Embed]");
+                        }*/
                         return name;
                     }
                 case "Unity.VisualScripting.AnyState":
@@ -216,14 +255,39 @@ namespace Unity.VisualScripting.UVSFinder
                         return name;
                     }
 #endif
+                case "Unity.VisualScripting.SuperState":
+                    {
+                        var subgraph = (SuperState)ge;
+                        var name = "";
+                        if (subgraph.nest.source == GraphSource.Macro)
+                        {
+                            name = String.IsNullOrEmpty(subgraph.nest.macro.name) ? "SuperState" : subgraph.nest.macro.name;
+                            name = $"{name} [SuperState]";
+                        }
+                        else
+                        {
+                            name = String.IsNullOrEmpty(subgraph.nest.embed.title) ? "SuperState" : subgraph.nest.embed.title;
+                            name = $"{name} [SuperState Embed]";
+                        }
+                        return name;
+                    }
                 case "Unity.VisualScripting.StateUnit":
                     {
                         var stateUnit = (StateUnit)ge;
                         var name = "";
                         if (stateUnit.nest.source == GraphSource.Macro)
                         {
-                            name = String.IsNullOrEmpty(stateUnit.nest.macro.name) ? "State Unit" : stateUnit.nest.macro.name;
-                            name = $"{name} [State]";
+                            if (!String.IsNullOrEmpty(stateUnit.nest.graph.title))
+                            {
+                                name = stateUnit.nest.graph.title;
+                            } else if (!String.IsNullOrEmpty(stateUnit.nest.macro.name))
+                            {
+                                name = stateUnit.nest.macro.name;
+                            } else
+                            {
+                                name = "State Unit";
+                            }
+                            name = $"{name} [Macro State]";
                         }
                         else
                         {

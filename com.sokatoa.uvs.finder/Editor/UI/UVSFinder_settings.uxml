@@ -4,29 +4,31 @@
         <ui:Foldout text="Global Settings" name="Collections" style="display: flex; visibility: visible;">
             <uie:ColorField label="Text Highlight" value="#FF8000FF" show-alpha="true" hdr="false" binding-path="textHighLightColor" />
         </ui:Foldout>
-        <ui:Foldout text="Find Current Graph" name="Collections">
-            <ui:Toggle label="Show Type Icons" binding-path="showTypeIconCurrent" focusable="true" tooltip="Display the icon type in the list view before the name of the node." style="margin-bottom: 3px;" />
-            <ui:Toggle label="Show all graph nodes" binding-path="ShowAllNodesInGraphCurrent" tooltip="Will set the defaut result to show all nodes within graph by default." style="flex-direction: row;" />
+        <ui:Foldout text="Find in Current Graph" name="Collections">
+            <ui:Toggle text="Search in current graph" value="true" binding-path="enableCurrentGraphSearch" tooltip="Enable the search in the Current graph tab of the node finder" />
+            <ui:Toggle binding-path="showTypeIconCurrent" focusable="true" tooltip="Display the icon type in the list view before the name of the node." value="true" text="Show Type Icons" style="margin-bottom: 3px;" />
+            <ui:Toggle binding-path="ShowAllNodesInGraphCurrent" tooltip="Will set the defaut result to show all nodes within graph by default." text="Show all graph nodes" style="flex-direction: row;" />
             <uie:EnumField label="Item Click" binding-path="itemClickCurrent" tooltip="Define the action to do, when you click on the item in the result list." style="display: none; visibility: hidden;" />
             <uie:EnumField label="Item Double Click" binding-path="itemDoubleClickCurrent" tooltip="Define the action to do, when you double click on the item in the result list." style="display: none;" />
+            <ui:DropdownField label="State Context" index="1" name="StateContext" binding-path="stateSearchContext" choices="All, Current, Children" />
         </ui:Foldout>
         <ui:Foldout text="Find All Graphs" name="Collections">
-            <ui:Toggle label="Show Type Icons" binding-path="showTypeIconAll" focusable="true" tooltip="Display the icon type in the list view before the name of the node." style="margin-bottom: 3px;" />
+            <ui:Toggle text="Search in all graphs" value="true" binding-path="enableAllGraphsSearch" tooltip="Enable the search in the All Graphs tab of the node finder" style="flex-direction: row;" />
+            <ui:Toggle binding-path="showTypeIconAll" focusable="true" tooltip="Display the icon type in the list view before the name of the node." text="Show Type Icons" value="true" style="margin-bottom: 3px;" />
             <uie:EnumField label="Item Click" binding-path="itemClickAll" tooltip="Define the action to do, when you click on the item in the result list." style="display: none;" />
-            <uie:EnumField label="Text highlighting color" binding-path="textHighlightingColor" tooltip="Define the action to do, when you double click on the item in the result list." value="#FF8000FF" style="flex-direction: row; display: none; visibility: hidden;" />
-            <ui:Toggle label="Show graph path" binding-path="ShowGraphPathAll" tooltip="Will set the defaut result to show all nodes within graph by default." style="flex-direction: row; display: none; visibility: hidden;" />
+            <uie:EnumField label="Text highlighting color" binding-path="textHighlightingColor" tooltip="Define the action to do, when you double click on the item in the result list." value="#FF8000FF" text="Find in Hierarchy" style="flex-direction: row; display: none; visibility: hidden;" />
+            <ui:Toggle label="Show graph path" binding-path="ShowGraphPathAll" tooltip="Will set the defaut result to show all nodes within graph by default." value="true" style="flex-direction: row; display: none; visibility: hidden;" />
         </ui:Foldout>
         <ui:Foldout text="Find Hierarchy" name="Collections">
-            <ui:Toggle label="Show Type Icons" binding-path="showTypeIconHierarchy" focusable="true" tooltip="Display the icon type in the list view before the name of the node." style="margin-bottom: 3px;" />
+            <ui:Toggle value="true" text="Search in hierarchy" binding-path="enableHierarchySearch" tooltip="Enable the search in the Hierarchy tab of the node finder." />
+            <ui:Toggle binding-path="showTypeIconHierarchy" focusable="true" tooltip="Display the icon type in the list view before the name of the node." text="Show Type Icons" value="true" style="margin-bottom: 3px;" />
             <uie:EnumField label="Item Click" binding-path="itemClickAll" tooltip="Define the action to do, when you click on the item in the result list." style="display: none;" />
             <uie:EnumField label="Text highlighting color" binding-path="textHighlightingColor" tooltip="Define the action to do, when you double click on the item in the result list." value="#FF8000FF" style="flex-direction: row; display: none; visibility: hidden;" />
             <ui:Toggle label="Show graph path" binding-path="ShowGraphPathAll" tooltip="Will set the defaut result to show all nodes within graph by default." style="flex-direction: row; display: none; visibility: hidden;" />
         </ui:Foldout>
-        <ui:Foldout text="Find and Replace" name="ObjectsPreview" style="display: none; visibility: hidden;">
+        <ui:Foldout text="Find and Replace" name="ObjectsPreview" style="display: none; visibility: visible;">
             <ui:Toggle label="Enable Preview" binding-path="enableHoverPreview" />
         </ui:Foldout>
-        <ui:Foldout text="Find References" name="FindReferences" style="display: none;">
-            <uie:EnumField label="Nothing" />
-        </ui:Foldout>
+        <ui:Foldout text="Find References" name="FindReferences" style="display: none; visibility: visible;" />
     </ui:ScrollView>
 </ui:UXML>
