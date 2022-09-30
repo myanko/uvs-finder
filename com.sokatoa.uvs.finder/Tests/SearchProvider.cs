@@ -92,6 +92,22 @@ namespace Unity.VisualScripting.UVSFinder {
         }
 
         [Test]
+        [TestCase("", 0)]
+        [TestCase("furet", 0)]
+        [TestCase("furetstategraph1", 0)]
+        [TestCase("furetstategraph1 [Macro State]", 1)]
+        [TestCase("unnamed", 0)] // special naming
+        [TestCase("[", 0)]
+        [TestCase("notexisting", 0)]
+        [TestCase("(", 0)]
+        [TestCase("*", 0)]
+        public void PerformSearchAll_With_Keyword_Exact_Returns_Some_Results(string keyword, int result)
+        {
+            var results = UVSSearchProvider.PerformSearchAll(keyword, true);
+            Assert.AreEqual(result, results.Count);
+        }
+
+        [Test]
         [TestCase("", 27)]
         [TestCase("furet", 4)]
         [TestCase("Furet", 4)]

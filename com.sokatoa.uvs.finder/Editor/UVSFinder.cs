@@ -207,32 +207,40 @@ namespace Unity.VisualScripting.UVSFinder
             return texture;
         }
 
-        public void PerformSearchInCurrent(string keyword)
+        
+
+        private void PerformSearch(string keyword, bool isExact = false) {
+            searchField.value = keyword;
+            OnAllGraphsClick();
+            if (enableCurrentGraphSearch.value == true)
+            {
+                searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(keyword, prefs.stateSearchContext, isExact);
+            }
+            if (enableAllGraphsSearch.value == true)
+            {
+                searchItems[UVSFinderTabs.all] = UVSSearchProvider.PerformSearchAll(keyword, isExact);
+            }
+            if (enableHierarchySearch.value == true)
+            {
+                searchItems[UVSFinderTabs.hierarchy] = UVSSearchProvider.PerformSearchInHierarchy(keyword, isExact);
+            }
+        }
+
+        public void PerformSearchInCurrent(string keyword, bool isExact = false)
         {
             searchField.value = keyword;
             OnCurrentGraphClick();
-            searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value);
+            searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value, prefs.stateSearchContext, isExact);
         }
 
         private void PerformSearch()
         {
-            if(enableCurrentGraphSearch.value == true)
-            {
-                searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value, prefs.stateSearchContext);
-            }
-            if (enableAllGraphsSearch.value == true)
-            {
-                searchItems[UVSFinderTabs.all] = UVSSearchProvider.PerformSearchAll(searchField.value);
-            }
-            if (enableHierarchySearch.value == true)
-            {
-                searchItems[UVSFinderTabs.hierarchy] = UVSSearchProvider.PerformSearchInHierarchy(searchField.value);
-            }
+            PerformSearch(searchField.value, false);
         }
 
         private void PerformSearchCurrent()
         {
-            searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value);
+            searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value, prefs.stateSearchContext);
         }
 
         private void setWindowTitle()
@@ -334,15 +342,20 @@ namespace Unity.VisualScripting.UVSFinder
             }
         }
 
-        private void OnSearchAction()
+        public void OnSearchAction(string keyword, bool isExact = false)
         {
             resultListview.Clear();
             ResetResultItems();
-            PerformSearch();
+            PerformSearch(keyword, isExact);
             setWindowTitle();
             setTabsResults();
             DisplayResultsItems();
             searchField.ElementAt(0).Focus();
+        }
+
+        private void OnSearchAction()
+        {
+            OnSearchAction(searchField.value);
         }
 
         private void ResetResultItems()

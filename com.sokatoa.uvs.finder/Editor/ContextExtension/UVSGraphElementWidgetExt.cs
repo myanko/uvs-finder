@@ -16,7 +16,7 @@ namespace Unity.VisualScripting.UVSFinder {
         [InitializeOnLoadMethod]
         public static void DoPatching()
         {
-            var harmony = new Harmony("com.example.patch");
+            var harmony = new Harmony("com.sokatoa.patch");
             harmony.PatchAll();
         }
 
@@ -35,20 +35,20 @@ namespace Unity.VisualScripting.UVSFinder {
             // --------------------
             // adding my own options
             // TODO: generalize this...
-            if ((__instance as IUnitWidget).unit is CustomEvent)
+            if ((__instance as IUnitWidget)?.unit is CustomEvent)
             {
-                yield return new DropdownOption((Action)(() => OnFind($"{((__instance as IUnitWidget).unit as CustomEvent).defaultValues["name"]} [CustomEvent]")), $"Find \"{((__instance as IUnitWidget).unit as CustomEvent).defaultValues["name"]} [CustomEvent]\"");
-                yield return new DropdownOption((Action)(() => OnFind($"{((__instance as IUnitWidget).unit as CustomEvent).defaultValues["name"]} [TriggerCustomEvent]")), $"Find \"{((__instance as IUnitWidget).unit as CustomEvent).defaultValues["name"]} [TriggerCustomEvent]\"");
+                yield return new DropdownOption((Action)(() => OnFindExact($"{((__instance as IUnitWidget).unit as CustomEvent).defaultValues["name"]} [CustomEvent]")), $"Find \"{((__instance as IUnitWidget).unit as CustomEvent).defaultValues["name"]} [CustomEvent]\"");
+                yield return new DropdownOption((Action)(() => OnFindExact($"{((__instance as IUnitWidget).unit as CustomEvent).defaultValues["name"]} [TriggerCustomEvent]")), $"Find \"{((__instance as IUnitWidget).unit as CustomEvent).defaultValues["name"]} [TriggerCustomEvent]\"");
             }
-            if ((__instance as IUnitWidget).unit is TriggerCustomEvent)
+            if ((__instance as IUnitWidget)?.unit is TriggerCustomEvent)
             {
-                yield return new DropdownOption((Action)(() => OnFind($"{((__instance as IUnitWidget).unit as TriggerCustomEvent).defaultValues["name"]} [TriggerCustomEvent]")), $"Find \"{((__instance as IUnitWidget).unit as TriggerCustomEvent).defaultValues["name"]} [TriggerCustomEvent]\"");
-                yield return new DropdownOption((Action)(() => OnFind($"{((__instance as IUnitWidget).unit as TriggerCustomEvent).defaultValues["name"]} [CustomEvent]")), $"Find \"{((__instance as IUnitWidget).unit as TriggerCustomEvent).defaultValues["name"]} [CustomEvent]\"");
+                yield return new DropdownOption((Action)(() => OnFindExact($"{((__instance as IUnitWidget).unit as TriggerCustomEvent).defaultValues["name"]} [TriggerCustomEvent]")), $"Find \"{((__instance as IUnitWidget).unit as TriggerCustomEvent).defaultValues["name"]} [TriggerCustomEvent]\"");
+                yield return new DropdownOption((Action)(() => OnFindExact($"{((__instance as IUnitWidget).unit as TriggerCustomEvent).defaultValues["name"]} [CustomEvent]")), $"Find \"{((__instance as IUnitWidget).unit as TriggerCustomEvent).defaultValues["name"]} [CustomEvent]\"");
             }
 
             // --------------------
             // This is recreating the list returned by GraphElementWidget's get contextOptions
-            var suffix = canvas.selection.Count > 1 ? " Selection" : "";
+            var suffix = canvas?.selection.Count > 1 ? " Selection" : "";
 
             if (GraphClipboard.canCopySelection)
             {
@@ -81,11 +81,10 @@ namespace Unity.VisualScripting.UVSFinder {
 
         }
 
-        private static void OnFind(string keyword)
+        private static void OnFindExact(string keyword)
         {
-            Debug.Log("on find!!");
             var uvsfinder = UVSFinder.GetUVSFinder();
-            uvsfinder.PerformSearchInCurrent(keyword);
+            uvsfinder.OnSearchAction(keyword, true);
         }
     }
 }
