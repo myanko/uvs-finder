@@ -207,11 +207,8 @@ namespace Unity.VisualScripting.UVSFinder
             return texture;
         }
 
-        
-
         private void PerformSearch(string keyword, bool isExact = false) {
             searchField.value = keyword;
-            OnAllGraphsClick();
             if (enableCurrentGraphSearch.value == true)
             {
                 searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(keyword, prefs.stateSearchContext, isExact);
