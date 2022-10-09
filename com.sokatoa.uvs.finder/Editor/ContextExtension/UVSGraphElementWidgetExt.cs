@@ -37,42 +37,78 @@ namespace Unity.VisualScripting.UVSFinder {
             // TODO: generalize this...
             if ((__instance as IUnitWidget)?.unit is CustomEvent)
             {
-                var findName = $"{((__instance as IUnitWidget).unit as CustomEvent).defaultValues["name"]} [CustomEvent]";
-                var relatedFindName = $"{((__instance as IUnitWidget).unit as CustomEvent).defaultValues["name"]} [TriggerCustomEvent]";
+                var curr = ((__instance as IUnitWidget).unit as CustomEvent);
+                var findName = $"{curr.defaultValues["name"]} [CustomEvent]";
+                var relatedFindName = $"{curr.defaultValues["name"]} [TriggerCustomEvent]";
                 yield return new DropdownOption((Action)(() => OnFindExact(findName)), $"Find \"{findName}\"");
                 yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
             }
             if ((__instance as IUnitWidget)?.unit is TriggerCustomEvent)
             {
-                var findName = $"{((__instance as IUnitWidget).unit as TriggerCustomEvent).defaultValues["name"]} [TriggerCustomEvent]";
-                var relatedFindName = $"{((__instance as IUnitWidget).unit as TriggerCustomEvent).defaultValues["name"]} [CustomEvent]";
+                var curr = ((__instance as IUnitWidget).unit as TriggerCustomEvent);
+                var findName = $"{curr.defaultValues["name"]} [TriggerCustomEvent]";
+                var relatedFindName = $"{curr.defaultValues["name"]} [CustomEvent]";
                 yield return new DropdownOption((Action)(() => OnFindExact(findName)), $"Find \"{findName}\"");
                 yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
             }
 
             if ((__instance as IUnitWidget)?.unit is GetVariable)
             {
-                var findName = $"{((__instance as IUnitWidget).unit as GetVariable).defaultValues["name"]} [Get Variable: {((__instance as IUnitWidget).unit as GetVariable).kind}]";
-                var relatedFindName = $"{((__instance as IUnitWidget).unit as GetVariable).defaultValues["name"]} [Set Variable: {((__instance as IUnitWidget).unit as GetVariable).kind}]";
-                var relatedFindName2 = $"{((__instance as IUnitWidget).unit as GetVariable).defaultValues["name"]} [Has Variable: {((__instance as IUnitWidget).unit as GetVariable).kind}]";
+                var curr = ((__instance as IUnitWidget).unit as GetVariable);
+                var findName = $"{curr.defaultValues["name"]} [Get Variable: {curr.kind}]";
+                var relatedFindName = $"{curr.defaultValues["name"]} [Set Variable: {curr.kind}]";
+                var relatedFindName2 = $"{curr.defaultValues["name"]} [Has Variable: {curr.kind}]";
                 yield return new DropdownOption((Action)(() => OnFindExact(findName)), $"Find \"{findName}\"");
                 yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
                 yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName2)), $"Find \"{relatedFindName2}\"");
             }
             if ((__instance as IUnitWidget)?.unit is SetVariable)
             {
-                var findName = $"{((__instance as IUnitWidget).unit as SetVariable).defaultValues["name"]} [Get Variable: {((__instance as IUnitWidget).unit as SetVariable).kind}]";
-                var relatedFindName = $"{((__instance as IUnitWidget).unit as SetVariable).defaultValues["name"]} [Set Variable: {((__instance as IUnitWidget).unit as SetVariable).kind}]";
-                var relatedFindName2 = $"{((__instance as IUnitWidget).unit as SetVariable).defaultValues["name"]} [Has Variable: {((__instance as IUnitWidget).unit as SetVariable).kind}]";
+                var curr = ((__instance as IUnitWidget).unit as SetVariable);
+                var findName = $"{curr.defaultValues["name"]} [Get Variable: {curr.kind}]";
+                var relatedFindName = $"{curr.defaultValues["name"]} [Set Variable: {curr.kind}]";
+                var relatedFindName2 = $"{curr.defaultValues["name"]} [Has Variable: {curr.kind}]";
                 yield return new DropdownOption((Action)(() => OnFindExact(findName)), $"Find \"{findName}\"");
                 yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
                 yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName2)), $"Find \"{relatedFindName2}\"");
             }
             if ((__instance as IUnitWidget)?.unit is IsVariableDefined)
             {
-                var findName = $"{((__instance as IUnitWidget).unit as IsVariableDefined).defaultValues["name"]} [Get Variable: {((__instance as IUnitWidget).unit as IsVariableDefined).kind}]";
-                var relatedFindName = $"{((__instance as IUnitWidget).unit as IsVariableDefined).defaultValues["name"]} [Set Variable: {((__instance as IUnitWidget).unit as IsVariableDefined).kind}]";
-                var relatedFindName2 = $"{((__instance as IUnitWidget).unit as IsVariableDefined).defaultValues["name"]} [Has Variable: {((__instance as IUnitWidget).unit as IsVariableDefined).kind}]";
+                var curr = ((__instance as IUnitWidget).unit as IsVariableDefined);
+                var findName = $"{curr.defaultValues["name"]} [Get Variable: {curr.kind}]";
+                var relatedFindName = $"{curr.defaultValues["name"]} [Set Variable: {curr.kind}]";
+                var relatedFindName2 = $"{curr.defaultValues["name"]} [Has Variable: {curr.kind}]";
+                yield return new DropdownOption((Action)(() => OnFindExact(findName)), $"Find \"{findName}\"");
+                yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
+                yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName2)), $"Find \"{relatedFindName2}\"");
+            }
+
+            if ((__instance as IUnitWidget)?.unit is GetMember)
+            {
+                var curr = ((__instance as IUnitWidget).unit as GetMember);
+                var findName = $"{curr.member.targetTypeName.Split('.').Last()} Get {curr.member.name}";
+                var relatedFindName = $"{curr.member.targetTypeName.Split('.').Last()} Set {curr.member.name}";
+                var relatedFindName2 = $"{curr.member.targetTypeName.Split('.').Last()} {curr.member.name}";
+                yield return new DropdownOption((Action)(() => OnFindExact(findName)), $"Find \"{findName}\"");
+                yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
+                yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName2)), $"Find \"{relatedFindName2}\"");
+            }
+            if ((__instance as IUnitWidget)?.unit is SetMember)
+            {
+                var curr = ((__instance as IUnitWidget).unit as SetMember);
+                var findName = $"{curr.member.targetTypeName.Split('.').Last()} Get {curr.member.name}";
+                var relatedFindName = $"{curr.member.targetTypeName.Split('.').Last()} Set {curr.member.name}";
+                var relatedFindName2 = $"{curr.member.targetTypeName.Split('.').Last()} {curr.member.name}";
+                yield return new DropdownOption((Action)(() => OnFindExact(findName)), $"Find \"{findName}\"");
+                yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
+                yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName2)), $"Find \"{relatedFindName2}\"");
+            }
+            if ((__instance as IUnitWidget)?.unit is InvokeMember)
+            {
+                var curr = ((__instance as IUnitWidget).unit as InvokeMember);
+                var findName = $"{curr.member.targetTypeName.Split('.').Last()} Get {curr.member.name}";
+                var relatedFindName = $"{curr.member.targetTypeName.Split('.').Last()} Set {curr.member.name}";
+                var relatedFindName2 = $"{curr.member.targetTypeName.Split('.').Last()} {curr.member.name}";
                 yield return new DropdownOption((Action)(() => OnFindExact(findName)), $"Find \"{findName}\"");
                 yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
                 yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName2)), $"Find \"{relatedFindName2}\"");
