@@ -6,6 +6,11 @@ using System.Linq;
 using System.Collections.Generic;
 using System;
 
+/// <summary>
+/// This class is extending the right-click on nodes in the Visual Scripting Window
+/// To achieve this, it relies on Harmony to be able to replace the contextOptions 
+/// getter with my own implementation. I was not able to find another way of doing this...
+/// </summary>
 namespace Unity.VisualScripting.UVSFinder {
 
     [HarmonyPatch(typeof(IGraphElementWidget))]
@@ -44,7 +49,7 @@ namespace Unity.VisualScripting.UVSFinder {
                     {
                         var curr = ((__instance as IUnitWidget).unit as CustomEvent);
                         var relatedFindName = $"{curr.defaultValues["name"]} [TriggerCustomEvent]";
-                        yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\"");
+                        yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\" ~");
                         yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
                         break;
                     }
@@ -54,7 +59,7 @@ namespace Unity.VisualScripting.UVSFinder {
 
                         var curr = ((__instance as IUnitWidget).unit as TriggerCustomEvent);
                         var relatedFindName = $"{curr.defaultValues["name"]} [CustomEvent]";
-                        yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\"");
+                        yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\" ~");
                         yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
                         break;
                     }
@@ -64,7 +69,7 @@ namespace Unity.VisualScripting.UVSFinder {
                         var curr = ((__instance as IUnitWidget).unit as GetVariable);
                         var relatedFindName = $"{curr.defaultValues["name"]} [Set Variable: {curr.kind}]";
                         var relatedFindName2 = $"{curr.defaultValues["name"]} [Has Variable: {curr.kind}]";
-                        yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\"");
+                        yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\" ~");
                         yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
                         yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName2)), $"Find \"{relatedFindName2}\"");
                         break;
@@ -76,7 +81,7 @@ namespace Unity.VisualScripting.UVSFinder {
                         var relatedFindName = $"{curr.defaultValues["name"]} [Get Variable: {curr.kind}]";
                         var relatedFindName2 = $"{curr.defaultValues["name"]} [Has Variable: {curr.kind}]";
                         yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
-                        yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\"");
+                        yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\" ~");
                         yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName2)), $"Find \"{relatedFindName2}\"");
                         break;
                     }
@@ -88,7 +93,7 @@ namespace Unity.VisualScripting.UVSFinder {
                         var relatedFindName2 = $"{curr.defaultValues["name"]} [Set Variable: {curr.kind}]";
                         yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
                         yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName2)), $"Find \"{relatedFindName2}\"");
-                        yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\"");
+                        yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\" ~");
                         break;
                     }
                 case "Unity.VisualScripting.GetMember":
@@ -96,7 +101,7 @@ namespace Unity.VisualScripting.UVSFinder {
                         var curr = ((__instance as IUnitWidget).unit as GetMember);
                         var relatedFindName = $"{curr.member.targetTypeName.Split('.').Last()} Set {curr.member.name}";
                         var relatedFindName2 = $"{curr.member.targetTypeName.Split('.').Last()} {curr.member.name}";
-                        yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\"");
+                        yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\" ~");
                         yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
                         yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName2)), $"Find \"{relatedFindName2}\"");
                         break;
@@ -107,7 +112,7 @@ namespace Unity.VisualScripting.UVSFinder {
                         var relatedFindName = $"{curr.member.targetTypeName.Split('.').Last()} Get {curr.member.name}";
                         var relatedFindName2 = $"{curr.member.targetTypeName.Split('.').Last()} {curr.member.name}";
                         yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
-                        yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\"");
+                        yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\" ~");
                         yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName2)), $"Find \"{relatedFindName2}\"");
                         break;
                     }
@@ -116,9 +121,15 @@ namespace Unity.VisualScripting.UVSFinder {
                         var curr = ((__instance as IUnitWidget).unit as InvokeMember);
                         var relatedFindName = $"{curr.member.targetTypeName.Split('.').Last()} Get {curr.member.name}";
                         var relatedFindName2 = $"{curr.member.targetTypeName.Split('.').Last()} Set {curr.member.name}";
-                        yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
-                        yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName2)), $"Find \"{relatedFindName2}\"");
-                        yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\"");
+                        if (curr.member.name != ".ctor")
+                        {
+                            yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
+                            yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName2)), $"Find \"{relatedFindName2}\"");
+                            yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\" ~");
+                        } else
+                        {
+                            yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\"");
+                        }
                         break;
                     }
                 default:
