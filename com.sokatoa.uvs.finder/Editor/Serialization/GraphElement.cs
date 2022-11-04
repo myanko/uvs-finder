@@ -107,34 +107,36 @@ namespace Unity.VisualScripting.UVSFinder
                 case "Bolt.BoltNamedAnimationEvent":
                     var buae = ge as BoltNamedAnimationEvent;
                     return $"{buae.defaultValues["name"]} [BoltAnimationEvent]";
-                
+                case "Unity.VisualScripting.Expose":
+                case "Bolt.Expose":
+                    return $"{(ge as Expose).type.ToString().Split('.').Last()} [Expose]";
                 case "Unity.VisualScripting.OnCollisionEnter":
                 case "Bolt.OnCollisionEnter":
-                    return $"{"OnCollisionEnter"} [PhysicsEvent]";
+                    return $"OnCollisionEnter [PhysicsEvent]";
                 case "Unity.VisualScripting.OnCollisionExit":
                 case "Bolt.OnCollisionExit":
-                    return $"{"OnCollisionExit"} [PhysicsEvent]";
+                    return $"OnCollisionExit [PhysicsEvent]";
                 case "Unity.VisualScripting.OnCollisionStay":
                 case "Bolt.OnCollisionStay":
-                    return $"{"OnCollisionStay"} [PhysicsEvent]";
+                    return $"OnCollisionStay [PhysicsEvent]";
                 case "Unity.VisualScripting.OnJointBreak":
                 case "Bolt.OnJointBreak":
-                    return $"{"OnJointBreak"} [PhysicsEvent]";
+                    return $"OnJointBreak [PhysicsEvent]";
                 case "Unity.VisualScripting.OnControllerColliderHit":
                 case "Bolt.OnControllerColliderHit":
-                    return $"{"OnControllerColliderHit"} [PhysicsEvent]";
+                    return $"OnControllerColliderHit [PhysicsEvent]";
                 case "Unity.VisualScripting.OnParticleCollision":
                 case "Bolt.OnParticleCollision":
-                    return $"{"OnParticleCollision"} [PhysicsEvent]";
+                    return $"OnParticleCollision [PhysicsEvent]";
                 case "Unity.VisualScripting.OnTriggerEnter":
                 case "Bolt.OnTriggerEnter":
-                    return $"{"OnTriggerEnter"} [PhysicsEvent]";
+                    return $"OnTriggerEnter [PhysicsEvent]";
                 case "Unity.VisualScripting.OnTriggerExit":
                 case "Bolt.OnTriggerExit":
-                    return $"{"OnTriggerExit"} [PhysicsEvent]";
+                    return $"OnTriggerExit [PhysicsEvent]";
                 case "Unity.VisualScripting.OnTriggerStay":
                 case "Bolt.OnTriggerStay":
-                    return $"{"OnTriggerStay"} [PhysicsEvent]";
+                    return $"OnTriggerStay [PhysicsEvent]";
 
                 case "Unity.VisualScripting.CustomEvent":
                 case "Bolt.CustomEvent":

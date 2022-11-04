@@ -100,36 +100,16 @@ namespace Unity.VisualScripting.UVSFinder {
                     {
                         var curr = ((__instance as IUnitWidget).unit as GetMember);
                         var relatedFindName = $"{curr.member.targetTypeName.Split('.').Last()} Set {curr.member.name}";
-                        var relatedFindName2 = $"{curr.member.targetTypeName.Split('.').Last()} {curr.member.name}";
                         yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\" ~");
                         yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
-                        yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName2)), $"Find \"{relatedFindName2}\"");
                         break;
                     }
                 case "Unity.VisualScripting.SetMember":
                     {
                         var curr = ((__instance as IUnitWidget).unit as SetMember);
                         var relatedFindName = $"{curr.member.targetTypeName.Split('.').Last()} Get {curr.member.name}";
-                        var relatedFindName2 = $"{curr.member.targetTypeName.Split('.').Last()} {curr.member.name}";
                         yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
                         yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\" ~");
-                        yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName2)), $"Find \"{relatedFindName2}\"");
-                        break;
-                    }
-                case "Unity.VisualScripting.InvokeMember":
-                    {
-                        var curr = ((__instance as IUnitWidget).unit as InvokeMember);
-                        var relatedFindName = $"{curr.member.targetTypeName.Split('.').Last()} Get {curr.member.name}";
-                        var relatedFindName2 = $"{curr.member.targetTypeName.Split('.').Last()} Set {curr.member.name}";
-                        if (curr.member.name != ".ctor")
-                        {
-                            yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
-                            yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName2)), $"Find \"{relatedFindName2}\"");
-                            yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\" ~");
-                        } else
-                        {
-                            yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\"");
-                        }
                         break;
                     }
                 default:
