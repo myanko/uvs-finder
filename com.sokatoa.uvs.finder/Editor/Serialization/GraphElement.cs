@@ -88,11 +88,30 @@ namespace Unity.VisualScripting.UVSFinder
                         {
                             return $"{((InvokeMember)ge).member.targetTypeName.Split('.').Last()} Create";
                         }
-                        else if(((InvokeMember)ge).member.targetTypeName == "UnityEngine.Animator")
+                        else if (((InvokeMember)ge).member.targetTypeName == "UnityEngine.Animator")
                         {
                             return $"{((InvokeMember)ge).defaultValues["%name"]} [{((InvokeMember)ge).member.targetTypeName.Split('.').Last()}: {((InvokeMember)ge).member.name}]";
                         }
-                            return $"{((InvokeMember)ge).member.targetTypeName.Split('.').Last()} {((InvokeMember)ge).member.name}";
+                        else if (((InvokeMember)ge).member.name == "GetKey")
+                        {
+                            try
+                            {
+                                return $"{((InvokeMember)ge).defaultValues["%key"]} [{((InvokeMember)ge).member.targetTypeName.Split('.').Last()}: {((InvokeMember)ge).member.name}]";
+                            }
+                            catch
+                            {
+                                return $"{((InvokeMember)ge).defaultValues["%name"]} [{((InvokeMember)ge).member.targetTypeName.Split('.').Last()}: {((InvokeMember)ge).member.name}]";
+                            }
+                        }
+                        else if (((InvokeMember)ge).member.name == "GetButtonDown")
+                        {
+                            return $"{((InvokeMember)ge).defaultValues["%buttonName"]} [{((InvokeMember)ge).member.targetTypeName.Split('.').Last()}: {((InvokeMember)ge).member.name}]";
+                        }
+                        else if (((InvokeMember)ge).member.name == "GetAxis")
+                        {
+                            return $"{((InvokeMember)ge).defaultValues["%axisName"]} [{((InvokeMember)ge).member.targetTypeName.Split('.').Last()}: {((InvokeMember)ge).member.name}]";
+                        }
+                        return $"{((InvokeMember)ge).member.targetTypeName.Split('.').Last()} {((InvokeMember)ge).member.name}";
                     }
                 case "Unity.VisualScripting.GetVariable":
                 case "Bolt.GetVariable":
@@ -113,7 +132,15 @@ namespace Unity.VisualScripting.UVSFinder
                 case "Unity.VisualScripting.InputSystem.OnInputSystemEventVector2":
                 case "Bolt.InputSystem.OnInputSystemEventVector2":
                     return $"{((InputSystem.OnInputSystemEventVector2)ge).defaultValues["InputAction"]} [{ge.GetType().HumanName()}: {((InputSystem.OnInputSystemEventVector2)ge).InputActionChangeType}]";
-
+                case "Unity.VisualScripting.OnMouseInput":
+                case "Bolt.OnMouseInput":
+                    return $"{((OnMouseInput)ge).defaultValues["button"]} [{ge.GetType().HumanName()}: {((OnMouseInput)ge).defaultValues["action"]}]";
+                case "Unity.VisualScripting.OnKeyboardInput":
+                case "Bolt.OnKeyboardInput":
+                    return $"{((OnKeyboardInput)ge).defaultValues["key"]} [{ge.GetType().HumanName()}: {((OnKeyboardInput)ge).defaultValues["action"]}]";
+                case "Unity.VisualScripting.OnButtonInput":
+                case "Bolt.OnButtonInput":
+                    return $"{((OnButtonInput)ge).defaultValues["buttonName"]} [{ge.GetType().HumanName()}: {((OnButtonInput)ge).defaultValues["action"]}]";
                 case "Unity.VisualScripting.BoltUnityEvent":
                 case "Bolt.BoltUnityEvent":
                     var bue = ge as BoltUnityEvent;
