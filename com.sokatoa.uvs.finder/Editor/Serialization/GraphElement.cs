@@ -103,6 +103,17 @@ namespace Unity.VisualScripting.UVSFinder
                 case "Unity.VisualScripting.SetVariable":
                 case "Bolt.SetVariable":
                     return $"{((SetVariable)ge).defaultValues["name"]} [Set Variable: {((SetVariable)ge).kind}]";
+
+                case "Unity.VisualScripting.InputSystem.OnInputSystemEventFloat":
+                case "Bolt.InputSystem.OnInputSystemEventFloat":
+                    return $"{((InputSystem.OnInputSystemEventFloat)ge).defaultValues["InputAction"]} [{ge.GetType().HumanName()}: {((InputSystem.OnInputSystemEventFloat)ge).InputActionChangeType}]";
+                case "Unity.VisualScripting.InputSystem.OnInputSystemEventButton":
+                case "Bolt.InputSystem.OnInputSystemEventButton":
+                    return $"{((InputSystem.OnInputSystemEventButton)ge).defaultValues["InputAction"]} [{ge.GetType().HumanName()}: {((InputSystem.OnInputSystemEventButton)ge).InputActionChangeType}]";
+                case "Unity.VisualScripting.InputSystem.OnInputSystemEventVector2":
+                case "Bolt.InputSystem.OnInputSystemEventVector2":
+                    return $"{((InputSystem.OnInputSystemEventVector2)ge).defaultValues["InputAction"]} [{ge.GetType().HumanName()}: {((InputSystem.OnInputSystemEventVector2)ge).InputActionChangeType}]";
+
                 case "Unity.VisualScripting.BoltUnityEvent":
                 case "Bolt.BoltUnityEvent":
                     var bue = ge as BoltUnityEvent;
@@ -152,7 +163,7 @@ namespace Unity.VisualScripting.UVSFinder
                     var literalType = ((Literal)ge).type.ToString();
                     if (literalType == "System.Single")
                     {
-                        return $"{"Float"} \"{((Literal)ge).value}\" [Literal]";
+                        return $"\"{((Literal)ge).value}\" {"Float"} [Literal]";
                     }
                     //Todo: Get the Layer value and convert it to a name
                     /*else if (literalType == "UnityEngine.LayerMask")
@@ -160,7 +171,7 @@ namespace Unity.VisualScripting.UVSFinder
                         Debug.Log(((Literal)ge).value).;
                         //return $"{literalType.Split('.').Last()} \"{LayerMask.LayerToName((int)((Literal)ge).value)}\" [Literal]";
                     }*/
-                    return $"{literalType.Split('.').Last()} \"{((Literal)ge).value}\" [Literal]";
+                    return $"\"{((Literal)ge).value}\" {literalType.Split('.').Last()} [Literal]";
                 case "Unity.VisualScripting.GraphGroup":
                 case "Bolt.GraphGroup":
                     return $"\"{((GraphGroup)ge).label}\" [Group]";
