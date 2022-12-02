@@ -1,6 +1,5 @@
 using HarmonyLib;
 using UnityEditor;
-using UnityEngine;
 using System.Reflection;
 using System.Linq;
 using System.Collections.Generic;
@@ -27,7 +26,7 @@ namespace Unity.VisualScripting.UVSFinder {
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(GraphElementWidget<ICanvas, IGraphElement>), "contextOptions", MethodType.Getter)]
-        static IEnumerable<DropdownOption> Postfix1(IEnumerable<DropdownOption> __result, GraphElementWidget<ICanvas, IGraphElement> __instance) {
+        public static IEnumerable<DropdownOption> Postfix1(IEnumerable<DropdownOption> __result, GraphElementWidget<ICanvas, IGraphElement> __instance) {
             // UnitWidget > NodeWidget > GraphElementWidget
             // SuperUnitWidget > NesterUnitWidget > UnitWidget
             var canvasProp = __instance.GetType().GetProperty("canvas", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -39,10 +38,23 @@ namespace Unity.VisualScripting.UVSFinder {
 
             // --------------------
             // adding my own options
-            var name = GraphElement.GetElementName((__instance as IUnitWidget)?.unit);
+            var name = "";
+            var type = "";
+            
+            if (__instance is Widget<ICanvas, IGraphElement>)
+            {
+                name = GraphElement.GetElementName(__instance.element);
+                type = (__instance as IUnitWidget)?.unit.GetType().ToString();
+                
+            }
+            else if (__instance is IWidget)
+            {
+                type = (__instance as IWidget).item.GetType().ToString();
+                name = (__instance as IWidget).item.GetType().HumanName();
+            }
 
             // adding the related searches per type
-            switch ((__instance as IUnitWidget)?.unit.GetType().ToString())
+            switch (type)
             {
                 case "Unity.VisualScripting.CustomEvent":
                 case "Bolt.CustomEvent":
@@ -114,7 +126,10 @@ namespace Unity.VisualScripting.UVSFinder {
                     }
                 default:
                     {
-                        yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\"");
+                        if (!String.IsNullOrEmpty(name))
+                        {
+                            yield return new DropdownOption((Action)(() => OnFind(name)), $"Find \"{name}\"");
+                        }
                         break;
                     }
             }
@@ -158,6 +173,12 @@ namespace Unity.VisualScripting.UVSFinder {
         {
             var uvsfinder = UVSFinder.GetUVSFinder();
             uvsfinder.OnSearchAction(keyword, true);
+        }
+
+        private static void OnFind(string keyword)
+        {
+            var uvsfinder = UVSFinder.GetUVSFinder();
+            uvsfinder.OnSearchAction(keyword, false);
         }
     }
 }
