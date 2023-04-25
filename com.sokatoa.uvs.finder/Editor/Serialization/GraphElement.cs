@@ -56,17 +56,17 @@ namespace Unity.VisualScripting.UVSFinder
                                 return $"{((InvokeMember)ge).defaultValues["%name"]} [{tagetTypeName}: {memberName}]";
                             }
                         }
-                        else if (memberName == "GetButtonDown")
-                        {
-                            return $"{((InvokeMember)ge).defaultValues["%buttonName"]} [{tagetTypeName}: {memberName}]";
-                        }
-                        else if (memberName == "GetButton")
+                        else if (memberName == "GetButtonDown" || memberName == "GetButtonUp" ||memberName == "GetButton")
                         {
                             return $"{((InvokeMember)ge).defaultValues["%buttonName"]} [{tagetTypeName}: {memberName}]";
                         }
                         else if (memberName == "GetAxis")
                         {
                             return $"{((InvokeMember)ge).defaultValues["%axisName"]} [{tagetTypeName}: {memberName}]";
+                        }
+                        else if (memberName == "GetMouseButtonUp" || memberName == "GetMouseButtonDown" || memberName == "GetMouseButton")
+                        {
+                            return $"{((InvokeMember)ge).defaultValues["%button"]} [{tagetTypeName}: {memberName}]";
                         }
                         return $"{tagetTypeName} {memberName}";
                     }
