@@ -41,9 +41,18 @@ namespace Unity.VisualScripting.UVSFinder
                         {
                             return $"{tagetTypeName} Create";
                         }
+                        // TODO: Add all animators data formats. 
                         else if (((InvokeMember)ge).member.targetTypeName == "UnityEngine.Animator")
                         {
-                            return $"{((InvokeMember)ge).defaultValues["%name"]} [{tagetTypeName}: {memberName}]";
+                            try
+                            {
+                                return $"{((InvokeMember)ge).defaultValues["%name"]} [{tagetTypeName}: {memberName}]";
+                            }
+                            catch
+                            {
+                                return $"{((InvokeMember)ge).defaultValues["%stateName"]} [{tagetTypeName}: {memberName}]";
+                            }
+                            
                         }
                         else if (memberName == "GetKey" || memberName == "GetKeyUp" || memberName == "GetKeyDown")
                         {
