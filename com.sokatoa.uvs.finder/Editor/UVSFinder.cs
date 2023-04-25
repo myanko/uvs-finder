@@ -21,7 +21,8 @@ namespace Unity.VisualScripting.UVSFinder
         [MenuItem("Tools/VisualScripting/UVS Find in All Graphs &F")]
         public static void ShowUVSFinder()
         {
-            GetWindow<UVSFinder>("UVSFinder");
+            EditorWindow wnd = GetWindow<UVSFinder>();
+            wnd.titleContent = new GUIContent("Node Finder");
         }
 
         public static UVSFinder GetUVSFinder()
@@ -52,7 +53,7 @@ namespace Unity.VisualScripting.UVSFinder
         private Toggle enableHierarchySearch;
         private UVSFinderTabs selectedTab;
 
-        public void OnEnable()
+        public void CreateGUI()
         {
             var path = new UVSFinderPaths().findRootPackagePath();
             // Each editor window contains a root VisualElement object
