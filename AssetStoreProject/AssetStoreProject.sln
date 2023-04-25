@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VSSettingsProvider", "VSSet
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UVSFinder.Editor", "UVSFinder.Editor.csproj", "{C2E11A9C-81A8-8A7C-17B5-57E48DDA74A7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "needle.EditorPatching", "needle.EditorPatching.csproj", "{3713141B-D1E9-679D-5613-6EEB0ED6C597}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UVSFinder.Editor.Tests", "UVSFinder.Editor.Tests.csproj", "{F9D2A5C9-6E34-1665-10BE-0524B01FFFEC}"
 EndProject
 Global
@@ -75,6 +77,10 @@ Global
 		{C2E11A9C-81A8-8A7C-17B5-57E48DDA74A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C2E11A9C-81A8-8A7C-17B5-57E48DDA74A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C2E11A9C-81A8-8A7C-17B5-57E48DDA74A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3713141B-D1E9-679D-5613-6EEB0ED6C597}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3713141B-D1E9-679D-5613-6EEB0ED6C597}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3713141B-D1E9-679D-5613-6EEB0ED6C597}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3713141B-D1E9-679D-5613-6EEB0ED6C597}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F9D2A5C9-6E34-1665-10BE-0524B01FFFEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F9D2A5C9-6E34-1665-10BE-0524B01FFFEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F9D2A5C9-6E34-1665-10BE-0524B01FFFEC}.Release|Any CPU.ActiveCfg = Release|Any CPU

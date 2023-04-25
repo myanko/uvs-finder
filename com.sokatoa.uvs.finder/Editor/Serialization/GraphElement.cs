@@ -18,61 +18,12 @@ namespace Unity.VisualScripting.UVSFinder
          
             name = GetNameFromSpecificTypes(ge);
             
-            /*if (member != null)
-            {
-                var memberName = member.name;
-                if(member.name == ".ctor")
-                {
-                    memberName = "Create";
-                }
-
-                if (type.EndsWith("Member")) {
-                    var cmd = type.Split('.').Last().Replace("Member", "");
-                    name = $"{cmd} {member.targetType.Split('.').Last()} {memberName}";
-                } else
-                {
-                    name = $"{member.targetType.Split('.').Last()} {memberName}";
-                }
-            }*/
-
-            /*if (nest != null && !string.IsNullOrEmpty(nest.embed?.title))
-            {
-                if (nest.source == "Macro")
-                {
-                    //TODO Find what script it is with the GUID
-                    name = type.Split('.').Last();
-                }
-                else
-                {
-                    name = nest.embed.title;
-                }
-            }*/
-
             if (ge.GetType().ToString().StartsWith("Bolt.")) {
                 name = $"Bolt {name}";
             }
 
             return name;
         }
-
-        /*public string GetElementType()
-        {
-            if (member != null)
-            {
-                return member.targetType;
-            }
-
-            if (type.EndsWith(".SetVariable") || type.EndsWith(".GetVariable")) {
-                return defaultValues.name.type;
-            }
-
-            if (type == "Unity.VisualScripting.Literal")
-            {
-                return value.type;
-            }
-
-            return type;
-        }*/
 
         public static string GetNameFromSpecificTypes(IGraphElement ge)
         {
@@ -179,6 +130,7 @@ namespace Unity.VisualScripting.UVSFinder
                 case "Unity.VisualScripting.OnTriggerStay":
                 case "Bolt.OnTriggerStay":
                     return $"OnTriggerStay [PhysicsEvent]";
+
                 case "Unity.VisualScripting.CustomEvent":
                 case "Bolt.CustomEvent":
                     return $"{((CustomEvent)ge).defaultValues["name"]} [CustomEvent]";
@@ -201,7 +153,7 @@ namespace Unity.VisualScripting.UVSFinder
                     return $"\"{((Literal)ge).value}\" {literalType.Split('.').Last()} [Literal]";
                 case "Unity.VisualScripting.GraphGroup":
                 case "Bolt.GraphGroup":
-                    return $"\"{((GraphGroup)ge).label}\" [Group]";
+                    return $"\"{((GraphGroup)ge).label}\" [Graph Group]";
                 case "Unity.VisualScripting.FlowState":
                     {
                         var flow = (FlowState)ge;
