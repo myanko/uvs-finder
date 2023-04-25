@@ -28,6 +28,11 @@
             "name": "com.unity.visualscripting",
             "expression": "1.7.0",
             "define": "SUBGRAPH_RENAME"
+        },
+        {
+            "name": "com.unity.inputsystem",
+            "expression": "",
+            "define": "NEW_INPUT_SYSTEM"
         }
     ],
     "noEngineReferences": false
