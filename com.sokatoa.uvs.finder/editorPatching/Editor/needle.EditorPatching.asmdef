@@ -1,0 +1,20 @@
+{
+    "name": "needle.EditorPatching",
+    "rootNamespace": "",
+    "references": [
+        "pfc.EditorPatching.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "EditorPatching_0Harmony.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

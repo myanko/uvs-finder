@@ -18,61 +18,12 @@ namespace Unity.VisualScripting.UVSFinder
          
             name = GetNameFromSpecificTypes(ge);
             
-            /*if (member != null)
-            {
-                var memberName = member.name;
-                if(member.name == ".ctor")
-                {
-                    memberName = "Create";
-                }
-
-                if (type.EndsWith("Member")) {
-                    var cmd = type.Split('.').Last().Replace("Member", "");
-                    name = $"{cmd} {member.targetType.Split('.').Last()} {memberName}";
-                } else
-                {
-                    name = $"{member.targetType.Split('.').Last()} {memberName}";
-                }
-            }*/
-
-            /*if (nest != null && !string.IsNullOrEmpty(nest.embed?.title))
-            {
-                if (nest.source == "Macro")
-                {
-                    //TODO Find what script it is with the GUID
-                    name = type.Split('.').Last();
-                }
-                else
-                {
-                    name = nest.embed.title;
-                }
-            }*/
-
             if (ge.GetType().ToString().StartsWith("Bolt.")) {
                 name = $"Bolt {name}";
             }
 
             return name;
         }
-
-        /*public string GetElementType()
-        {
-            if (member != null)
-            {
-                return member.targetType;
-            }
-
-            if (type.EndsWith(".SetVariable") || type.EndsWith(".GetVariable")) {
-                return defaultValues.name.type;
-            }
-
-            if (type == "Unity.VisualScripting.Literal")
-            {
-                return value.type;
-            }
-
-            return type;
-        }*/
 
         public static string GetNameFromSpecificTypes(IGraphElement ge)
         {
@@ -107,34 +58,36 @@ namespace Unity.VisualScripting.UVSFinder
                 case "Bolt.BoltNamedAnimationEvent":
                     var buae = ge as BoltNamedAnimationEvent;
                     return $"{buae.defaultValues["name"]} [BoltAnimationEvent]";
-                
+                case "Unity.VisualScripting.Expose":
+                case "Bolt.Expose":
+                    return $"{(ge as Expose).type.ToString().Split('.').Last()} [Expose]";
                 case "Unity.VisualScripting.OnCollisionEnter":
                 case "Bolt.OnCollisionEnter":
-                    return $"{"OnCollisionEnter"} [PhysicsEvent]";
+                    return $"OnCollisionEnter [PhysicsEvent]";
                 case "Unity.VisualScripting.OnCollisionExit":
                 case "Bolt.OnCollisionExit":
-                    return $"{"OnCollisionExit"} [PhysicsEvent]";
+                    return $"OnCollisionExit [PhysicsEvent]";
                 case "Unity.VisualScripting.OnCollisionStay":
                 case "Bolt.OnCollisionStay":
-                    return $"{"OnCollisionStay"} [PhysicsEvent]";
+                    return $"OnCollisionStay [PhysicsEvent]";
                 case "Unity.VisualScripting.OnJointBreak":
                 case "Bolt.OnJointBreak":
-                    return $"{"OnJointBreak"} [PhysicsEvent]";
+                    return $"OnJointBreak [PhysicsEvent]";
                 case "Unity.VisualScripting.OnControllerColliderHit":
                 case "Bolt.OnControllerColliderHit":
-                    return $"{"OnControllerColliderHit"} [PhysicsEvent]";
+                    return $"OnControllerColliderHit [PhysicsEvent]";
                 case "Unity.VisualScripting.OnParticleCollision":
                 case "Bolt.OnParticleCollision":
-                    return $"{"OnParticleCollision"} [PhysicsEvent]";
+                    return $"OnParticleCollision [PhysicsEvent]";
                 case "Unity.VisualScripting.OnTriggerEnter":
                 case "Bolt.OnTriggerEnter":
-                    return $"{"OnTriggerEnter"} [PhysicsEvent]";
+                    return $"OnTriggerEnter [PhysicsEvent]";
                 case "Unity.VisualScripting.OnTriggerExit":
                 case "Bolt.OnTriggerExit":
-                    return $"{"OnTriggerExit"} [PhysicsEvent]";
+                    return $"OnTriggerExit [PhysicsEvent]";
                 case "Unity.VisualScripting.OnTriggerStay":
                 case "Bolt.OnTriggerStay":
-                    return $"{"OnTriggerStay"} [PhysicsEvent]";
+                    return $"OnTriggerStay [PhysicsEvent]";
 
                 case "Unity.VisualScripting.CustomEvent":
                 case "Bolt.CustomEvent":
@@ -158,7 +111,7 @@ namespace Unity.VisualScripting.UVSFinder
                     return $"{literalType.Split('.').Last()} \"{((Literal)ge).value}\" [Literal]";
                 case "Unity.VisualScripting.GraphGroup":
                 case "Bolt.GraphGroup":
-                    return $"\"{((GraphGroup)ge).label}\" [Group]";
+                    return $"\"{((GraphGroup)ge).label}\" [Graph Group]";
                 case "Unity.VisualScripting.FlowState":
                     {
                         var flow = (FlowState)ge;
