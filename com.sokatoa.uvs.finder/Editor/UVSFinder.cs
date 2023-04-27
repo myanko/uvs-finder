@@ -18,7 +18,7 @@ namespace Unity.VisualScripting.UVSFinder
     {
         internal static UVSFinderPreferences prefs => UVSFinderSettingsProvider.Preferences;
 
-        [MenuItem("Tools/VisualScripting/UVS Find in All Graphs &F")]
+        [MenuItem("Tools/VisualScripting/Node Finder All Graphs &F")]
         public static void ShowUVSFinder()
         {
             EditorWindow wnd = GetWindow<UVSFinder>();
@@ -244,7 +244,7 @@ namespace Unity.VisualScripting.UVSFinder
         private void setWindowTitle()
         {
             var wnd = GetWindow<UVSFinder>();
-            wnd.titleContent = new GUIContent("UVSFinder (" + searchItems[selectedTab]?.Count + ")");
+            wnd.titleContent = new GUIContent("Node Finder (" + searchItems[selectedTab]?.Count + ")");
         }
 
         private void setTabsResults()
