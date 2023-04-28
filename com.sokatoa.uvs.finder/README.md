@@ -1,9 +1,27 @@
-# Node Finder for Unity Visual Scripting
+# Node Finder for Unity Visual Scripting V0.4
 
 This package adds searching functionalities to Visual Scripting, by letting you simply press Alt+F and start to browse for nodes in graphs, so you always know where your events are used in the project, or where your variables or subgraphs are used in your super huge graph.
 
 # **Features:**
 
+- Right click on nodes contextual find options *[NEW]*
+  - Variables (Getter, Setter and Has)
+  - Groups
+  - Custom Events (Trigger and Events)
+- Adding support to Find nodes with custom text fields, dropdown items *[NEW]*
+  - Get Button show Button Name
+  - Get Axis
+  - Get Button Down
+  - Get Button  UP
+  - Get Button show Button Name
+  - Get Axis
+  - Animator
+  - GetButton
+  - GetMouseButton
+  - New Input System Events
+    - On Input System Event Float
+    - On Input System Event Button
+    - On Input System Event Vector 2
 - Find nodes in current graph.
 - Find nodes in all project graphs.
 - Find nodes in Hierachy.
@@ -14,20 +32,16 @@ This package adds searching functionalities to Visual Scripting, by letting you 
 - Search in embed graphs
 - Constraint search to children and current graph in current graph tab
 
-  
-
 # **Dependencies**
 
 - **com.unity.visualscripting:** 1.5.x, 1.6.x, 1.7.x, 1.8.x
 
-
 # **Supported OS:**
 
 - Windows 10
+- Windows 11
 - MacOs (Not Tested)
 - Linux (Not Tested)
-
-
 
 # Supported Unity Versions:
 
@@ -37,23 +51,15 @@ This package adds searching functionalities to Visual Scripting, by letting you 
 
 - https://github.com/myanko/uvs-finder/issues
 
-
-
 # **Documentation:**
-
-
 
 ## How to Open the Tool
 
 To open the node finder, you can simply press Alt+F.
 
-
-
 ## Default ShortCuts
 
 **Alt+F** :Open the node finder and search in all graphs in the project.
-
-
 
 ## User Settings
 
@@ -65,13 +71,11 @@ To open the User Settings, click on the button on the side of the search field o
 
 After opening the node finding tool, simply type in the search field and press Enter. The finder will search
 
-
+You can also right click on nodes in a graph, to get contextual search options.
 
 ## How to Update
 
 Delete the folder com.sokatoa.uvs.finder and import the node finder from the asset store.
-
-
 
 ## Find special types of nodes
 
