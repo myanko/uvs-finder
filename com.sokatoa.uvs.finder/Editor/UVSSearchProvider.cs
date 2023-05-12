@@ -119,7 +119,9 @@ namespace Unity.VisualScripting.UVSFinder
                 {
                     searchItems = GetElementsFromScriptMachine(scriptMachine, o.GameObject().scene.path, searchContext, searchItems);
                 }
-
+            }
+            foreach (UnityEngine.Object o in GameObject.FindObjectsOfType<StateMachine>())
+            {
                 var stateMachine = o.GetComponent<StateMachine>();
                 if (stateMachine?.nest?.source == GraphSource.Embed)
                 {
