@@ -113,15 +113,15 @@ namespace Unity.VisualScripting.UVSFinder.Tests {
         }
 
         [Test]
-        [TestCase("", 27)]
-        [TestCase("furet", 4)]
-        [TestCase("Furet", 4)]
-        [TestCase("FURET", 4)]
-        [TestCase("[", 6)]
+        [TestCase("", 35)]
+        [TestCase("furet", 6)]
+        [TestCase("Furet", 6)]
+        [TestCase("FURET", 6)]
+        [TestCase("[", 8)]
         [TestCase("notexisting", 0)]
         [TestCase("(", 0)]
         [TestCase("*", 0)]
-        [TestCase("\"", 4)]
+        [TestCase("\"", 6)]
         public void PerformSearchHierarchy_With_All_Scenes_Opened_And_Keyword_Returns_Some_Results(string keyword, int result)
         {
             Utilities.OpenAllScenes();

@@ -242,7 +242,8 @@ namespace Unity.VisualScripting.UVSFinder
 
         private static ResultItemList GetElementsFromScriptMachine(ScriptMachine scriptMachine, string assetPath, SearchContext searchContext, ResultItemList searchItems)
         {
-            if(scriptMachine == null || scriptMachine.graph.elements.Count() == 0)
+            
+            if (scriptMachine == null || (scriptMachine.graph.elements.Count() == 0 && scriptMachine.nest?.embed?.elements.Count == 0))
             {
                 return searchItems;
             }
@@ -252,7 +253,11 @@ namespace Unity.VisualScripting.UVSFinder
             {
                 searchItems = GrabElements(e, "", scriptMachine.gameObject, reference, scriptMachine.graph, assetPath, searchContext, searchItems);
             }
-            
+            foreach (var e in scriptMachine.nest?.embed?.elements)
+            {
+                searchItems = GrabElements(e, "", scriptMachine.gameObject, reference, scriptMachine.graph, assetPath, searchContext, searchItems);
+            }
+
             return searchItems;
         }
 
