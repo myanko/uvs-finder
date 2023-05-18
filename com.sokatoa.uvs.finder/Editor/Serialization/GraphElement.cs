@@ -160,12 +160,11 @@ namespace Unity.VisualScripting.UVSFinder
                     {
                         return $"\"{((Literal)ge).value}\" {"Float"} [Literal]";
                     }
-                    //Todo: Get the Layer value and convert it to a name
-                    /*else if (literalType == "UnityEngine.LayerMask")
+                    else if (literalType == "UnityEngine.LayerMask")
                     {
-                        Debug.Log(((Literal)ge).value).;
-                        //return $"{literalType.Split('.').Last()} \"{LayerMask.LayerToName((int)((Literal)ge).value)}\" [Literal]";
-                    }*/
+                        // ((LayerMask)((Literal)ge).value).value = 2^8 = , but Layer.LayerToName expects [0-31]
+                        return $"{literalType.Split('.').Last()} \"{LayerMask.LayerToName((int)Mathf.Log(((LayerMask)((Literal)ge).value).value, 2))}\" [Literal]";
+                    }
                     return $"\"{((Literal)ge).value}\" {literalType.Split('.').Last()} [Literal]";
                 case "Unity.VisualScripting.GraphGroup":
                 case "Bolt.GraphGroup":
