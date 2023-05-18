@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Can search the embedded elements in the opened scenes' hierarchy (script machines and state graphs)
+
 ### Fixed
 
 - Better display name for the Layer Masks
