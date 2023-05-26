@@ -120,14 +120,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Minimal Visual Scripting version and packages dependencies
 
-## [0.0.3] - 2022-12-18
+## [0.0.3] - 2021-12-18
 
 ### Fixed
 
 - Adding the required getaotstubs for Visual Scripting @1.7.5
 - Removing a useless  Debug.Log
 
-## [0.0.2] - 2022-12-03
+## [0.0.2] - 2021-12-03
 
 ### Added
 
