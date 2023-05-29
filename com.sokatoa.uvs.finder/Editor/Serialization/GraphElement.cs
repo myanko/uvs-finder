@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting.UVSFinder.ExtensionMethods;
 using UnityEngine;
@@ -36,86 +37,89 @@ namespace Unity.VisualScripting.UVSFinder
                 case "Unity.VisualScripting.InvokeMember":
                     {
                         var memberName = ((InvokeMember)ge).member.name;
-                        var tagetTypeName = ((InvokeMember)ge).member.targetTypeName.Split('.').Last();
+                        var targetTypeName = ((InvokeMember)ge).member.targetTypeName.Split('.').Last();
                         if (memberName == ".ctor")
                         {
-                            return $"{tagetTypeName} Create";
+                            return $"{targetTypeName} Create";
                         }
                         // TODO: Add all animators data formats. 
                         else if (((InvokeMember)ge).member.targetTypeName == "UnityEngine.Animator")
                         {
                             try
                             {
-                                return $"{((InvokeMember)ge).defaultValues["%name"]} [{tagetTypeName}: {memberName}]";
+                                return $"{getValueFromDictionary(((InvokeMember)ge).defaultValues, "%name")} [{targetTypeName}: {memberName}]";
                             }
                             catch
                             {
-                                return $"{((InvokeMember)ge).defaultValues["%stateName"]} [{tagetTypeName}: {memberName}]";
+                                return $"{getValueFromDictionary(((InvokeMember)ge).defaultValues, "%stateName")} [{targetTypeName}: {memberName}]";
                             }
-                            
+
                         }
-                        else if (memberName == "GetKey" || memberName == "GetKeyUp" || memberName == "GetKeyDown")
+                        else if (targetTypeName == "Input")
                         {
-                            try
+                            if (memberName == "GetKey" || memberName == "GetKeyUp" || memberName == "GetKeyDown")
                             {
-                                return $"{((InvokeMember)ge).defaultValues["%key"]} [{tagetTypeName}: {memberName}]";
+                                try
+                                {
+                                    return $"{getValueFromDictionary(((InvokeMember)ge).defaultValues, "%key")} [{targetTypeName}: {memberName}]";
+                                }
+                                catch
+                                {
+                                    return $"{getValueFromDictionary(((InvokeMember)ge).defaultValues, "%name")} [{targetTypeName}: {memberName}]";
+                                }
                             }
-                            catch
+                            else if (memberName == "GetButtonDown" || memberName == "GetButtonUp" || memberName == "GetButton")
                             {
-                                return $"{((InvokeMember)ge).defaultValues["%name"]} [{tagetTypeName}: {memberName}]";
+                                return $"{getValueFromDictionary(((InvokeMember)ge).defaultValues, "%buttonName")} [{targetTypeName}: {memberName}]";
+                            }
+                            else if (memberName == "GetAxis")
+                            {
+                                return $"{getValueFromDictionary(((InvokeMember)ge).defaultValues, "%axisName")} [{targetTypeName}: {memberName}]";
+                            }
+                            else if (memberName == "GetMouseButtonUp" || memberName == "GetMouseButtonDown" || memberName == "GetMouseButton")
+                            {
+                                return $"{getValueFromDictionary(((InvokeMember)ge).defaultValues, "%button")} [{targetTypeName}: {memberName}]";
                             }
                         }
-                        else if (memberName == "GetButtonDown" || memberName == "GetButtonUp" ||memberName == "GetButton")
-                        {
-                            return $"{((InvokeMember)ge).defaultValues["%buttonName"]} [{tagetTypeName}: {memberName}]";
-                        }
-                        else if (memberName == "GetAxis")
-                        {
-                            return $"{((InvokeMember)ge).defaultValues["%axisName"]} [{tagetTypeName}: {memberName}]";
-                        }
-                        else if (memberName == "GetMouseButtonUp" || memberName == "GetMouseButtonDown" || memberName == "GetMouseButton")
-                        {
-                            return $"{((InvokeMember)ge).defaultValues["%button"]} [{tagetTypeName}: {memberName}]";
-                        }
-                        return $"{tagetTypeName} {memberName}";
+                        return $"{targetTypeName} {memberName}";
                     }
                 case "Unity.VisualScripting.GetVariable":
                 case "Bolt.GetVariable":
-                    return $"{((GetVariable)ge).defaultValues["name"]} [Get Variable: {((GetVariable)ge).kind}]";
+                    return $"{getValueFromDictionary(((GetVariable)ge).defaultValues, "name")} [Get Variable: {((GetVariable)ge).kind}]";
                 case "Unity.VisualScripting.IsVariableDefined":
                 case "Bolt.IsVariableDefined":
-                    return $"{((IsVariableDefined)ge).defaultValues["name"]} [Has Variable: {((IsVariableDefined)ge).kind}]";                    
+                    return $"{getValueFromDictionary(((IsVariableDefined)ge).defaultValues, "name")} [Has Variable: {((IsVariableDefined)ge).kind}]";                    
                 case "Unity.VisualScripting.SetVariable":
                 case "Bolt.SetVariable":
-                    return $"{((SetVariable)ge).defaultValues["name"]} [Set Variable: {((SetVariable)ge).kind}]";
+                    return $"{getValueFromDictionary(((SetVariable)ge).defaultValues, "name")} [Set Variable: {((SetVariable)ge).kind}]";
 #if NEW_INPUT_SYSTEM
                 case "Unity.VisualScripting.InputSystem.OnInputSystemEventFloat":
                 case "Bolt.InputSystem.OnInputSystemEventFloat":
-                    return $"{((InputSystem.OnInputSystemEventFloat)ge).defaultValues["InputAction"]} [{ge.GetType().HumanName()}: {((InputSystem.OnInputSystemEventFloat)ge).InputActionChangeType}]";
+                    return $"{getValueFromDictionary(((InputSystem.OnInputSystemEventFloat)ge).defaultValues, "InputAction")} [{ge.GetType().HumanName()}: {((InputSystem.OnInputSystemEventFloat)ge).InputActionChangeType}]";
                 case "Unity.VisualScripting.InputSystem.OnInputSystemEventButton":
                 case "Bolt.InputSystem.OnInputSystemEventButton":
-                    return $"{((InputSystem.OnInputSystemEventButton)ge).defaultValues["InputAction"]} [{ge.GetType().HumanName()}: {((InputSystem.OnInputSystemEventButton)ge).InputActionChangeType}]";
+                    return $"{getValueFromDictionary(((InputSystem.OnInputSystemEventButton)ge).defaultValues, "InputAction")} [{ge.GetType().HumanName()}: {((InputSystem.OnInputSystemEventButton)ge).InputActionChangeType}]";
                 case "Unity.VisualScripting.InputSystem.OnInputSystemEventVector2":
                 case "Bolt.InputSystem.OnInputSystemEventVector2":
-                    return $"{((InputSystem.OnInputSystemEventVector2)ge).defaultValues["InputAction"]} [{ge.GetType().HumanName()}: {((InputSystem.OnInputSystemEventVector2)ge).InputActionChangeType}]";
+                    return $"{getValueFromDictionary(((InputSystem.OnInputSystemEventVector2)ge).defaultValues, "InputAction")} [{ge.GetType().HumanName()}: {((InputSystem.OnInputSystemEventVector2)ge).InputActionChangeType}]";
 #endif                
                 case "Unity.VisualScripting.OnMouseInput":
                 case "Bolt.OnMouseInput":
-                    return $"{((OnMouseInput)ge).defaultValues["button"]} [{ge.GetType().HumanName()}: {((OnMouseInput)ge).defaultValues["action"]}]";
+                    return $"{getValueFromDictionary(((OnMouseInput)ge).defaultValues, "button")} [{ge.GetType().HumanName()}: {getValueFromDictionary(((OnMouseInput)ge).defaultValues, "action")}]";
                 case "Unity.VisualScripting.OnKeyboardInput":
                 case "Bolt.OnKeyboardInput":
-                    return $"{((OnKeyboardInput)ge).defaultValues["key"]} [{ge.GetType().HumanName()}: {((OnKeyboardInput)ge).defaultValues["action"]}]";
+                    return $"{getValueFromDictionary(((OnKeyboardInput)ge).defaultValues, "key")} [{ge.GetType().HumanName()}: {getValueFromDictionary(((OnKeyboardInput)ge).defaultValues, "action")}]";
                 case "Unity.VisualScripting.OnButtonInput":
                 case "Bolt.OnButtonInput":
-                    return $"{((OnButtonInput)ge).defaultValues["buttonName"]} [{ge.GetType().HumanName()}: {((OnButtonInput)ge).defaultValues["action"]}]";
+                    return $"{getValueFromDictionary(((OnButtonInput)ge).defaultValues, "buttonName")} [{ge.GetType().HumanName()}: {getValueFromDictionary(((OnButtonInput)ge).defaultValues, "action")}]";
                 case "Unity.VisualScripting.BoltUnityEvent":
                 case "Bolt.BoltUnityEvent":
                     var bue = ge as BoltUnityEvent;
-                    return $"{bue.defaultValues["name"]} [BoltUnityEvent]";
+                    return $"{getValueFromDictionary(bue.defaultValues, "name")} [BoltUnityEvent]";
                 case "Unity.VisualScripting.BoltNamedAnimationEvent":
                 case "Bolt.BoltNamedAnimationEvent":
                     var buae = ge as BoltNamedAnimationEvent;
-                    return $"{buae.defaultValues["name"]} [BoltAnimationEvent]";
+                    return $"{getValueFromDictionary(buae.defaultValues, "name")} [BoltAnimationEvent]";
                 case "Unity.VisualScripting.Expose":
                 case "Bolt.Expose":
                     return $"{(ge as Expose).type.ToString().Split('.').Last()} [Expose]";
@@ -149,10 +153,10 @@ namespace Unity.VisualScripting.UVSFinder
 
                 case "Unity.VisualScripting.CustomEvent":
                 case "Bolt.CustomEvent":
-                    return $"{((CustomEvent)ge).defaultValues["name"]} [CustomEvent]";
+                    return $"{getValueFromDictionary(((CustomEvent)ge).defaultValues, "name")} [CustomEvent]";
                 case "Unity.VisualScripting.TriggerCustomEvent":
                 case "Bolt.TriggerCustomEvent":
-                    return $"{((TriggerCustomEvent)ge).defaultValues["name"]} [TriggerCustomEvent]";
+                    return $"{getValueFromDictionary(((TriggerCustomEvent)ge).defaultValues, "name")} [TriggerCustomEvent]";
                 case "Unity.VisualScripting.Literal":
                 case "Bolt.Literal":
                     var literalType = ((Literal)ge).type.ToString();
@@ -160,12 +164,11 @@ namespace Unity.VisualScripting.UVSFinder
                     {
                         return $"\"{((Literal)ge).value}\" {"Float"} [Literal]";
                     }
-                    //Todo: Get the Layer value and convert it to a name
-                    /*else if (literalType == "UnityEngine.LayerMask")
+                    else if (literalType == "UnityEngine.LayerMask")
                     {
-                        Debug.Log(((Literal)ge).value).;
-                        //return $"{literalType.Split('.').Last()} \"{LayerMask.LayerToName((int)((Literal)ge).value)}\" [Literal]";
-                    }*/
+                        // ((LayerMask)((Literal)ge).value).value = 2^8 = , but Layer.LayerToName expects [0-31]
+                        return $"{literalType.Split('.').Last()} \"{LayerMask.LayerToName((int)Mathf.Log(((LayerMask)((Literal)ge).value).value, 2))}\" [Literal]";
+                    }
                     return $"\"{((Literal)ge).value}\" {literalType.Split('.').Last()} [Literal]";
                 case "Unity.VisualScripting.GraphGroup":
                 case "Bolt.GraphGroup":
@@ -334,6 +337,14 @@ namespace Unity.VisualScripting.UVSFinder
                         return name;
                     }
             }
+        }
+        private static object getValueFromDictionary(Dictionary<string, object> dict, string key)
+        {
+            if (dict.ContainsKey(key))
+            {
+                return dict[key];
+            }
+            return "";
         }
     }
 }

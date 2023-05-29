@@ -36,12 +36,12 @@ namespace Unity.VisualScripting.UVSFinder.Tests {
         }
 
         [Test]
-        [TestCase("", 76)]
+        [TestCase("", 78)]
         [TestCase("furet", 12)]
         [TestCase("Furet", 12)]
         [TestCase("FURET", 12)]
         [TestCase("unnamed", 3)] // special naming
-        [TestCase("[", 25)]
+        [TestCase("[", 26)]
         [TestCase("notexisting", 0)]
         [TestCase("(", 0)]
         [TestCase("*", 0)]
@@ -79,22 +79,22 @@ namespace Unity.VisualScripting.UVSFinder.Tests {
 
         [Test]
         // this is the entry point of the state graph
-        [TestCase("", "", StateSearchContext.Children, 19)]
-        [TestCase("", "", StateSearchContext.All, 19)]
+        [TestCase("", "", StateSearchContext.Children, 21)]
+        [TestCase("", "", StateSearchContext.All, 21)]
         [TestCase("", "", StateSearchContext.Current, 3)]
         [TestCase("", "furet", StateSearchContext.Children, 5)]
         [TestCase("", "furet", StateSearchContext.All, 5)]
         [TestCase("", "furet", StateSearchContext.Current, 2)]
         // Those are state -> Flow
         [TestCase("furet42scriptstate", "", StateSearchContext.Children, 3)]
-        [TestCase("furet42scriptstate", "", StateSearchContext.All, 19)]
+        [TestCase("furet42scriptstate", "", StateSearchContext.All, 21)]
         [TestCase("furet42scriptstate", "", StateSearchContext.Current, 3)]
         [TestCase("furet42scriptstate", "furet", StateSearchContext.Children, 0)]
         [TestCase("furet42scriptstate", "furet", StateSearchContext.All, 5)]
         [TestCase("furet42scriptstate", "furet", StateSearchContext.Current, 0)]
         // those are state -> state -> Flow
-        [TestCase("furet2embed", "", StateSearchContext.Children, 10)]
-        [TestCase("furet2embed", "", StateSearchContext.All, 19)]
+        [TestCase("furet2embed", "", StateSearchContext.Children, 12)]
+        [TestCase("furet2embed", "", StateSearchContext.All, 21)]
         [TestCase("furet2embed", "", StateSearchContext.Current, 2)]
         [TestCase("furet2embed", "furet", StateSearchContext.Children, 3)]
         [TestCase("furet2embed", "furet", StateSearchContext.All, 5)]
@@ -113,15 +113,15 @@ namespace Unity.VisualScripting.UVSFinder.Tests {
         }
 
         [Test]
-        [TestCase("", 27)]
-        [TestCase("furet", 4)]
-        [TestCase("Furet", 4)]
-        [TestCase("FURET", 4)]
-        [TestCase("[", 6)]
+        [TestCase("", 42)]
+        [TestCase("furet", 7)]
+        [TestCase("Furet", 7)]
+        [TestCase("FURET", 7)]
+        [TestCase("[", 11)]
         [TestCase("notexisting", 0)]
         [TestCase("(", 0)]
         [TestCase("*", 0)]
-        [TestCase("\"", 4)]
+        [TestCase("\"", 8)]
         public void PerformSearchHierarchy_With_All_Scenes_Opened_And_Keyword_Returns_Some_Results(string keyword, int result)
         {
             Utilities.OpenAllScenes();
