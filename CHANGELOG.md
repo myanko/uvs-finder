@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Better display name for the Layer Masks
 - Errors with the Input methods "The given key '%axisName' was not present in the dictionary"
+- Harmony issue with burst compile
 
 ## [0.4.0] - 2023-05-04
 
