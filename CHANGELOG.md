@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.5.0] - 2023-06-02
 
 ### Added
 
@@ -22,21 +22,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Right click on nodes contextual find options
-	- Variables (Getter, Setter and Has)
-	- Groups
-	- Custom Events (Trigger and Events)
+  - Variables (Getter, Setter and Has)
+  - Groups
+  - Custom Events (Trigger and Events)
 - Adding support to Find nodes with custom text fields, dropdown items
-	- Get Button show Button Name
-	- Get Axis
-	- Get Button Down
-	- Get Button UP
-	- Animator (Work in progress)
-	- GetButton
-	- GetMouseButton
+  - Get Button show Button Name
+  - Get Axis
+  - Get Button Down
+  - Get Button UP
+  - Animator (Work in progress)
+  - GetButton
+  - GetMouseButton
 - New Input System Events
-	- On Input System Event Float
-	- On Input System Event Button
-	- On Input System Event Vector 2
+  - On Input System Event Float
+  - On Input System Event Button
+  - On Input System Event Vector 2
 
 ### Fixed
 
@@ -48,10 +48,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Option to disable search in tabs with the checkbox on each tabs.
 - New search filters to constraint current graph to:
-	- Search in current graph.
-	- Search in current graph and subgraphs.
-	- Search in all graphs (Parent, current and subgraphs).
-	- Search in state graphs transition nodes.
+  - Search in current graph.
+  - Search in current graph and subgraphs.
+  - Search in all graphs (Parent, current and subgraphs).
+  - Search in state graphs transition nodes.
 
 ### Fixed
 

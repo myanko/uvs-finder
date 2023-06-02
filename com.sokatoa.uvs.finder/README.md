@@ -1,14 +1,19 @@
-# Node Finder for Unity Visual Scripting V0.4
+# Node Finder for Unity Visual Scripting V0.5
 
 This package adds searching functionalities to Visual Scripting, by letting you simply press Alt+F and start to browse for nodes in graphs, so you always know where your events are used in the project, or where your variables or subgraphs are used in your super huge graph.
 
 # **Features:**
 
+- Can search the embedded elements in the opened scenes' hierarchy (script machines and state graphs.
+
 - Right click on nodes contextual find options *[NEW]*
+  
   - Variables (Getter, Setter and Has)
   - Groups
   - Custom Events (Trigger and Events)
+
 - Adding support to Find nodes with custom text fields, dropdown items *[NEW]*
+  
   - Get Button show Button Name
   - Get Axis
   - Get Button Down
@@ -22,14 +27,23 @@ This package adds searching functionalities to Visual Scripting, by letting you 
     - On Input System Event Float
     - On Input System Event Button
     - On Input System Event Vector 2
+
 - Find nodes in current graph.
+
 - Find nodes in all project graphs.
+
 - Find nodes in Hierachy.
+
 - Find groupes by title.
+
 - Find custom events nodes.
+
 - Focus on node in graph when clicking on the found item.
+
 - Enable and disable search scopes.
+
 - Search in embed graphs
+
 - Constraint search to children and current graph in current graph tab
 
 # **Dependencies**
@@ -89,3 +103,9 @@ Some Usefull Keywords
 - State
 - Group
 - Deprecated
+
+# Support US
+
+- [Buy Sokatoa a Coffee](https://ko-fi.com/sokatoa)
+
+- https://patreon.com/myanko
