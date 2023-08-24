@@ -1,5 +1,6 @@
 using HarmonyLib;
 using UnityEditor;
+using UnityEngine;
 using System.Reflection;
 using System.Linq;
 using System.Collections.Generic;
@@ -9,6 +10,8 @@ using System;
 /// This class is extending the right-click on nodes in the Visual Scripting Window
 /// To achieve this, it relies on Harmony to be able to replace the contextOptions 
 /// getter with my own implementation. I was not able to find another way of doing this...
+/// 
+/// For now, Harmony does not work on the Apple M1 architecture, so this might error out.
 /// </summary>
 namespace Unity.VisualScripting.UVSFinder {
 
@@ -20,8 +23,14 @@ namespace Unity.VisualScripting.UVSFinder {
         [InitializeOnLoadMethod]
         public static void DoPatching()
         {
-            var harmony = new Harmony("com.sokatoa.patch");
-            harmony.PatchAll();
+            try
+            {
+                var harmony = new Harmony("com.sokatoa.patch");
+                harmony.PatchAll();
+            } catch (Exception e)
+            {
+                Debug.LogError("Could not load Harmony to add new options in the context menu of the widgets in the Visual Scripting window.");
+            }
         }
 
         [HarmonyPostfix]
