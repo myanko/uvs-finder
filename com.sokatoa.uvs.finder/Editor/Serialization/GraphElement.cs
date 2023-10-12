@@ -229,7 +229,7 @@ namespace Unity.VisualScripting.UVSFinder
                 case "Unity.VisualScripting.AnyState":
                     {
                         var flow = (AnyState)ge;
-                        var name  = "[AnyState]";
+                        var name = "[AnyState]";
                         if (!string.IsNullOrEmpty(flow.graph.title))
                         {
                             name = $"{flow.graph.title} {name}";
@@ -243,7 +243,7 @@ namespace Unity.VisualScripting.UVSFinder
                         var name = "";
                         if (subgraph.nest.source == GraphSource.Macro)
                         {
-                            name = $"{subgraph.nest.macro.name} [SubGraph]";
+                            name = $"{subgraph.nest.macro?.name} [SubGraph]";
                         } 
                         else
                         {
@@ -275,7 +275,7 @@ namespace Unity.VisualScripting.UVSFinder
                         var name = "";
                         if (subgraph.nest.source == GraphSource.Macro)
                         {
-                            name = String.IsNullOrEmpty(subgraph.nest.macro.name) ? "SuperState" : subgraph.nest.macro.name;
+                            name = String.IsNullOrEmpty(subgraph.nest.macro?.name) ? "SuperState" : subgraph.nest.macro.name;
                             name = $"{name} [SuperState]";
                         }
                         else
