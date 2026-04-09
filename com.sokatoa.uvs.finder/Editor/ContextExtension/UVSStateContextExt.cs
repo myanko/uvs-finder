@@ -16,9 +16,7 @@ namespace Unity.VisualScripting.UVSFinder
 
         public void OnFind(Vector2 vector)
         {
-            UVSFinder.ShowUVSFinder();
-            UVSFinder window = (UVSFinder)UVSFinder.GetWindow(typeof(UVSFinder));
-            window.PerformSearchInCurrent("");
+            UVSGraphElementWidgetExt.SearchInCurrentGraph();
         }
 
         public void OnFindAndReplace(Vector2 vector)
