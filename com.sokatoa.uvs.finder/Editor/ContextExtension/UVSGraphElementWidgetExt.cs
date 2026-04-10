@@ -1,184 +1,673 @@
-using HarmonyLib;
-using UnityEditor;
-using System.Reflection;
-using System.Linq;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using UnityEditor;
+using UnityEngine;
+#if !SUBGRAPH_RENAME
+using SubgraphUnit = Unity.VisualScripting.SuperUnit;
+#endif
 
-/// <summary>
-/// This class is extending the right-click on nodes in the Visual Scripting Window
-/// To achieve this, it relies on Harmony to be able to replace the contextOptions 
-/// getter with my own implementation. I was not able to find another way of doing this...
-/// </summary>
-namespace Unity.VisualScripting.UVSFinder {
-
-    [HarmonyPatch(typeof(IGraphElementWidget))]
-    public class UVSGraphElementWidgetExt
+namespace Unity.VisualScripting.UVSFinder
+{
+    internal readonly struct UVSContextSearchAction
     {
-        // make sure DoPatching() is called at start either by
-        // the mod loader or by your injector
-        [InitializeOnLoadMethod]
-        public static void DoPatching()
+        public UVSContextSearchAction(string keyword, string label, bool exact)
         {
-            var harmony = new Harmony("com.sokatoa.patch");
-            harmony.PatchAll();
+            Keyword = keyword;
+            Label = label;
+            Exact = exact;
         }
 
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(GraphElementWidget<ICanvas, IGraphElement>), "contextOptions", MethodType.Getter)]
-        public static IEnumerable<DropdownOption> Postfix1(IEnumerable<DropdownOption> __result, GraphElementWidget<ICanvas, IGraphElement> __instance) {
-            // UnitWidget > NodeWidget > GraphElementWidget
-            // SuperUnitWidget > NesterUnitWidget > UnitWidget
-            var canvasProp = __instance.GetType().GetProperty("canvas", BindingFlags.NonPublic | BindingFlags.Instance);
-            ICanvas canvas = (ICanvas)canvasProp.GetValue(__instance);
+        public string Keyword { get; }
+        public string Label { get; }
+        public bool Exact { get; }
+    }
 
-            var elementProp = __instance.GetType().GetProperty("element", BindingFlags.NonPublic | BindingFlags.Instance);
+    internal static class UVSGraphElementWidgetExt
+    {
+        private static readonly Dictionary<Type, Type> widgetOverrides = new Dictionary<Type, Type>
+        {
+            { typeof(IUnit), typeof(UVSContextSearchUnitWidget<>) },
+            { typeof(IEventUnit), typeof(UVSEventContextSearchUnitWidget<>) },
+            { typeof(GraphGroup), typeof(UVSGraphGroupWidget) },
+            { typeof(SubgraphUnit), typeof(UVSSuperUnitWidget) },
+            { typeof(StateUnit), typeof(UVSStateUnitWidget) },
+            { typeof(AnyState), typeof(UVSAnyStateWidget) },
+            { typeof(FlowState), typeof(UVSFlowStateWidget) },
+            { typeof(SuperState), typeof(UVSSuperStateWidget) },
+            { typeof(FlowStateTransition), typeof(UVSFlowStateTransitionWidget) },
+            { typeof(TriggerStateTransition), typeof(UVSTriggerStateTransitionWidget) }
+        };
 
-            IGraphElement element = (IGraphElement)elementProp?.GetValue(__instance);
+        private static readonly FieldInfo definedDecoratorTypesField = typeof(WidgetProvider).BaseType?.GetField("definedDecoratorTypes", BindingFlags.Instance | BindingFlags.NonPublic);
+        private static readonly FieldInfo resolvedDecoratorTypesField = typeof(WidgetProvider).BaseType?.GetField("resolvedDecoratorTypes", BindingFlags.Instance | BindingFlags.NonPublic);
 
-            // --------------------
-            // adding my own options
-            var name = "";
-            var type = "";
-            
-            if (__instance is Widget<ICanvas, IGraphElement>)
+        [InitializeOnLoadMethod]
+        private static void Initialize()
+        {
+            GraphWindow.activeContextChanged -= OnActiveContextChanged;
+            GraphWindow.activeContextChanged += OnActiveContextChanged;
+
+            EditorApplication.delayCall += ApplyToOpenGraphWindows;
+        }
+
+        public static IEnumerable<DropdownOption> GetDropdownOptions(IGraphElement element)
+        {
+            foreach (var option in GetSearchActions(element))
             {
-                name = GraphElement.GetElementName(__instance.element);
-                type = (__instance as IUnitWidget)?.unit.GetType().ToString();
-                
+                yield return new DropdownOption((Action)(() => OpenFinder(option.Keyword, option.Exact)), option.Label);
             }
-            else if (__instance is IWidget)
+        }
+
+        public static void SearchInCurrentGraph()
+        {
+            UVSFinder.ShowUVSFinder();
+            UVSFinder.GetUVSFinder().PerformSearchInCurrent("");
+        }
+
+        private static void OnActiveContextChanged(IGraphContext context)
+        {
+            ApplyWidgetOverrides(context?.canvas);
+        }
+
+        private static void ApplyToOpenGraphWindows()
+        {
+            foreach (var window in Resources.FindObjectsOfTypeAll<GraphWindow>())
             {
-                type = (__instance as IWidget).item.GetType().ToString();
-                name = (__instance as IWidget).item.GetType().HumanName();
+                ApplyWidgetOverrides(window.context?.canvas);
+            }
+        }
+
+        // Visual Scripting exposes widgets as decorators, but not a public registration API.
+        // Overriding the provider map lets us swap in our Harmony-free widgets while keeping
+        // the same node context menu entry points.
+        private static void ApplyWidgetOverrides(ICanvas canvas)
+        {
+            if (canvas?.widgetProvider == null || definedDecoratorTypesField == null || resolvedDecoratorTypesField == null)
+            {
+                return;
             }
 
-            // adding the related searches per type
-            switch (type)
+            var definedDecoratorTypes = definedDecoratorTypesField.GetValue(canvas.widgetProvider) as Dictionary<Type, Type>;
+            var resolvedDecoratorTypes = resolvedDecoratorTypesField.GetValue(canvas.widgetProvider) as Dictionary<Type, Type>;
+
+            if (definedDecoratorTypes == null || resolvedDecoratorTypes == null)
+            {
+                return;
+            }
+
+            foreach (var pair in widgetOverrides)
+            {
+                definedDecoratorTypes[pair.Key] = pair.Value;
+            }
+
+            resolvedDecoratorTypes.Clear();
+            canvas.widgetProvider.FreeAll();
+            canvas.Recollect();
+        }
+
+        private static IEnumerable<UVSContextSearchAction> GetSearchActions(IGraphElement element)
+        {
+            if (element == null)
+            {
+                yield break;
+            }
+
+            var name = GraphElement.GetElementName(element);
+
+            switch (element.GetType().ToString())
             {
                 case "Unity.VisualScripting.CustomEvent":
                 case "Bolt.CustomEvent":
                     {
-                        var curr = ((__instance as IUnitWidget).unit as CustomEvent);
+                        var curr = (CustomEvent)element;
                         var relatedFindName = $"{curr.defaultValues["name"]} [TriggerCustomEvent]";
-                        yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\" ~");
-                        yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
+                        yield return Exact(name, true);
+                        yield return Exact(relatedFindName);
                         break;
                     }
                 case "Unity.VisualScripting.TriggerCustomEvent":
                 case "Bolt.TriggerCustomEvent":
                     {
-
-                        var curr = ((__instance as IUnitWidget).unit as TriggerCustomEvent);
+                        var curr = (TriggerCustomEvent)element;
                         var relatedFindName = $"{curr.defaultValues["name"]} [CustomEvent]";
-                        yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\" ~");
-                        yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
+                        yield return Exact(name, true);
+                        yield return Exact(relatedFindName);
                         break;
                     }
                 case "Unity.VisualScripting.GetVariable":
                 case "Bolt.GetVariable":
                     {
-                        var curr = ((__instance as IUnitWidget).unit as GetVariable);
+                        var curr = (GetVariable)element;
                         var relatedFindName = $"{curr.defaultValues["name"]} [Set Variable: {curr.kind}]";
                         var relatedFindName2 = $"{curr.defaultValues["name"]} [Has Variable: {curr.kind}]";
-                        yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\" ~");
-                        yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
-                        yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName2)), $"Find \"{relatedFindName2}\"");
+                        yield return Exact(name, true);
+                        yield return Exact(relatedFindName);
+                        yield return Exact(relatedFindName2);
                         break;
                     }
                 case "Unity.VisualScripting.SetVariable":
                 case "Bolt.SetVariable":
                     {
-                        var curr = ((__instance as IUnitWidget).unit as SetVariable);
+                        var curr = (SetVariable)element;
                         var relatedFindName = $"{curr.defaultValues["name"]} [Get Variable: {curr.kind}]";
                         var relatedFindName2 = $"{curr.defaultValues["name"]} [Has Variable: {curr.kind}]";
-                        yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
-                        yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\" ~");
-                        yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName2)), $"Find \"{relatedFindName2}\"");
+                        yield return Exact(relatedFindName);
+                        yield return Exact(name, true);
+                        yield return Exact(relatedFindName2);
                         break;
                     }
                 case "Unity.VisualScripting.IsVariableDefined":
                 case "Bolt.IsVariableDefined":
                     {
-                        var curr = ((__instance as IUnitWidget).unit as IsVariableDefined);
+                        var curr = (IsVariableDefined)element;
                         var relatedFindName = $"{curr.defaultValues["name"]} [Get Variable: {curr.kind}]";
                         var relatedFindName2 = $"{curr.defaultValues["name"]} [Set Variable: {curr.kind}]";
-                        yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
-                        yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName2)), $"Find \"{relatedFindName2}\"");
-                        yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\" ~");
+                        yield return Exact(relatedFindName);
+                        yield return Exact(relatedFindName2);
+                        yield return Exact(name, true);
                         break;
                     }
                 case "Unity.VisualScripting.GetMember":
                     {
-                        var curr = ((__instance as IUnitWidget).unit as GetMember);
+                        var curr = (GetMember)element;
                         var relatedFindName = $"{curr.member.targetTypeName.Split('.').Last()} Set {curr.member.name}";
-                        yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\" ~");
-                        yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
+                        yield return Exact(name, true);
+                        yield return Exact(relatedFindName);
                         break;
                     }
                 case "Unity.VisualScripting.SetMember":
                     {
-                        var curr = ((__instance as IUnitWidget).unit as SetMember);
+                        var curr = (SetMember)element;
                         var relatedFindName = $"{curr.member.targetTypeName.Split('.').Last()} Get {curr.member.name}";
-                        yield return new DropdownOption((Action)(() => OnFindExact(relatedFindName)), $"Find \"{relatedFindName}\"");
-                        yield return new DropdownOption((Action)(() => OnFindExact(name)), $"Find \"{name}\" ~");
+                        yield return Exact(relatedFindName);
+                        yield return Exact(name, true);
                         break;
                     }
                 default:
                     {
-                        if (!String.IsNullOrEmpty(name))
+                        if (!string.IsNullOrEmpty(name))
                         {
-                            yield return new DropdownOption((Action)(() => OnFind(name)), $"Find \"{name}\"");
+                            yield return Find(name);
                         }
+
                         break;
                     }
             }
+        }
 
-            // --------------------
-            // This is recreating the list returned by GraphElementWidget's get contextOptions
-            var suffix = canvas?.selection.Count > 1 ? " Selection" : "";
+        private static UVSContextSearchAction Find(string keyword)
+        {
+            return new UVSContextSearchAction(keyword, $"Find \"{keyword}\"", false);
+        }
 
-            if (GraphClipboard.canCopySelection)
+        private static UVSContextSearchAction Exact(string keyword, bool emphasize = false)
+        {
+            var suffix = emphasize ? " ~" : string.Empty;
+            return new UVSContextSearchAction(keyword, $"Find \"{keyword}\"{suffix}", true);
+        }
+
+        private static void OpenFinder(string keyword, bool exact)
+        {
+            var uvsFinder = UVSFinder.GetUVSFinder();
+            uvsFinder.OnSearchAction(keyword, exact);
+        }
+    }
+
+    public class UVSContextSearchUnitWidget<TUnit> : UnitWidget<TUnit>
+        where TUnit : class, IUnit
+    {
+        public UVSContextSearchUnitWidget(FlowCanvas canvas, TUnit unit) : base(canvas, unit)
+        {
+        }
+
+        protected override IEnumerable<DropdownOption> contextOptions
+        {
+            get
             {
-                yield return new DropdownOption((Action)GraphClipboard.CopySelection, "Copy" + suffix);
-                yield return new DropdownOption((Action)GraphClipboard.CutSelection, "Cut" + suffix);
-            }
-
-            if (GraphClipboard.canDuplicateSelection)
-            {
-                yield return new DropdownOption((Action)GraphClipboard.DuplicateSelection, "Duplicate" + suffix);
-            }
-
-            if (canvas.selection.Count > 0)
-            {
-                yield return new DropdownOption((Action)canvas.DeleteSelection, "Delete" + suffix);
-            }
-
-            if (element != null) // this is fishy that I have to add that and GraphElementWidget doesn't...
-            {
-                if (GraphClipboard.CanPasteInside(element))
+                foreach (var option in UVSGraphElementWidgetExt.GetDropdownOptions(unit))
                 {
-                    yield return new DropdownOption((Action)(() => GraphClipboard.PasteInside(element)), "Paste Inside");
+                    yield return option;
+                }
+
+                foreach (var baseOption in base.contextOptions)
+                {
+                    yield return baseOption;
                 }
             }
+        }
+    }
 
-            if (GraphClipboard.canPasteOutside)
+    public class UVSEventContextSearchUnitWidget<TEvent> : UVSContextSearchUnitWidget<TEvent>
+        where TEvent : class, IEventUnit
+    {
+        public UVSEventContextSearchUnitWidget(FlowCanvas canvas, TEvent unit) : base(canvas, unit)
+        {
+        }
+
+        protected override NodeColorMix baseColor => NodeColor.Green;
+    }
+
+    public sealed class UVSGraphGroupWidget : GraphGroupWidget
+    {
+        public UVSGraphGroupWidget(ICanvas canvas, GraphGroup group) : base(canvas, group)
+        {
+        }
+
+        protected override IEnumerable<DropdownOption> contextOptions
+        {
+            get
             {
-                yield return new DropdownOption((Action)(() => GraphClipboard.PasteOutside(true)), "Paste Outside");
+                foreach (var option in UVSGraphElementWidgetExt.GetDropdownOptions(element))
+                {
+                    yield return option;
+                }
+
+                foreach (var baseOption in base.contextOptions)
+                {
+                    yield return baseOption;
+                }
+            }
+        }
+    }
+
+    public class UVSSuperUnitWidget : SuperUnitWidget
+    {
+        public UVSSuperUnitWidget(FlowCanvas canvas, SubgraphUnit unit) : base(canvas, unit)
+        {
+        }
+
+        protected override IEnumerable<DropdownOption> contextOptions
+        {
+            get
+            {
+                foreach (var option in UVSGraphElementWidgetExt.GetDropdownOptions(unit))
+                {
+                    yield return option;
+                }
+
+                foreach (var baseOption in base.contextOptions)
+                {
+                    yield return baseOption;
+                }
+            }
+        }
+    }
+
+    public class UVSStateUnitWidget : StateUnitWidget
+    {
+        public UVSStateUnitWidget(FlowCanvas canvas, StateUnit unit) : base(canvas, unit)
+        {
+        }
+
+        protected override IEnumerable<DropdownOption> contextOptions
+        {
+            get
+            {
+                foreach (var option in UVSGraphElementWidgetExt.GetDropdownOptions(unit))
+                {
+                    yield return option;
+                }
+
+                foreach (var baseOption in base.contextOptions)
+                {
+                    yield return baseOption;
+                }
+            }
+        }
+    }
+
+    public class UVSAnyStateWidget : AnyStateWidget
+    {
+        public UVSAnyStateWidget(StateCanvas canvas, AnyState state) : base(canvas, state)
+        {
+        }
+
+        protected override IEnumerable<DropdownOption> contextOptions
+        {
+            get
+            {
+                foreach (var option in UVSGraphElementWidgetExt.GetDropdownOptions(state))
+                {
+                    yield return option;
+                }
+
+                foreach (var baseOption in base.contextOptions)
+                {
+                    yield return baseOption;
+                }
+            }
+        }
+    }
+
+    public sealed class UVSTriggerStateTransitionWidget : UVSContextSearchUnitWidget<TriggerStateTransition>
+    {
+        public UVSTriggerStateTransitionWidget(FlowCanvas canvas, TriggerStateTransition unit) : base(canvas, unit)
+        {
+        }
+
+        protected override NodeColorMix baseColor => NodeColorMix.TealReadable;
+    }
+
+    public sealed class UVSSuperStateWidget : NesterStateWidget<SuperState>, IDragAndDropHandler
+    {
+        public UVSSuperStateWidget(StateCanvas canvas, SuperState state) : base(canvas, state)
+        {
+        }
+
+        protected override IEnumerable<DropdownOption> contextOptions
+        {
+            get
+            {
+                foreach (var option in UVSGraphElementWidgetExt.GetDropdownOptions(state))
+                {
+                    yield return option;
+                }
+
+                foreach (var baseOption in base.contextOptions)
+                {
+                    yield return baseOption;
+                }
+            }
+        }
+
+        public DragAndDropVisualMode dragAndDropVisualMode => DragAndDropVisualMode.Generic;
+
+        public bool AcceptsDragAndDrop()
+        {
+            return DragAndDropUtility.Is<StateGraphAsset>();
+        }
+
+        public void PerformDragAndDrop()
+        {
+            UndoUtility.RecordEditedObject("Drag & Drop Macro");
+            state.nest.source = GraphSource.Macro;
+            state.nest.macro = DragAndDropUtility.Get<StateGraphAsset>();
+            state.nest.embed = null;
+            GUI.changed = true;
+        }
+
+        public void UpdateDragAndDrop()
+        {
+        }
+
+        public void DrawDragAndDropPreview()
+        {
+            GraphGUI.DrawDragAndDropPreviewLabel(new Vector2(edgePosition.x, outerPosition.yMax), "Replace with: " + DragAndDropUtility.Get<StateGraphAsset>().name, typeof(StateGraphAsset).Icon());
+        }
+
+        public void ExitDragAndDrop()
+        {
+        }
+    }
+
+    public sealed class UVSFlowStateTransitionWidget : NesterStateTransitionWidget<FlowStateTransition>, IDragAndDropHandler
+    {
+        public UVSFlowStateTransitionWidget(StateCanvas canvas, FlowStateTransition transition) : base(canvas, transition)
+        {
+        }
+
+        protected override IEnumerable<DropdownOption> contextOptions
+        {
+            get
+            {
+                foreach (var option in UVSGraphElementWidgetExt.GetDropdownOptions(transition))
+                {
+                    yield return option;
+                }
+
+                foreach (var baseOption in base.contextOptions)
+                {
+                    yield return baseOption;
+                }
+            }
+        }
+
+        public DragAndDropVisualMode dragAndDropVisualMode => DragAndDropVisualMode.Generic;
+
+        public bool AcceptsDragAndDrop()
+        {
+            return DragAndDropUtility.Is<ScriptGraphAsset>();
+        }
+
+        public void PerformDragAndDrop()
+        {
+            UndoUtility.RecordEditedObject("Drag & Drop Macro");
+            transition.nest.source = GraphSource.Macro;
+            transition.nest.macro = DragAndDropUtility.Get<ScriptGraphAsset>();
+            transition.nest.embed = null;
+            GUI.changed = true;
+        }
+
+        public void UpdateDragAndDrop()
+        {
+        }
+
+        public void DrawDragAndDropPreview()
+        {
+            GraphGUI.DrawDragAndDropPreviewLabel(new Vector2(edgePosition.x, outerPosition.yMax), "Replace with: " + DragAndDropUtility.Get<ScriptGraphAsset>().name, typeof(ScriptGraphAsset).Icon());
+        }
+
+        public void ExitDragAndDrop()
+        {
+        }
+    }
+
+    public sealed class UVSFlowStateWidget : NesterStateWidget<FlowState>, IDragAndDropHandler
+    {
+        public UVSFlowStateWidget(StateCanvas canvas, FlowState state) : base(canvas, state)
+        {
+            state.nest.beforeGraphChange += BeforeGraphChange;
+            state.nest.afterGraphChange += AfterGraphChange;
+
+            if (state.nest.graph != null)
+            {
+                state.nest.graph.elements.CollectionChanged += CacheEventLinesOnUnityThread;
+            }
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+
+            state.nest.beforeGraphChange -= BeforeGraphChange;
+            state.nest.afterGraphChange -= AfterGraphChange;
+        }
+
+        private void BeforeGraphChange()
+        {
+            if (state.nest.graph != null)
+            {
+                state.nest.graph.elements.CollectionChanged -= CacheEventLinesOnUnityThread;
+            }
+        }
+
+        private void AfterGraphChange()
+        {
+            CacheEventLinesOnUnityThread();
+
+            if (state.nest.graph != null)
+            {
+                state.nest.graph.elements.CollectionChanged += CacheEventLinesOnUnityThread;
+            }
+        }
+
+        private List<EventLine> eventLines { get; } = new List<EventLine>();
+
+        private void CacheEventLinesOnUnityThread()
+        {
+            UnityAPI.Async(CacheEventLines);
+        }
+
+        private void CacheEventLines()
+        {
+            eventLines.Clear();
+
+            if (state.nest.graph != null)
+            {
+                eventLines.AddRange(state.nest.graph.units
+                    .OfType<IEventUnit>()
+                    .Select(e => e.GetType())
+                    .Distinct()
+                    .Select(eventType => new EventLine(eventType))
+                    .OrderBy(eventLine => eventLine.content.text));
             }
 
+            Reposition();
         }
 
-        private static void OnFindExact(string keyword)
+        protected override void CacheItemFirstTime()
         {
-            var uvsfinder = UVSFinder.GetUVSFinder();
-            uvsfinder.OnSearchAction(keyword, true);
+            base.CacheItemFirstTime();
+
+            CacheEventLines();
         }
 
-        private static void OnFind(string keyword)
+        public Dictionary<EventLine, Rect> eventLinesPositions { get; } = new Dictionary<EventLine, Rect>();
+
+        public override void CachePosition()
         {
-            var uvsfinder = UVSFinder.GetUVSFinder();
-            uvsfinder.OnSearchAction(keyword, false);
+            base.CachePosition();
+
+            eventLinesPositions.Clear();
+
+            var y = contentInnerPosition.y;
+
+            foreach (var eventLine in eventLines)
+            {
+                var eventLinePosition = new Rect
+                (
+                    contentInnerPosition.x,
+                    y,
+                    contentInnerPosition.width,
+                    eventLine.GetHeight(contentInnerPosition.width)
+                );
+
+                eventLinesPositions.Add(eventLine, eventLinePosition);
+
+                y += eventLinePosition.height;
+            }
+        }
+
+        protected override float GetContentHeight(float width)
+        {
+            var eventLinesHeight = 0f;
+
+            foreach (var eventLine in eventLines)
+            {
+                eventLinesHeight += eventLine.GetHeight(width);
+            }
+
+            return eventLinesHeight;
+        }
+
+        protected override bool showContent => eventLines.Count > 0;
+
+        protected override void DrawContent()
+        {
+            foreach (var eventLine in eventLines)
+            {
+                eventLine.Draw(eventLinesPositions[eventLine]);
+            }
+        }
+
+        protected override IEnumerable<DropdownOption> contextOptions
+        {
+            get
+            {
+                foreach (var option in UVSGraphElementWidgetExt.GetDropdownOptions(state))
+                {
+                    yield return option;
+                }
+
+                foreach (var baseOption in base.contextOptions)
+                {
+                    yield return baseOption;
+                }
+            }
+        }
+
+        public DragAndDropVisualMode dragAndDropVisualMode => DragAndDropVisualMode.Generic;
+
+        public bool AcceptsDragAndDrop()
+        {
+            return DragAndDropUtility.Is<ScriptGraphAsset>();
+        }
+
+        public void PerformDragAndDrop()
+        {
+            UndoUtility.RecordEditedObject("Drag & Drop Macro");
+            state.nest.source = GraphSource.Macro;
+            state.nest.macro = DragAndDropUtility.Get<ScriptGraphAsset>();
+            state.nest.embed = null;
+            GUI.changed = true;
+        }
+
+        public void UpdateDragAndDrop()
+        {
+        }
+
+        public void DrawDragAndDropPreview()
+        {
+            GraphGUI.DrawDragAndDropPreviewLabel(new Vector2(edgePosition.x, outerPosition.yMax), "Replace with: " + DragAndDropUtility.Get<ScriptGraphAsset>().name, typeof(ScriptGraphAsset).Icon());
+        }
+
+        public void ExitDragAndDrop()
+        {
+        }
+
+        public new static class Styles
+        {
+            static Styles()
+            {
+                eventLine = new GUIStyle(EditorStyles.label);
+                eventLine.wordWrap = true;
+                eventLine.imagePosition = ImagePosition.TextOnly;
+                eventLine.padding = new RectOffset(0, 0, 3, 3);
+            }
+
+            public static readonly GUIStyle eventLine;
+            public static readonly float spaceAroundLineIcon = 5;
+        }
+
+        public class EventLine
+        {
+            public EventLine(Type eventType)
+            {
+                content = new GUIContent(BoltFlowNameUtility.UnitTitle(eventType, false, true), eventType.Icon()?[IconSize.Small]);
+            }
+
+            public GUIContent content { get; }
+
+            public float GetHeight(float width)
+            {
+                var labelWidth = width - Styles.spaceAroundLineIcon - IconSize.Small - Styles.spaceAroundLineIcon;
+
+                return Styles.eventLine.CalcHeight(content, labelWidth);
+            }
+
+            public void Draw(Rect position)
+            {
+                var iconPosition = new Rect
+                (
+                    position.x + Styles.spaceAroundLineIcon,
+                    position.y + Styles.eventLine.padding.top - 1,
+                    IconSize.Small,
+                    IconSize.Small
+                );
+
+                var labelPosition = new Rect
+                (
+                    iconPosition.xMax + Styles.spaceAroundLineIcon,
+                    position.y,
+                    position.width - Styles.spaceAroundLineIcon - iconPosition.width - Styles.spaceAroundLineIcon,
+                    position.height
+                );
+
+                GUI.DrawTexture(iconPosition, content.image);
+                GUI.Label(labelPosition, content, Styles.eventLine);
+            }
         }
     }
 }
