@@ -28,6 +28,9 @@ namespace Unity.VisualScripting.UVSFinder
     {
         private static readonly Dictionary<Type, Type> widgetOverrides = new Dictionary<Type, Type>
         {
+            { typeof(GetVariable), typeof(UVSGetVariableWidget) },
+            { typeof(SetVariable), typeof(UVSSetVariableWidget) },
+            { typeof(IsVariableDefined), typeof(UVSIsVariableDefinedWidget) },
             { typeof(IUnit), typeof(UVSContextSearchUnitWidget<>) },
             { typeof(IEventUnit), typeof(UVSEventContextSearchUnitWidget<>) },
             { typeof(GraphGroup), typeof(UVSGraphGroupWidget) },
@@ -54,6 +57,16 @@ namespace Unity.VisualScripting.UVSFinder
 
         public static IEnumerable<DropdownOption> GetDropdownOptions(IGraphElement element)
         {
+            if (UVSSearchProvider.TryGetVariableUnitInfo(element, out var variableName, out var variableKind))
+            {
+                yield return new DropdownOption((Action)(() => OpenVariableRename(variableName, variableKind)), $"Rename Variable \"{variableName}\"...");
+            }
+
+            if (UVSSearchProvider.TryGetEventRenameInfo(element, out var eventInfo))
+            {
+                yield return new DropdownOption((Action)(() => OpenEventRename(eventInfo)), $"Rename Event \"{eventInfo.ValueText}\"...");
+            }
+
             foreach (var option in GetSearchActions(element))
             {
                 yield return new DropdownOption((Action)(() => OpenFinder(option.Keyword, option.Exact)), option.Label);
@@ -213,6 +226,18 @@ namespace Unity.VisualScripting.UVSFinder
             var uvsFinder = UVSFinder.GetUVSFinder();
             uvsFinder.OnSearchAction(keyword, exact);
         }
+
+        private static void OpenVariableRename(string variableName, VariableKind variableKind)
+        {
+            var uvsFinder = UVSFinder.GetUVSFinder();
+            uvsFinder.StartVariableRename(variableName, variableKind);
+        }
+
+        private static void OpenEventRename(UVSEventRenameInfo eventInfo)
+        {
+            var uvsFinder = UVSFinder.GetUVSFinder();
+            uvsFinder.StartEventRename(eventInfo);
+        }
     }
 
     public class UVSContextSearchUnitWidget<TUnit> : UnitWidget<TUnit>
@@ -236,6 +261,73 @@ namespace Unity.VisualScripting.UVSFinder
                     yield return baseOption;
                 }
             }
+        }
+    }
+
+    public class UVSUnifiedVariableUnitWidget<TUnit> : UnitWidget<TUnit>
+        where TUnit : UnifiedVariableUnit
+    {
+        private readonly Func<Metadata, VariableNameInspector> nameInspectorConstructor;
+        private VariableNameInspector nameInspector;
+
+        public UVSUnifiedVariableUnitWidget(FlowCanvas canvas, TUnit unit) : base(canvas, unit)
+        {
+            nameInspectorConstructor = metadata => new VariableNameInspector(metadata, GetNameSuggestions);
+        }
+
+        protected override NodeColorMix baseColor => NodeColorMix.TealReadable;
+
+        public override Inspector GetPortInspector(IUnitPort port, Metadata metadata)
+        {
+            if (port == unit.name)
+            {
+                InspectorProvider.instance.Renew(ref nameInspector, metadata, nameInspectorConstructor);
+                return nameInspector;
+            }
+
+            return base.GetPortInspector(port, metadata);
+        }
+
+        private IEnumerable<string> GetNameSuggestions()
+        {
+            return EditorVariablesUtility.GetVariableNameSuggestions(unit.kind, reference);
+        }
+
+        protected override IEnumerable<DropdownOption> contextOptions
+        {
+            get
+            {
+                foreach (var option in UVSGraphElementWidgetExt.GetDropdownOptions(unit))
+                {
+                    yield return option;
+                }
+
+                foreach (var baseOption in base.contextOptions)
+                {
+                    yield return baseOption;
+                }
+            }
+        }
+    }
+
+    public sealed class UVSGetVariableWidget : UVSUnifiedVariableUnitWidget<GetVariable>
+    {
+        public UVSGetVariableWidget(FlowCanvas canvas, GetVariable unit) : base(canvas, unit)
+        {
+        }
+    }
+
+    public sealed class UVSSetVariableWidget : UVSUnifiedVariableUnitWidget<SetVariable>
+    {
+        public UVSSetVariableWidget(FlowCanvas canvas, SetVariable unit) : base(canvas, unit)
+        {
+        }
+    }
+
+    public sealed class UVSIsVariableDefinedWidget : UVSUnifiedVariableUnitWidget<IsVariableDefined>
+    {
+        public UVSIsVariableDefinedWidget(FlowCanvas canvas, IsVariableDefined unit) : base(canvas, unit)
+        {
         }
     }
 
