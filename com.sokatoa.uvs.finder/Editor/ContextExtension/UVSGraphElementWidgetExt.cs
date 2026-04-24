@@ -2,11 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using UnityEditor;
 using UnityEngine;
 #if !SUBGRAPH_RENAME
 using SubgraphUnit = Unity.VisualScripting.SuperUnit;
 #endif
+
+[assembly: InternalsVisibleTo("UVSFinder.Editor.Tests")]
 
 namespace Unity.VisualScripting.UVSFinder
 {
@@ -26,6 +29,8 @@ namespace Unity.VisualScripting.UVSFinder
 
     internal static class UVSGraphElementWidgetExt
     {
+        private const string MissingScriptPath = "";
+
         private static readonly Dictionary<Type, Type> widgetOverrides = new Dictionary<Type, Type>
         {
             { typeof(GetVariable), typeof(UVSGetVariableWidget) },
@@ -43,6 +48,7 @@ namespace Unity.VisualScripting.UVSFinder
             { typeof(TriggerStateTransition), typeof(UVSTriggerStateTransitionWidget) }
         };
 
+        private static readonly Dictionary<Type, string> unitScriptPathsByType = new Dictionary<Type, string>();
         private static readonly FieldInfo definedDecoratorTypesField = typeof(WidgetProvider).BaseType?.GetField("definedDecoratorTypes", BindingFlags.Instance | BindingFlags.NonPublic);
         private static readonly FieldInfo resolvedDecoratorTypesField = typeof(WidgetProvider).BaseType?.GetField("resolvedDecoratorTypes", BindingFlags.Instance | BindingFlags.NonPublic);
 
@@ -57,6 +63,11 @@ namespace Unity.VisualScripting.UVSFinder
 
         public static IEnumerable<DropdownOption> GetDropdownOptions(IGraphElement element)
         {
+            if (TryGetUnitScriptPath(element, out var unitScriptPath))
+            {
+                yield return new DropdownOption((Action)(() => OpenUnitScript(unitScriptPath)), "Open C# Script");
+            }
+
             if (UVSSearchProvider.TryGetVariableUnitInfo(element, out var variableName, out var variableKind))
             {
                 yield return new DropdownOption((Action)(() => OpenVariableRename(variableName, variableKind)), $"Rename Variable \"{variableName}\"...");
@@ -237,6 +248,59 @@ namespace Unity.VisualScripting.UVSFinder
         {
             var uvsFinder = UVSFinder.GetUVSFinder();
             uvsFinder.StartEventRename(eventInfo);
+        }
+
+        private static bool TryGetUnitScriptPath(IGraphElement element, out string scriptPath)
+        {
+            scriptPath = null;
+
+            return element is IUnit unit && TryGetScriptPath(unit.GetType(), out scriptPath);
+        }
+
+        private static bool TryGetScriptPath(Type type, out string scriptPath)
+        {
+            if (unitScriptPathsByType.TryGetValue(type, out scriptPath))
+            {
+                return scriptPath != MissingScriptPath;
+            }
+
+            foreach (var guid in AssetDatabase.FindAssets($"{GetScriptSearchName(type)} t:MonoScript"))
+            {
+                var candidatePath = AssetDatabase.GUIDToAssetPath(guid);
+                var candidate = AssetDatabase.LoadAssetAtPath<MonoScript>(candidatePath);
+
+                if (candidate != null && candidate.GetClass() == type)
+                {
+                    scriptPath = candidatePath;
+                    unitScriptPathsByType[type] = scriptPath;
+                    return true;
+                }
+            }
+
+            scriptPath = null;
+            unitScriptPathsByType[type] = MissingScriptPath;
+            return false;
+        }
+
+        private static string GetScriptSearchName(Type type)
+        {
+            var name = type.Name;
+            var genericMarkerIndex = name.IndexOf('`');
+
+            return genericMarkerIndex >= 0 ? name.Substring(0, genericMarkerIndex) : name;
+        }
+
+        private static void OpenUnitScript(string scriptPath)
+        {
+            var script = AssetDatabase.LoadAssetAtPath<MonoScript>(scriptPath);
+
+            if (script == null)
+            {
+                Debug.LogWarning($"Unable to open C# script at '{scriptPath}'. The asset may have moved or been deleted.");
+                return;
+            }
+
+            AssetDatabase.OpenAsset(script);
         }
     }
 

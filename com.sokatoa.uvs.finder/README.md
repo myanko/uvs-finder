@@ -17,6 +17,7 @@ Open it with **Alt+F**, type a search term, and press **Enter**.
 - Find variable nodes by name and kind.
 - Find graph, object, scene, application, saved, and prefab blackboard variable declarations.
 - Right-click graph elements for contextual finder actions.
+- Right-click nodes to open the C# script that defines the unit, when Unity can resolve it.
 - Right-click variable nodes to rename matching Get, Set, Has, and blackboard variables across the selected search scope.
 - Preview graph nodes before replacing values or replacing nodes.
 - Replace editable node values in selected results or all results in the active tab.
@@ -31,6 +32,7 @@ Supported contextual actions include:
 - Find selected node or group.
 - Find related Custom Event and Trigger Custom Event nodes.
 - Find related Get Variable, Set Variable, and Has Variable nodes.
+- Open the C# script for the clicked unit, when a matching script asset is available.
 - Rename variables from Get Variable, Set Variable, and Has Variable nodes.
 - Start find and replace from the current graph context menu.
 
