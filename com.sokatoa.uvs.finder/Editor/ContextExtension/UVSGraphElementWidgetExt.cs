@@ -24,7 +24,7 @@ namespace Unity.VisualScripting.UVSFinder
         public bool Exact { get; }
     }
 
-    internal static class UVSGraphElementWidgetExt
+    public static class UVSGraphElementWidgetExt
     {
         private static readonly Dictionary<Type, Type> widgetOverrides = new Dictionary<Type, Type>
         {
@@ -113,7 +113,6 @@ namespace Unity.VisualScripting.UVSFinder
             {
                 yield break;
             }
-        }
 
             var name = GraphElement.GetElementName(element);
 

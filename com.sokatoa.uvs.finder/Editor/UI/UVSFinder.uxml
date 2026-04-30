@@ -31,7 +31,7 @@
             </ui:VisualElement>
             <ui:VisualElement name="graph-preview-host" class="graph-preview-host" />
         </ui:Foldout>
-        <ui:VisualElement text="Current Graph" style="flex-direction: row; border-bottom-color: rgb(0, 0, 0); border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 1px; background-color: rgb(40, 40, 40); max-height: 24px; flex-grow: 1;">
+        <ui:VisualElement text="Current Graph" style="flex-direction: row; border-bottom-color: rgb(0, 0, 0); border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 1px; background-color: rgb(40, 40, 40); max-height: 24px; flex-grow: 1; min-height: 24px;">
             <ui:Button text="      Current Graph" display-tooltip-when-elided="true" name="currentGraphButton" binding-path="tabCurrentGraph" enable-rich-text="true" tooltip="Current graph search context." class="tab" style="flex-grow: 1; flex-shrink: 1; -unity-text-align: middle-left; min-width: 1px; flex-direction: row;">
                 <ui:Toggle value="true" binding-path="enableCurrentGraphSearch" name="toggleEnableCurrentGraphSearch" tooltip="Enable Search in current graph." style="max-width: 14px; max-height: initial; min-width: 14px; flex-shrink: 0;" />
             </ui:Button>
