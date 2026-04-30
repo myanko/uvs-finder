@@ -137,5 +137,4 @@ This package no longer depends on Harmony.
 
 ## Support
 
-- https://ko-fi.com/sokatoa
-- https://patreon.com/myanko
+This package no longer depends on Harmony.
