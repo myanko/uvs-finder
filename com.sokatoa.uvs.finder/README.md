@@ -15,6 +15,7 @@ Open it with **Alt+F**, type a search term, and press **Enter**.
 - Find groups by title and comments.
 - Find custom events and matching trigger custom event nodes.
 - Find variable nodes by name and kind.
+- Find Time nodes by configured input values such as delay, duration, and unscaled time.
 - Find graph, object, scene, application, saved, and prefab blackboard variable declarations.
 - Right-click graph elements for contextual finder actions.
 - Right-click nodes to open the C# script that defines the unit, when Unity can resolve it.
@@ -85,6 +86,7 @@ Node Finder formats many Visual Scripting nodes with searchable labels, includin
 - Animator member nodes
 - New Input System event nodes
 - Literal nodes
+- Time nodes with configured input values
 - Graph groups
 - Flow states and transitions
 
@@ -97,6 +99,9 @@ Useful keywords include:
 - State
 - Group
 - Literal
+- Time
+- Delay
+- Duration
 - Deprecated
 
 ## User Settings
