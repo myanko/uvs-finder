@@ -1,49 +1,65 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using NUnit.Framework;
-using UnityEditor.SceneManagement;
-using UnityEditor;
-using System.IO;
-using System.Text.RegularExpressions;
-using Unity.VisualScripting;
 using System;
+using System.Linq;
+using NUnit.Framework;
 
-
-namespace Unity.VisualScripting.UVSFinder.Tests {
-
-    public class UVSGraphElementWidgetExt : MonoBehaviour
+namespace Unity.VisualScripting.UVSFinder.Tests
+{
+    public class UVSGraphElementWidgetExt
     {
-        /*[Test]
-        [TestCase("Debug Log")]
-        public void RightClickNode_Displays_Options(string name)
+        [Test]
+        public void GetDropdownOptions_ForUnitWithScript_IncludesOpenCSharpScript()
         {
-            Utilities.OpenVisualScriptAsset("Assets/TestAsset/furetscriptgraph1.asset");
-            var element = GetElementByName(name, GraphWindow.activeContext.canvas.graph.elements);
-            var instance = GraphWindow.activeContext.canvas.Widget(element);
-            // TODO: I am stuck here because the instance is not what is expected... 
-            var actual = Unity.VisualScripting.UVSFinder.UVSGraphElementWidgetExt.Postfix1(null, instance);
-            DropdownOption[] expected = { new DropdownOption("Find") };
+            var options = Unity.VisualScripting.UVSFinder.UVSGraphElementWidgetExt.GetDropdownOptions(new WaitForSecondsUnit()).ToArray();
 
-            var @enum = actual.GetEnumerator();
-
-            Assert.IsTrue(@enum.MoveNext());
-            Assert.AreEqual(@enum.Current.label, "Find");
-            Assert.IsTrue(@enum.MoveNext());
-            Assert.AreEqual(@enum.Current.label, "Find");
+            Assert.That(options.Any(option => option.label == "Open C# Script" && option.value is Action), Is.True);
         }
 
-        private IGraphElement GetElementByName(string name, MergedGraphElementCollection elements)
+        [Test]
+        public void GetDropdownOptions_ForNonUnit_DoesNotIncludeOpenCSharpScript()
         {
-            foreach (var e in elements)
-            {
-                if (GraphElement.GetElementName(e) == name)
-                {
-                    return e;
-                }
-            }
+            var options = Unity.VisualScripting.UVSFinder.UVSGraphElementWidgetExt.GetDropdownOptions(new GraphGroup()).ToArray();
 
-            return null;
-        }*/
+            Assert.That(options.Any(option => option.label == "Open C# Script"), Is.False);
+        }
+
+        [Test]
+        public void GetElementName_ForWaitForSeconds_IncludesInputValues()
+        {
+            var unit = new WaitForSecondsUnit();
+            unit.EnsureDefined();
+            unit.defaultValues["seconds"] = 2.5f;
+            unit.defaultValues["unscaledTime"] = true;
+
+            var name = GraphElement.GetElementName(unit);
+
+            Assert.That(name, Is.EqualTo("Wait For Seconds [Delay: 2.5, Unscaled: True]"));
+        }
+
+        [Test]
+        public void GetElementName_ForTimer_IncludesInputValues()
+        {
+            var unit = new Timer();
+            unit.EnsureDefined();
+            unit.defaultValues["duration"] = 4f;
+            unit.defaultValues["unscaledTime"] = true;
+
+            var name = GraphElement.GetElementName(unit);
+
+            Assert.That(name, Is.EqualTo("Timer [Duration: 4, Unscaled: True]"));
+        }
+
+        [Test]
+        public void GetElementName_ForWaitForFlow_IncludesHeaderValues()
+        {
+            var unit = new WaitForFlow
+            {
+                inputCount = 4,
+                resetOnExit = true
+            };
+
+            var name = GraphElement.GetElementName(unit);
+
+            Assert.That(name, Is.EqualTo("Wait For Flow [Inputs: 4, Reset On Exit: True]"));
+        }
     }
 }

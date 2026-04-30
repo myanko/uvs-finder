@@ -21,16 +21,16 @@ namespace Unity.VisualScripting.UVSFinder
 
         public void OnFindAndReplace(Vector2 vector)
         {
-            UVSFinder.ShowUVSFinder();
+            UVSFinder.GetUVSFinder().StartReplaceFromSelection();
         }
 
         protected virtual IEnumerable<GraphContextMenuItem> GetContextOptions()
         {
             yield return new GraphContextMenuItem((Action<Vector2>)OnFind, "Find all in current state graph");
-           /* if (canvas.selection.Count > 0)
+            if (canvas.selection.Count > 0)
             {
                 yield return new GraphContextMenuItem((Action<Vector2>)OnFindAndReplace, "Find and replace");
-            }*/
+            }
         }
     }
 }

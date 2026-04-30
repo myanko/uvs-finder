@@ -113,6 +113,7 @@ namespace Unity.VisualScripting.UVSFinder
             {
                 yield break;
             }
+        }
 
             var name = GraphElement.GetElementName(element);
 

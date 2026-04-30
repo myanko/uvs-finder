@@ -15,6 +15,8 @@
     padding-bottom: 0;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
+    min-width: 1px;
+    flex-shrink: 1;
 }
 
 TemplateContainer {
@@ -42,6 +44,141 @@ TemplateContainer {
     -unity-font-style: italic;
 }
 
+.result-row {
+    flex-grow: 1;
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+.result-row-selected,
+#results-list .unity-list-view__item--selected,
+#results-list .unity-collection-view__item--selected {
+    background-color: rgb(36, 88, 145);
+}
+
+.result-row-selected Label,
+#results-list .unity-list-view__item--selected Label,
+#results-list .unity-collection-view__item--selected Label {
+    color: rgb(235, 245, 255);
+}
+
+.result-row-selected #FilePath,
+#results-list .unity-list-view__item--selected #FilePath,
+#results-list .unity-collection-view__item--selected #FilePath {
+    color: rgb(205, 225, 250);
+}
+
 #searchOptions {
     background-image: resource('_Menu');
+}
+
+.replace-foldout {
+    flex-shrink: 0;
+    background-color: rgb(35, 35, 35);
+}
+
+.replace-panel {
+    flex-direction: row;
+    align-items: stretch;
+    flex-shrink: 1;
+    min-width: 1px;
+    padding-left: 4px;
+    padding-right: 4px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    background-color: rgb(35, 35, 35);
+}
+
+.replace-column {
+    flex-direction: column;
+    flex-shrink: 1;
+    min-width: 1px;
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+.replace-column-mode {
+    flex-grow: 0;
+    width: 82px;
+    min-width: 64px;
+}
+
+.replace-column-with {
+    flex-grow: 1;
+}
+
+.replace-column-apply {
+    flex-grow: 1;
+}
+
+.replace-column-label {
+    margin-left: 2px;
+    margin-right: 2px;
+    padding-left: 0;
+    padding-right: 0;
+    font-size: 10px;
+    color: rgb(170, 170, 170);
+}
+
+.replace-apply-buttons {
+    flex-direction: row;
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 1px;
+}
+
+.replace-panel Button {
+    min-width: 1px;
+    flex-grow: 1;
+    flex-shrink: 1;
+    margin-left: 2px;
+    margin-right: 2px;
+    padding-left: 4px;
+    padding-right: 4px;
+    white-space: nowrap;
+}
+
+#replace-mode {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 1px;
+}
+
+#replace-field {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 1px;
+}
+
+#use-selected-node {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 1px;
+}
+
+#replace-selected,
+#replace-all {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.replacement-preview {
+    color: rgb(145, 190, 255);
+    margin-left: 6px;
+    margin-right: 8px;
+}
+
+.replace-preview-disabled {
+    color: rgb(150, 150, 150);
+}
+
+.graph-preview-host {
+    height: 122px;
+    min-height: 122px;
+    max-height: 122px;
+    flex-shrink: 0;
+    padding-left: 4px;
+    padding-right: 4px;
+    padding-bottom: 4px;
+    background-color: rgb(30, 30, 30);
 }

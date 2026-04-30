@@ -83,6 +83,25 @@ namespace Unity.VisualScripting.UVSFinder
                         }
                         return $"{targetTypeName} {memberName}";
                     }
+                case "Unity.VisualScripting.Cooldown":
+                case "Unity.VisualScripting.OnTimerElapsed":
+                case "Unity.VisualScripting.Timer":
+                case "Unity.VisualScripting.WaitForEndOfFrameUnit":
+                case "Unity.VisualScripting.WaitForFlow":
+                case "Unity.VisualScripting.WaitForNextFrameUnit":
+                case "Unity.VisualScripting.WaitForSecondsUnit":
+                case "Unity.VisualScripting.WaitUntilUnit":
+                case "Unity.VisualScripting.WaitWhileUnit":
+                case "Bolt.Cooldown":
+                case "Bolt.OnTimerElapsed":
+                case "Bolt.Timer":
+                case "Bolt.WaitForEndOfFrameUnit":
+                case "Bolt.WaitForFlow":
+                case "Bolt.WaitForNextFrameUnit":
+                case "Bolt.WaitForSecondsUnit":
+                case "Bolt.WaitUntilUnit":
+                case "Bolt.WaitWhileUnit":
+                    return GetTimeUnitName((IUnit)ge);
                 case "Unity.VisualScripting.GetVariable":
                 case "Bolt.GetVariable":
                     return $"{getValueFromDictionary(((GetVariable)ge).defaultValues, "name")} [Get Variable: {((GetVariable)ge).kind}]";
@@ -345,6 +364,80 @@ namespace Unity.VisualScripting.UVSFinder
                 return dict[key];
             }
             return "";
+        }
+
+        private static string GetTimeUnitName(IUnit unit)
+        {
+            unit.EnsureDefined();
+
+            var name = GetUnitTitle(unit);
+            var values = GetTimeUnitValues(unit).ToArray();
+
+            if (values.Length == 0)
+            {
+                return name;
+            }
+
+            return $"{name} [{string.Join(", ", values)}]";
+        }
+
+        private static IEnumerable<string> GetTimeUnitValues(IUnit unit)
+        {
+            foreach (var input in unit.valueInputs)
+            {
+                if (unit.defaultValues.TryGetValue(input.key, out var value))
+                {
+                    yield return $"{GetPortLabel(input.key)}: {FormatValue(value)}";
+                }
+            }
+
+            if (unit is WaitForFlow waitForFlow)
+            {
+                yield return $"Inputs: {waitForFlow.inputCount}";
+                yield return $"Reset On Exit: {FormatValue(waitForFlow.resetOnExit)}";
+            }
+        }
+
+        private static string GetUnitTitle(IUnit unit)
+        {
+            var name = BoltFlowNameUtility.UnitTitle(unit.GetType(), false, true);
+
+            if (string.IsNullOrEmpty(name))
+            {
+                name = BoltFlowNameUtility.UnitTitle(unit.GetType(), true, true);
+            }
+
+            if (string.IsNullOrEmpty(name))
+            {
+                name = unit.GetType().HumanName();
+            }
+
+            return name;
+        }
+
+        private static string GetPortLabel(string key)
+        {
+            if (key == "seconds")
+            {
+                return "Delay";
+            }
+
+            if (key == "unscaledTime")
+            {
+                return "Unscaled";
+            }
+
+            var label = string.Concat(key.SelectMany((character, index) =>
+                index > 0 && char.IsUpper(character)
+                    ? new[] { ' ', character }
+                    : new[] { character }));
+
+            return char.ToUpper(label[0]) + label.Substring(1);
+        }
+
+        private static string FormatValue(object value)
+        {
+            return value == null ? "null" : value.ToString();
         }
     }
 }

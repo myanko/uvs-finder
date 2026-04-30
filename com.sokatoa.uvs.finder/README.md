@@ -1,113 +1,140 @@
 # Node Finder for Unity Visual Scripting V0.5
 
-This package adds searching functionalities to Visual Scripting, by letting you simply press Alt+F and start to browse for nodes in graphs, so you always know where your events are used in the project, or where your variables or subgraphs are used in your super huge graph.
+Node Finder adds project-wide search tools to Unity Visual Scripting. It helps you find units, events, variables, groups, subgraphs, state graphs, and embedded graph content without manually opening every graph in your project.
 
-# **Features:**
+Open it with **Alt+F**, type a search term, and press **Enter**.
 
-- Can search the embedded elements in the opened scenes' hierarchy (script machines and state graphs.
+## Features
 
-- Right click on nodes contextual find options *[NEW]*
-  
-  - Variables (Getter, Setter and Has)
-  - Groups
-  - Custom Events (Trigger and Events)
+- Search the current graph, all project graphs, or the open scene hierarchy.
+- Search inside embedded script graphs, embedded state graphs, subgraphs, state units, and transition graphs.
+- Control current-graph search depth from preferences: current graph, children, parent, or all.
+- Enable or disable each search scope directly from the finder tabs.
+- Focus and select matching nodes in the Visual Scripting graph window.
+- Multi-select results in the finder list.
+- Find groups by title and comments.
+- Find custom events and matching trigger custom event nodes.
+- Find variable nodes by name and kind.
+- Find Time nodes by configured input values such as delay, duration, and unscaled time.
+- Find graph, object, scene, application, saved, and prefab blackboard variable declarations.
+- Right-click graph elements for contextual finder actions.
+- Right-click nodes to open the C# script that defines the unit, when Unity can resolve it.
+- Right-click variable nodes to rename matching Get, Set, Has, and blackboard variables across the selected search scope.
+- Preview graph nodes before replacing values or replacing nodes.
+- Replace editable node values in selected results or all results in the active tab.
+- Replace whole flow nodes using a selected node as a template.
 
-- Adding support to Find nodes with custom text fields, dropdown items *[NEW]*
-  
-  - Get Button show Button Name
-  - Get Axis
-  - Get Button Down
-  - Get Button  UP
-  - Get Button show Button Name
-  - Get Axis
-  - Animator
-  - GetButton
-  - GetMouseButton
-  - New Input System Events
-    - On Input System Event Float
-    - On Input System Event Button
-    - On Input System Event Vector 2
+## Context Menu Actions
 
-- Find nodes in current graph.
+Node Finder adds right-click actions directly in Visual Scripting graphs.
 
-- Find nodes in all project graphs.
+Supported contextual actions include:
 
-- Find nodes in Hierachy.
+- Find selected node or group.
+- Find related Custom Event and Trigger Custom Event nodes.
+- Find related Get Variable, Set Variable, and Has Variable nodes.
+- Open the C# script for the clicked unit, when a matching script asset is available.
+- Rename variables from Get Variable, Set Variable, and Has Variable nodes.
+- Start find and replace from the current graph context menu.
 
-- Find groupes by title.
+## Find And Replace
 
-- Find custom events nodes.
+Open the **Replace** foldout to enable replacement mode.
 
-- Focus on node in graph when clicking on the found item.
+### Values
 
-- Enable and disable search scopes.
+Use **Values** mode to replace editable values on matching results. This can update node default values, literal values, group labels, group comments, embedded graph titles, and blackboard variable names when those items are in the result list.
 
-- Search in embed graphs
+Use **Selected** to replace only selected results in the list of showing nodes, or **All In Tab** to replace every replaceable result in the active tab.
 
-- Constraint search to children and current graph in current graph tab
+### Nodes
 
-# **Dependencies**
+Use **Node** mode to replace matching flow nodes with a selected node template.
 
-- **com.unity.visualscripting:** 1.5.x, 1.6.x, 1.7.x, 1.8.x
+1. Select a flow node in the graph.
+2. Open the Replace foldout.
+3. Click **Pick**.
+4. Select one or more finder results.
+5. Click **Selected** or **All In Tab**.
 
-# **Supported OS:**
+Node replacement preserves compatible connections where possible and restores the selected template defaults.
 
-- Windows 10
-- Windows 11
-- MacOs (Not Tested)
-- Linux (Not Tested)
+## Variable Rename
 
-# Supported Unity Versions:
+Right-click a **Get Variable**, **Set Variable**, or **Has Variable** node and choose **Rename Variable**.
 
-- 2021.1+
+The finder opens in a filtered rename mode for the clicked variable name and variable kind. This keeps scopes separate, so a Graph variable rename does not touch Object, Scene, Application, or Saved variables with the same name.
 
-# **Known Issues:**
+The rename flow can update:
 
-- https://github.com/myanko/uvs-finder/issues
+- Get Variable nodes
+- Set Variable nodes
+- Has Variable nodes
+- Matching blackboard variable declarations
 
-# **Documentation:**
+The rename uses the active finder scopes, so use the Current Graph, All Graphs, and Hierarchy toggles to control how far the rename search reaches.
 
-## How to Open the Tool
+## Special Search Labels
 
-To open the node finder, you can simply press Alt+F.
+Node Finder formats many Visual Scripting nodes with searchable labels, including:
 
-## Default ShortCuts
+- Variable nodes
+- Custom Events
+- Trigger Custom Events
+- Member get, set, and invoke nodes
+- Input and mouse input nodes
+- Animator member nodes
+- New Input System event nodes
+- Literal nodes
+- Time nodes with configured input values
+- Graph groups
+- Flow states and transitions
 
-**Alt+F** :Open the node finder and search in all graphs in the project.
-
-## User Settings
-
-To open the User Settings, click on the button on the side of the search field or open the Preference panel then go to **Visual Scripting/ UVS Finder**.
-
-### 
-
-## How to find nodes
-
-After opening the node finding tool, simply type in the search field and press Enter. The finder will search
-
-You can also right click on nodes in a graph, to get contextual search options.
-
-## How to Update
-
-Delete the folder com.sokatoa.uvs.finder and import the node finder from the asset store.
-
-## Find special types of nodes
-
-Some Usefull Keywords
+Useful keywords include:
 
 - Event
 - Trigger
 - Variable
-- Bolt
 - Subgraph
 - State
 - Group
+- Literal
+- Time
+- Delay
+- Duration
 - Deprecated
 
-# Support US
+## User Settings
 
-- [Buy Sokatoa a Coffee](https://ko-fi.com/sokatoa)
+Open settings from the button beside the search field, or from:
 
-- https://patreon.com/myanko
+**Preferences > Visual Scripting > UVS Finder**
+
+## Shortcut
+
+**Alt+F** opens Node Finder.
+
+## Dependencies
+
+- **com.unity.visualscripting:** 1.5.x, 1.6.x, 1.7.x, 1.8.x, 1.9.x
+
+This package no longer depends on Harmony.
+
+## Supported Unity Versions
+
+- Unity 2021.1+
+
+## Supported OS
+
+- Windows 10
+- Windows 11
+- macOS (not tested)
+- Linux (not tested)
+
+## Known Issues
+
+- https://github.com/myanko/uvs-finder/issues
+
+## Support
 
 This package no longer depends on Harmony.
