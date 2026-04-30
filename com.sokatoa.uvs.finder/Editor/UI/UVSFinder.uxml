@@ -1,5 +1,5 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
-    <Style src="UVSFinder.uss" />
+    <Style src="project://database/Packages/com.sokatoa.uvs.finder/Editor/UI/UVSFinder.uss?fileID=7433441132597879392&amp;guid=661f7c9dd00847545bb4612bc58d5aac&amp;type=3#UVSFinder" />
     <ui:VisualElement name="Screen" style="flex-grow: 1; flex-shrink: 1; flex-direction: column; min-width: 128px; min-height: auto; justify-content: flex-end;">
         <ui:VisualElement text="Current Graph" style="flex-direction: row; border-bottom-color: rgb(0, 0, 0); border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 1px; background-color: rgb(40, 40, 40); max-height: 32px; visibility: hidden; display: none;">
             <ui:Button text="Find" display-tooltip-when-elided="true" class="tab" />
@@ -10,24 +10,45 @@
             <ui:Button display-tooltip-when-elided="true" value="Search" label="Fin" name="searchOptions" tooltip="Open Preferences panel" style="white-space: nowrap; align-items: flex-end; display: flex; margin-left: 0; margin-right: 0; padding-left: 3px; padding-right: 3px; min-width: initial; min-height: initial; background-color: rgb(40, 40, 40);" />
             <ui:DropdownField index="-1" style="min-width: 12px; max-width: 50px; display: none;" />
         </ui:GroupBox>
-        <ui:VisualElement text="Current Graph" style="flex-direction: row; border-bottom-color: rgb(0, 0, 0); border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 1px; background-color: rgb(40, 40, 40); max-height: 32px;">
-            <ui:Button text="      Current Graph" display-tooltip-when-elided="true" name="currentGraphButton" binding-path="tabCurrentGraph" enable-rich-text="true" class="tab" style="flex-grow: 0; -unity-text-align: middle-left; min-width: 140px; flex-direction: row;">
-                <ui:Toggle value="true" binding-path="enableCurrentGraphSearch" name="toggleEnableCurrentGraphSearch" style="max-width: 14px; max-height: initial; min-width: 14px;" />
+        <ui:Foldout name="replace-foldout" text="Replace" value="false" tooltip="Replace setting with node preview." class="replace-foldout" style="background-color: rgba(35, 35, 35, 0);">
+            <ui:VisualElement name="replace-panel" class="replace-panel" style="height: initial; flex-grow: 1; background-color: rgba(35, 35, 35, 0.42);">
+                <ui:VisualElement class="replace-column replace-column-mode" style="width: 70px;">
+                    <ui:Label text="The" display-tooltip-when-elided="true" class="replace-column-label" />
+                    <ui:DropdownField name="replace-mode" class="replace-mode-field" style="max-width: none;" />
+                </ui:VisualElement>
+                <ui:VisualElement class="replace-column replace-column-with" style="min-width: 24px;">
+                    <ui:Label text="With" display-tooltip-when-elided="true" class="replace-column-label" />
+                    <ui:TextField name="replace-field" tooltip="Replacement value for editable node values." class="replace-value-field" />
+                    <ui:Button name="use-selected-node" text="Pick" display-tooltip-when-elided="true" tooltip="Use the selected node in the current graph as the replacement template." class="replace-pick-button" />
+                </ui:VisualElement>
+                <ui:VisualElement class="replace-column replace-column-apply" style="flex-grow: 0;">
+                    <ui:Label text="Apply" display-tooltip-when-elided="true" class="replace-column-label" />
+                    <ui:VisualElement class="replace-apply-buttons" style="flex-grow: 0;">
+                        <ui:Button name="replace-selected" text="On Selected" display-tooltip-when-elided="true" tooltip="Replace the selected result(s) from the Node Finder list." style="flex-grow: 0; -unity-text-align: middle-center;" />
+                        <ui:Button name="replace-all" text="All In Tab" display-tooltip-when-elided="true" tooltip="Replace all previewed results in the selected tab." style="flex-grow: 0;" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="graph-preview-host" class="graph-preview-host" />
+        </ui:Foldout>
+        <ui:VisualElement text="Current Graph" style="flex-direction: row; border-bottom-color: rgb(0, 0, 0); border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 1px; background-color: rgb(40, 40, 40); max-height: 24px; flex-grow: 1;">
+            <ui:Button text="      Current Graph" display-tooltip-when-elided="true" name="currentGraphButton" binding-path="tabCurrentGraph" enable-rich-text="true" tooltip="Current graph search context." class="tab" style="flex-grow: 1; flex-shrink: 1; -unity-text-align: middle-left; min-width: 1px; flex-direction: row;">
+                <ui:Toggle value="true" binding-path="enableCurrentGraphSearch" name="toggleEnableCurrentGraphSearch" tooltip="Enable Search in current graph." style="max-width: 14px; max-height: initial; min-width: 14px; flex-shrink: 0;" />
             </ui:Button>
-            <ui:Button text="      All Graphs" display-tooltip-when-elided="true" name="allGraphsButton" binding-path="tabAllGraphs" class="tab selected" style="min-width: 120px; -unity-text-align: middle-left; flex-direction: row;">
-                <ui:Toggle value="true" binding-path="enableAllGraphsSearch" name="toggleEnableAllGraphsSearch" style="max-width: 14px; max-height: initial; min-width: 14px;" />
+            <ui:Button text="      All Graphs" display-tooltip-when-elided="true" name="allGraphsButton" binding-path="tabAllGraphs" tooltip="All graphs search context." class="tab selected" style="flex-grow: 1; flex-shrink: 1; min-width: 1px; -unity-text-align: middle-left; flex-direction: row;">
+                <ui:Toggle value="true" binding-path="enableAllGraphsSearch" name="toggleEnableAllGraphsSearch" tooltip="Enable Search in all graphs" style="max-width: 14px; max-height: initial; min-width: 14px; flex-shrink: 0;" />
             </ui:Button>
-            <ui:Button text="      Hierarchy" display-tooltip-when-elided="true" name="hierarchyGraphButton" binding-path="tabHierarchy" class="tab" style="display: flex; min-width: 110px; -unity-text-align: middle-left; flex-direction: row;">
-                <ui:Toggle value="true" binding-path="enableHierarchySearch" name="toggleEnableHierarchySearch" style="max-width: 14px; max-height: initial; min-width: 14px;" />
+            <ui:Button text="      Hierarchy" display-tooltip-when-elided="true" name="hierarchyGraphButton" binding-path="tabHierarchy" tooltip="Hierarchy graphs search context." class="tab" style="display: flex; flex-grow: 1; flex-shrink: 1; min-width: 1px; -unity-text-align: middle-left; flex-direction: row;">
+                <ui:Toggle value="true" binding-path="enableHierarchySearch" name="toggleEnableHierarchySearch" tooltip="Enable Search in hierarchy graphs." style="max-width: 14px; max-height: initial; min-width: 14px; flex-shrink: 0;" />
             </ui:Button>
             <ui:Button text="Project" display-tooltip-when-elided="true" name="ProjectGraphButton" class="tab" style="display: none;">
                 <ui:Toggle value="true" style="max-width: 14px; max-height: initial; min-width: 14px;" />
             </ui:Button>
         </ui:VisualElement>
         <ui:VisualElement style="flex-grow: 1; margin-bottom: 8px;">
-            <ui:ListView focusable="true" show-alternating-row-backgrounds="All" horizontal-scrolling="true" name="results-list" selection-type="Single" reorderable="false" usage-hints="DynamicTransform" text="TMP Focus In Graph" value="false" show-bound-collection-size="true" show-border="true" item-height="24" style="justify-content: flex-start; align-items: stretch; flex-grow: 1; flex-shrink: 0; min-width: 128px; height: auto; margin-left: 0; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0; -unity-text-align: middle-left; padding-bottom: 2px;" />
+            <ui:ListView focusable="true" show-alternating-row-backgrounds="All" horizontal-scrolling="true" name="results-list" selection-type="Multiple" reorderable="false" usage-hints="DynamicTransform" text="TMP Focus In Graph" value="false" show-bound-collection-size="true" show-border="true" item-height="24" style="justify-content: flex-start; align-items: stretch; flex-grow: 1; flex-shrink: 1; min-width: 128px; min-height: 48px; height: auto; margin-left: 0; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0; -unity-text-align: middle-left; padding-bottom: 2px;" />
         </ui:VisualElement>
         <ui:VisualElement style="flex-direction: row; align-items: flex-end; justify-content: space-between;" />
     </ui:VisualElement>
-    <ui:Label text="[V0.4] Press Enter to launch the search" display-tooltip-when-elided="true" name="Info" tooltip="Press Enter to launch the search" style="padding-top: 0; flex-shrink: 1;" />
+    <ui:Label text="[V0.6] Press Enter to launch the search" display-tooltip-when-elided="true" name="Info" tooltip="Press Enter to launch the search" style="padding-top: 0; flex-shrink: 1;" />
 </ui:UXML>

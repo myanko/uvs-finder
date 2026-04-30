@@ -2,11 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using UnityEditor;
 using UnityEngine;
 #if !SUBGRAPH_RENAME
 using SubgraphUnit = Unity.VisualScripting.SuperUnit;
 #endif
+
+[assembly: InternalsVisibleTo("UVSFinder.Editor.Tests")]
 
 namespace Unity.VisualScripting.UVSFinder
 {
@@ -26,8 +29,13 @@ namespace Unity.VisualScripting.UVSFinder
 
     internal static class UVSGraphElementWidgetExt
     {
+        private const string MissingScriptPath = "";
+
         private static readonly Dictionary<Type, Type> widgetOverrides = new Dictionary<Type, Type>
         {
+            { typeof(GetVariable), typeof(UVSGetVariableWidget) },
+            { typeof(SetVariable), typeof(UVSSetVariableWidget) },
+            { typeof(IsVariableDefined), typeof(UVSIsVariableDefinedWidget) },
             { typeof(IUnit), typeof(UVSContextSearchUnitWidget<>) },
             { typeof(IEventUnit), typeof(UVSEventContextSearchUnitWidget<>) },
             { typeof(GraphGroup), typeof(UVSGraphGroupWidget) },
@@ -40,6 +48,7 @@ namespace Unity.VisualScripting.UVSFinder
             { typeof(TriggerStateTransition), typeof(UVSTriggerStateTransitionWidget) }
         };
 
+        private static readonly Dictionary<Type, string> unitScriptPathsByType = new Dictionary<Type, string>();
         private static readonly FieldInfo definedDecoratorTypesField = typeof(WidgetProvider).BaseType?.GetField("definedDecoratorTypes", BindingFlags.Instance | BindingFlags.NonPublic);
         private static readonly FieldInfo resolvedDecoratorTypesField = typeof(WidgetProvider).BaseType?.GetField("resolvedDecoratorTypes", BindingFlags.Instance | BindingFlags.NonPublic);
 
@@ -54,6 +63,21 @@ namespace Unity.VisualScripting.UVSFinder
 
         public static IEnumerable<DropdownOption> GetDropdownOptions(IGraphElement element)
         {
+            if (TryGetUnitScriptPath(element, out var unitScriptPath))
+            {
+                yield return new DropdownOption((Action)(() => OpenUnitScript(unitScriptPath)), "Open C# Script");
+            }
+
+            if (UVSSearchProvider.TryGetVariableUnitInfo(element, out var variableName, out var variableKind))
+            {
+                yield return new DropdownOption((Action)(() => OpenVariableRename(variableName, variableKind)), $"Rename Variable \"{variableName}\"...");
+            }
+
+            if (UVSSearchProvider.TryGetEventRenameInfo(element, out var eventInfo))
+            {
+                yield return new DropdownOption((Action)(() => OpenEventRename(eventInfo)), $"Rename Event \"{eventInfo.ValueText}\"...");
+            }
+
             foreach (var option in GetSearchActions(element))
             {
                 yield return new DropdownOption((Action)(() => OpenFinder(option.Keyword, option.Exact)), option.Label);
@@ -213,6 +237,71 @@ namespace Unity.VisualScripting.UVSFinder
             var uvsFinder = UVSFinder.GetUVSFinder();
             uvsFinder.OnSearchAction(keyword, exact);
         }
+
+        private static void OpenVariableRename(string variableName, VariableKind variableKind)
+        {
+            var uvsFinder = UVSFinder.GetUVSFinder();
+            uvsFinder.StartVariableRename(variableName, variableKind);
+        }
+
+        private static void OpenEventRename(UVSEventRenameInfo eventInfo)
+        {
+            var uvsFinder = UVSFinder.GetUVSFinder();
+            uvsFinder.StartEventRename(eventInfo);
+        }
+
+        private static bool TryGetUnitScriptPath(IGraphElement element, out string scriptPath)
+        {
+            scriptPath = null;
+
+            return element is IUnit unit && TryGetScriptPath(unit.GetType(), out scriptPath);
+        }
+
+        private static bool TryGetScriptPath(Type type, out string scriptPath)
+        {
+            if (unitScriptPathsByType.TryGetValue(type, out scriptPath))
+            {
+                return scriptPath != MissingScriptPath;
+            }
+
+            foreach (var guid in AssetDatabase.FindAssets($"{GetScriptSearchName(type)} t:MonoScript"))
+            {
+                var candidatePath = AssetDatabase.GUIDToAssetPath(guid);
+                var candidate = AssetDatabase.LoadAssetAtPath<MonoScript>(candidatePath);
+
+                if (candidate != null && candidate.GetClass() == type)
+                {
+                    scriptPath = candidatePath;
+                    unitScriptPathsByType[type] = scriptPath;
+                    return true;
+                }
+            }
+
+            scriptPath = null;
+            unitScriptPathsByType[type] = MissingScriptPath;
+            return false;
+        }
+
+        private static string GetScriptSearchName(Type type)
+        {
+            var name = type.Name;
+            var genericMarkerIndex = name.IndexOf('`');
+
+            return genericMarkerIndex >= 0 ? name.Substring(0, genericMarkerIndex) : name;
+        }
+
+        private static void OpenUnitScript(string scriptPath)
+        {
+            var script = AssetDatabase.LoadAssetAtPath<MonoScript>(scriptPath);
+
+            if (script == null)
+            {
+                Debug.LogWarning($"Unable to open C# script at '{scriptPath}'. The asset may have moved or been deleted.");
+                return;
+            }
+
+            AssetDatabase.OpenAsset(script);
+        }
     }
 
     public class UVSContextSearchUnitWidget<TUnit> : UnitWidget<TUnit>
@@ -236,6 +325,73 @@ namespace Unity.VisualScripting.UVSFinder
                     yield return baseOption;
                 }
             }
+        }
+    }
+
+    public class UVSUnifiedVariableUnitWidget<TUnit> : UnitWidget<TUnit>
+        where TUnit : UnifiedVariableUnit
+    {
+        private readonly Func<Metadata, VariableNameInspector> nameInspectorConstructor;
+        private VariableNameInspector nameInspector;
+
+        public UVSUnifiedVariableUnitWidget(FlowCanvas canvas, TUnit unit) : base(canvas, unit)
+        {
+            nameInspectorConstructor = metadata => new VariableNameInspector(metadata, GetNameSuggestions);
+        }
+
+        protected override NodeColorMix baseColor => NodeColorMix.TealReadable;
+
+        public override Inspector GetPortInspector(IUnitPort port, Metadata metadata)
+        {
+            if (port == unit.name)
+            {
+                InspectorProvider.instance.Renew(ref nameInspector, metadata, nameInspectorConstructor);
+                return nameInspector;
+            }
+
+            return base.GetPortInspector(port, metadata);
+        }
+
+        private IEnumerable<string> GetNameSuggestions()
+        {
+            return EditorVariablesUtility.GetVariableNameSuggestions(unit.kind, reference);
+        }
+
+        protected override IEnumerable<DropdownOption> contextOptions
+        {
+            get
+            {
+                foreach (var option in UVSGraphElementWidgetExt.GetDropdownOptions(unit))
+                {
+                    yield return option;
+                }
+
+                foreach (var baseOption in base.contextOptions)
+                {
+                    yield return baseOption;
+                }
+            }
+        }
+    }
+
+    public sealed class UVSGetVariableWidget : UVSUnifiedVariableUnitWidget<GetVariable>
+    {
+        public UVSGetVariableWidget(FlowCanvas canvas, GetVariable unit) : base(canvas, unit)
+        {
+        }
+    }
+
+    public sealed class UVSSetVariableWidget : UVSUnifiedVariableUnitWidget<SetVariable>
+    {
+        public UVSSetVariableWidget(FlowCanvas canvas, SetVariable unit) : base(canvas, unit)
+        {
+        }
+    }
+
+    public sealed class UVSIsVariableDefinedWidget : UVSUnifiedVariableUnitWidget<IsVariableDefined>
+    {
+        public UVSIsVariableDefinedWidget(FlowCanvas canvas, IsVariableDefined unit) : base(canvas, unit)
+        {
         }
     }
 
