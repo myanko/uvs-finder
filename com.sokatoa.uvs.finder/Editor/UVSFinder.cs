@@ -40,6 +40,64 @@ namespace Unity.VisualScripting.UVSFinder
             all,
             hierarchy
         }
+
+        [SerializeField]
+        private string serializedSearchText = string.Empty;
+
+        [SerializeField]
+        private bool serializedHasSearchState;
+
+        [SerializeField]
+        private string serializedReplaceText = string.Empty;
+
+        [SerializeField]
+        private bool serializedReplaceFoldout;
+
+        [SerializeField]
+        private UVSReplaceMode serializedReplaceMode = UVSReplaceMode.Values;
+
+        [SerializeField]
+        private string serializedReplacementNodeTemplateName;
+
+        [SerializeField]
+        private SerializationData serializedReplacementNodeTemplate;
+
+        [SerializeField]
+        private bool serializedLastSearchExact;
+
+        [SerializeField]
+        private bool serializedVariableRenameSearchActive;
+
+        [SerializeField]
+        private string serializedVariableRenameName;
+
+        [SerializeField]
+        private VariableKind serializedVariableRenameKind;
+
+        [SerializeField]
+        private bool serializedEventRenameSearchActive;
+
+        [SerializeField]
+        private string serializedEventRenameValueText;
+
+        [SerializeField]
+        private string serializedEventRenameValueKey;
+
+        [SerializeField]
+        private string serializedEventRenameFamilyKey;
+
+        [SerializeField]
+        private UVSFinderTabs serializedSelectedTab = UVSFinderTabs.all;
+
+        [SerializeField]
+        private int serializedCurrentSelectionIndex = -1;
+
+        [SerializeField]
+        private int serializedAllSelectionIndex = -1;
+
+        [SerializeField]
+        private int serializedHierarchySelectionIndex = -1;
+
         private Dictionary<UVSFinderTabs, List<ResultItem>> searchItems = new Dictionary<UVSFinderTabs, List<ResultItem>>(){
             { UVSFinderTabs.current, new List<ResultItem>() },
             { UVSFinderTabs.all, new List<ResultItem>() },
@@ -57,6 +115,7 @@ namespace Unity.VisualScripting.UVSFinder
         private IUnit replacementNodeTemplate;
         private string replacementNodeTemplateName;
         private bool lastSearchExact;
+        private bool isRestoringPersistentState;
         private bool variableRenameSearchActive;
         private string variableRenameName;
         private VariableKind variableRenameKind;
@@ -94,6 +153,7 @@ namespace Unity.VisualScripting.UVSFinder
 
             // Get a reference to the Button from UXML and assign it its action.
             searchField = root.Q<ToolbarPopupSearchField>("search-field");
+            searchField.RegisterValueChangedCallback(_ => CapturePersistentState());
             var nodePathLabel = root.Q<Label>("node-path-label");
             var searchOptions = root.Q<Button>("searchOptions");
             replaceFoldout = root.Q<Foldout>("replace-foldout");
@@ -122,7 +182,7 @@ namespace Unity.VisualScripting.UVSFinder
             enableHierarchySearch = root.Q<Toggle>("toggleEnableHierarchySearch");
             enableHierarchySearch.value = prefs.enableHierarchySearch;
             enableHierarchySearch.RegisterValueChangedCallback(OnEnableHierarchySearchValueChanged);
-            selectedTab = UVSFinderTabs.all;
+            selectedTab = serializedSelectedTab;
 
             // The "makeItem" function will be called as needed
             // when the ListView needs more items to render
@@ -198,6 +258,7 @@ namespace Unity.VisualScripting.UVSFinder
             {
                 RefreshResultSelectionStyles();
                 graphPreview?.MarkDirtyRepaint();
+                CapturePersistentState();
             };
             var graphPreviewHost = root.Q<VisualElement>("graph-preview-host");
             if (graphPreviewHost != null)
@@ -217,8 +278,179 @@ namespace Unity.VisualScripting.UVSFinder
                     SettingsService.OpenUserPreferences("Preferences/Visual Scripting/UVS Finder");
                 };
             }
+
+            RestorePersistentState();
             GetWindow<UVSFinder>();
             searchField.Focus();
+        }
+
+        private void OnDisable()
+        {
+            CapturePersistentState();
+        }
+
+        private void RestorePersistentState()
+        {
+            isRestoringPersistentState = true;
+            try
+            {
+                searchField?.SetValueWithoutNotify(serializedSearchText ?? string.Empty);
+                replaceField?.SetValueWithoutNotify(serializedReplaceText ?? string.Empty);
+
+                selectedReplaceMode = serializedReplaceMode;
+                replacementNodeTemplateName = serializedReplacementNodeTemplateName;
+                replacementNodeTemplate = DeserializeReplacementNodeTemplate();
+                replaceMode?.SetValueWithoutNotify(selectedReplaceMode == UVSReplaceMode.Node ? ReplaceModeNodeLabel : ReplaceModeValuesLabel);
+                replaceFoldout?.SetValueWithoutNotify(serializedReplaceFoldout);
+
+                lastSearchExact = serializedLastSearchExact;
+                variableRenameSearchActive = serializedVariableRenameSearchActive && !string.IsNullOrEmpty(serializedVariableRenameName);
+                variableRenameName = serializedVariableRenameName;
+                variableRenameKind = serializedVariableRenameKind;
+                eventRenameSearchActive = serializedEventRenameSearchActive &&
+                    !string.IsNullOrEmpty(serializedEventRenameValueText) &&
+                    !string.IsNullOrEmpty(serializedEventRenameValueKey) &&
+                    !string.IsNullOrEmpty(serializedEventRenameFamilyKey);
+                eventRenameInfo = eventRenameSearchActive
+                    ? new UVSEventRenameInfo(serializedEventRenameValueText, serializedEventRenameValueKey, serializedEventRenameFamilyKey)
+                    : default;
+
+                SelectTabWithoutSearch(serializedSelectedTab);
+                UpdateReplaceControls();
+
+                if (serializedHasSearchState)
+                {
+                    ResetResultItems();
+                    if (variableRenameSearchActive)
+                    {
+                        PerformVariableRenameSearch();
+                    }
+                    else if (eventRenameSearchActive)
+                    {
+                        PerformEventRenameSearch();
+                    }
+                    else
+                    {
+                        PerformSearch(serializedSearchText ?? string.Empty, lastSearchExact);
+                    }
+
+                    RefreshReplacePreview();
+                }
+            }
+            finally
+            {
+                isRestoringPersistentState = false;
+            }
+
+            setTabsResults();
+            DisplayResultsItems();
+            RestoreSelectedResult();
+            setWindowTitle();
+        }
+
+        private void CapturePersistentState()
+        {
+            if (isRestoringPersistentState)
+            {
+                return;
+            }
+
+            serializedSearchText = searchField?.value ?? serializedSearchText ?? string.Empty;
+            serializedReplaceText = replaceField?.value ?? serializedReplaceText ?? string.Empty;
+            serializedReplaceFoldout = replaceFoldout?.value ?? serializedReplaceFoldout;
+            serializedReplaceMode = selectedReplaceMode;
+            serializedReplacementNodeTemplateName = replacementNodeTemplateName;
+            if (replacementNodeTemplate != null)
+            {
+                serializedReplacementNodeTemplate = replacementNodeTemplate.Serialize();
+            }
+            else if (selectedReplaceMode != UVSReplaceMode.Node)
+            {
+                serializedReplacementNodeTemplate = default;
+            }
+
+            serializedLastSearchExact = lastSearchExact;
+            serializedVariableRenameSearchActive = variableRenameSearchActive;
+            serializedVariableRenameName = variableRenameName;
+            serializedVariableRenameKind = variableRenameKind;
+            serializedEventRenameSearchActive = eventRenameSearchActive;
+            serializedEventRenameValueText = eventRenameInfo.ValueText;
+            serializedEventRenameValueKey = eventRenameInfo.ValueKey;
+            serializedEventRenameFamilyKey = eventRenameInfo.FamilyKey;
+            serializedSelectedTab = selectedTab;
+            SetSerializedSelectionIndex(selectedTab, resultListview?.selectedIndex ?? GetSerializedSelectionIndex(selectedTab));
+        }
+
+        private void SelectTabWithoutSearch(UVSFinderTabs tab)
+        {
+            selectedTab = tab;
+            tabCurrentGraph?.EnableInClassList("selected", selectedTab == UVSFinderTabs.current);
+            tabAllGraphs?.EnableInClassList("selected", selectedTab == UVSFinderTabs.all);
+            tabHierarchyGraphButton?.EnableInClassList("selected", selectedTab == UVSFinderTabs.hierarchy);
+        }
+
+        private int GetSerializedSelectionIndex(UVSFinderTabs tab)
+        {
+            switch (tab)
+            {
+                case UVSFinderTabs.current:
+                    return serializedCurrentSelectionIndex;
+                case UVSFinderTabs.hierarchy:
+                    return serializedHierarchySelectionIndex;
+                default:
+                    return serializedAllSelectionIndex;
+            }
+        }
+
+        private void SetSerializedSelectionIndex(UVSFinderTabs tab, int index)
+        {
+            switch (tab)
+            {
+                case UVSFinderTabs.current:
+                    serializedCurrentSelectionIndex = index;
+                    break;
+                case UVSFinderTabs.hierarchy:
+                    serializedHierarchySelectionIndex = index;
+                    break;
+                default:
+                    serializedAllSelectionIndex = index;
+                    break;
+            }
+        }
+
+        private void RestoreSelectedResult()
+        {
+            if (resultListview == null || !searchItems.TryGetValue(selectedTab, out var items))
+            {
+                return;
+            }
+
+            var selectedIndex = GetSerializedSelectionIndex(selectedTab);
+            if (selectedIndex < 0 || selectedIndex >= items.Count)
+            {
+                resultListview.ClearSelection();
+                return;
+            }
+
+            resultListview.SetSelectionWithoutNotify(new[] { selectedIndex });
+        }
+
+        private IUnit DeserializeReplacementNodeTemplate()
+        {
+            if (selectedReplaceMode != UVSReplaceMode.Node || string.IsNullOrEmpty(serializedReplacementNodeTemplate.json))
+            {
+                return null;
+            }
+
+            try
+            {
+                return serializedReplacementNodeTemplate.Deserialize() as IUnit;
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"Could not restore replacement node template: {e.Message}");
+                return null;
+            }
         }
 
         private void OverwriteHighlightColor(VisualElement e)
@@ -246,6 +478,7 @@ namespace Unity.VisualScripting.UVSFinder
             {
                 UpdateReplaceControls();
                 RefreshReplacePreview();
+                CapturePersistentState();
             });
 
             replaceField?.RegisterValueChangedCallback(_ =>
@@ -254,6 +487,8 @@ namespace Unity.VisualScripting.UVSFinder
                 {
                     RefreshReplacePreview();
                 }
+
+                CapturePersistentState();
             });
 
             useSelectedNodeButton?.RegisterCallback<ClickEvent>(_ => CaptureSelectedNodeTemplate());
@@ -268,6 +503,7 @@ namespace Unity.VisualScripting.UVSFinder
             selectedReplaceMode = evt.newValue == ReplaceModeNodeLabel ? UVSReplaceMode.Node : UVSReplaceMode.Values;
             UpdateReplaceControls();
             RefreshReplacePreview();
+            CapturePersistentState();
         }
 
         private void UpdateReplaceControls()
@@ -323,6 +559,7 @@ namespace Unity.VisualScripting.UVSFinder
             }
 
             variableRenameSearchActive = true;
+            serializedHasSearchState = true;
             variableRenameName = variableName;
             variableRenameKind = variableKind;
             eventRenameSearchActive = false;
@@ -349,6 +586,7 @@ namespace Unity.VisualScripting.UVSFinder
             setWindowTitle();
             setTabsResults();
             DisplayResultsItems();
+            CapturePersistentState();
             replaceField?.Focus();
         }
 
@@ -361,6 +599,7 @@ namespace Unity.VisualScripting.UVSFinder
             }
 
             eventRenameSearchActive = true;
+            serializedHasSearchState = true;
             this.eventRenameInfo = eventInfo;
             variableRenameSearchActive = false;
             variableRenameName = null;
@@ -386,6 +625,7 @@ namespace Unity.VisualScripting.UVSFinder
             setWindowTitle();
             setTabsResults();
             DisplayResultsItems();
+            CapturePersistentState();
             replaceField?.Focus();
         }
 
@@ -415,6 +655,7 @@ namespace Unity.VisualScripting.UVSFinder
 
             UpdateReplaceControls();
             RefreshReplacePreview();
+            CapturePersistentState();
         }
 
         private void RefreshReplacePreview()
@@ -493,6 +734,8 @@ namespace Unity.VisualScripting.UVSFinder
             {
                 RefreshSearchAfterReplace();
             }
+
+            CapturePersistentState();
         }
 
         private void ReplaceAllInSelectedTab()
@@ -530,6 +773,8 @@ namespace Unity.VisualScripting.UVSFinder
             {
                 RefreshSearchAfterReplace();
             }
+
+            CapturePersistentState();
         }
 
         private void RefreshSearchAfterReplace()
@@ -1316,11 +1561,13 @@ namespace Unity.VisualScripting.UVSFinder
             variableRenameSearchActive = false;
             eventRenameSearchActive = false;
             eventRenameInfo = default;
+            serializedHasSearchState = true;
             lastSearchExact = isExact;
             searchField.value = keyword;
             OnCurrentGraphClick();
             searchItems[UVSFinderTabs.current] = UVSSearchProvider.PerformSearchInCurrentScript(searchField.value, prefs.stateSearchContext, isExact);
             RefreshReplacePreview();
+            CapturePersistentState();
         }
 
         private void PerformSearch()
@@ -1368,49 +1615,49 @@ namespace Unity.VisualScripting.UVSFinder
         }
         private void OnCurrentGraphClick()
         {
-            tabCurrentGraph.AddToClassList("selected");
-            tabAllGraphs.RemoveFromClassList("selected");
-            tabHierarchyGraphButton.RemoveFromClassList("selected");
-            selectedTab = UVSFinderTabs.current;
+            SelectTabWithoutSearch(UVSFinderTabs.current);
             if(searchItems[UVSFinderTabs.current].Count == 0)
             {
                 PerformSearchCurrent();
             }
             DisplayResultsItems();
+            RestoreSelectedResult();
             setWindowTitle();
+            CapturePersistentState();
         }
 
         private void OnAllGraphsClick()
         {
-            tabAllGraphs.AddToClassList("selected");
-            tabCurrentGraph.RemoveFromClassList("selected");
-            tabHierarchyGraphButton.RemoveFromClassList("selected");
-            selectedTab = UVSFinderTabs.all;
+            SelectTabWithoutSearch(UVSFinderTabs.all);
             DisplayResultsItems();
+            RestoreSelectedResult();
             setWindowTitle();
+            CapturePersistentState();
         }
 
         private void OnHierarchyGraphClick()
         {
-            tabHierarchyGraphButton.AddToClassList("selected");
-            tabAllGraphs.RemoveFromClassList("selected");
-            tabCurrentGraph.RemoveFromClassList("selected");
-            selectedTab = UVSFinderTabs.hierarchy;
+            SelectTabWithoutSearch(UVSFinderTabs.hierarchy);
             DisplayResultsItems();
+            RestoreSelectedResult();
             setWindowTitle();
+            CapturePersistentState();
         }
 
         private void OnEnableCurrentGraphSearchValueChanged(ChangeEvent<bool> evt)
         {
             prefs.enableCurrentGraphSearch = enableCurrentGraphSearch.value;
+            CapturePersistentState();
         }
         private void OnEnableAllGraphsSearchValueChanged(ChangeEvent<bool> evt)
         {
             prefs.enableAllGraphsSearch = enableAllGraphsSearch.value;
+            CapturePersistentState();
         }
         private void OnEnableHierarchySearchValueChanged(ChangeEvent<bool> evt)
         {
             prefs.enableHierarchySearch = enableHierarchySearch.value;
+            CapturePersistentState();
         }
         private void OnKeyUp(KeyUpEvent evt)
         {
@@ -1485,14 +1732,18 @@ namespace Unity.VisualScripting.UVSFinder
             variableRenameSearchActive = false;
             eventRenameSearchActive = false;
             eventRenameInfo = default;
+            serializedHasSearchState = true;
             lastSearchExact = isExact;
             resultListview.Clear();
+            resultListview.ClearSelection();
+            SetSerializedSelectionIndex(selectedTab, -1);
             ResetResultItems();
             PerformSearch(keyword, isExact);
             RefreshReplacePreview();
             setWindowTitle();
             setTabsResults();
             DisplayResultsItems();
+            CapturePersistentState();
             searchField.ElementAt(0).Focus();
         }
 
