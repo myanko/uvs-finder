@@ -23,6 +23,33 @@ namespace Unity.VisualScripting.UVSFinder.Tests
         }
 
         [Test]
+        public void GetDropdownOptions_ForVariableUnit_IncludesRenameVariable()
+        {
+            var unit = new GetVariable
+            {
+                kind = VariableKind.Graph
+            };
+            unit.EnsureDefined();
+            unit.defaultValues["name"] = "score";
+
+            var options = Unity.VisualScripting.UVSFinder.UVSGraphElementWidgetExt.GetDropdownOptions(unit).ToArray();
+
+            Assert.That(options.Any(option => option.label == "Rename Variable \"score\"..." && option.value is Action), Is.True);
+        }
+
+        [Test]
+        public void GetDropdownOptions_ForCustomEventUnit_IncludesRenameEvent()
+        {
+            var unit = new CustomEvent();
+            unit.EnsureDefined();
+            unit.defaultValues["name"] = "Wave";
+
+            var options = Unity.VisualScripting.UVSFinder.UVSGraphElementWidgetExt.GetDropdownOptions(unit).ToArray();
+
+            Assert.That(options.Any(option => option.label == "Rename Event \"Wave\"..." && option.value is Action), Is.True);
+        }
+
+        [Test]
         public void GetElementName_ForWaitForSeconds_IncludesInputValues()
         {
             var unit = new WaitForSecondsUnit();
