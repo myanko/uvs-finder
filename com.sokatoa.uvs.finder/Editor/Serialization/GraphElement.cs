@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Unity.VisualScripting.UVSFinder.ExtensionMethods;
 using UnityEngine;
 
@@ -24,6 +25,25 @@ namespace Unity.VisualScripting.UVSFinder
             }
 
             return name;
+        }
+
+        public static IEnumerable<string> GetElementSearchTerms(IGraphElement ge)
+        {
+            var elementName = GetElementName(ge);
+            if (!string.IsNullOrEmpty(elementName))
+            {
+                yield return elementName;
+            }
+
+            if (!(ge is IUnit unit))
+            {
+                yield break;
+            }
+
+            foreach (var headerValue in GetUnitHeaderInspectableValues(unit))
+            {
+                yield return headerValue;
+            }
         }
 
         public static string GetNameFromSpecificTypes(IGraphElement ge)
@@ -395,6 +415,97 @@ namespace Unity.VisualScripting.UVSFinder
             {
                 yield return $"Inputs: {waitForFlow.inputCount}";
                 yield return $"Reset On Exit: {FormatValue(waitForFlow.resetOnExit)}";
+            }
+        }
+
+        private static IEnumerable<string> GetUnitHeaderInspectableValues(IUnit unit)
+        {
+            if (unit == null)
+            {
+                yield break;
+            }
+
+            var members = unit.GetType()
+                .GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                .Where(HasUnitHeaderInspectableAttribute)
+                .OrderBy(GetInspectableOrder)
+                .ThenBy(member => member.MetadataToken);
+
+            foreach (var member in members)
+            {
+                if (!TryGetMemberValue(unit, member, out var value))
+                {
+                    continue;
+                }
+
+                var valueText = FormatValue(value);
+                var label = GetUnitHeaderInspectableLabel(member);
+                yield return $"{label}: {valueText}";
+
+                if (!string.Equals(label, member.Name, StringComparison.Ordinal))
+                {
+                    yield return $"{member.Name}: {valueText}";
+                }
+            }
+        }
+
+        private static bool HasUnitHeaderInspectableAttribute(MemberInfo member)
+        {
+            return member.GetCustomAttributes(typeof(UnitHeaderInspectableAttribute), true).Any();
+        }
+
+        private static int GetInspectableOrder(MemberInfo member)
+        {
+            var inspectable = member.GetCustomAttributes(true).OfType<IInspectableAttribute>().FirstOrDefault();
+            return inspectable?.order ?? int.MaxValue;
+        }
+
+        private static string GetUnitHeaderInspectableLabel(MemberInfo member)
+        {
+            var headerLabel = member.GetCustomAttributes(typeof(UnitHeaderInspectableAttribute), true)
+                .OfType<UnitHeaderInspectableAttribute>()
+                .FirstOrDefault()
+                ?.label;
+
+            if (!string.IsNullOrEmpty(headerLabel))
+            {
+                return headerLabel;
+            }
+
+            var inspectorLabel = member.GetCustomAttributes(typeof(InspectorLabelAttribute), true)
+                .OfType<InspectorLabelAttribute>()
+                .FirstOrDefault()
+                ?.text;
+
+            if (!string.IsNullOrEmpty(inspectorLabel))
+            {
+                return inspectorLabel;
+            }
+
+            return GetPortLabel(member.Name);
+        }
+
+        private static bool TryGetMemberValue(IUnit unit, MemberInfo member, out object value)
+        {
+            value = null;
+
+            try
+            {
+                switch (member)
+                {
+                    case FieldInfo field:
+                        value = field.GetValue(unit);
+                        return true;
+                    case PropertyInfo property when property.GetIndexParameters().Length == 0 && property.GetGetMethod(true) != null:
+                        value = property.GetValue(unit);
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+            catch
+            {
+                return false;
             }
         }
 

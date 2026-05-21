@@ -970,12 +970,13 @@ namespace Unity.VisualScripting.UVSFinder
 
         private static bool isFoundElement(SearchContext searchContext, IGraphElement currentElement)
         {
-            var currentElementName = GraphElement.GetElementName(currentElement);
+            var searchTerms = GraphElement.GetElementSearchTerms(currentElement);
             if (searchContext.isExactSearchTerm)
             {
-                return currentElementName == searchContext.keyword && !IsIgnoredElement(currentElement);
+                return searchTerms.Any(term => term == searchContext.keyword) && !IsIgnoredElement(currentElement);
             }
-            return CleanString(currentElementName).Contains(CleanString(searchContext.keyword)) && !IsIgnoredElement(currentElement);
+            var cleanKeyword = CleanString(searchContext.keyword);
+            return searchTerms.Any(term => CleanString(term).Contains(cleanKeyword)) && !IsIgnoredElement(currentElement);
         }
 
         private static bool IsIgnoredElement(IGraphElement graphElement)

@@ -61,5 +61,19 @@ namespace Unity.VisualScripting.UVSFinder.Tests
 
             Assert.That(name, Is.EqualTo("Wait For Flow [Inputs: 4, Reset On Exit: True]"));
         }
+
+        [Test]
+        public void GetElementSearchTerms_ForUnitHeaderInspectable_IncludesHeaderValue()
+        {
+            var unit = new Sequence
+            {
+                outputCount = 4
+            };
+
+            var terms = GraphElement.GetElementSearchTerms(unit).ToArray();
+
+            Assert.That(terms, Does.Contain("Steps: 4"));
+            Assert.That(terms, Does.Contain("outputCount: 4"));
+        }
     }
 }

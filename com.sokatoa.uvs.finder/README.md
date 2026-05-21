@@ -1,4 +1,4 @@
-# Node Finder for Unity Visual Scripting V0.5
+# Node Finder for Unity Visual Scripting V0.6
 
 Node Finder adds project-wide search tools to Unity Visual Scripting. It helps you find units, events, variables, groups, subgraphs, state graphs, and embedded graph content without manually opening every graph in your project.
 
@@ -135,6 +135,9 @@ This package no longer depends on Harmony.
 
 - https://github.com/myanko/uvs-finder/issues
 
-## Support
+## Support Us
 
-This package no longer depends on Harmony.
+- https://ko-fi.com/sokatoa
+- https://patreon.com/myanko
+
+**This package no longer depends on Harmony.
