@@ -20,6 +20,7 @@ Open it with **Alt+F**, type a search term, and press **Enter**.
 - Right-click graph elements for contextual finder actions.
 - Right-click nodes to open the C# script that defines the unit, when Unity can resolve it.
 - Right-click variable nodes to rename matching Get, Set, Has, and blackboard variables across the selected search scope.
+- Right-click blackboard variable items to start the same scoped rename workflow from the variable declaration.
 - Preview graph nodes before replacing values or replacing nodes.
 - Replace editable node values in selected results or all results in the active tab.
 - Replace whole flow nodes using a selected node as a template.
@@ -35,6 +36,7 @@ Supported contextual actions include:
 - Find related Get Variable, Set Variable, and Has Variable nodes.
 - Open the C# script for the clicked unit, when a matching script asset is available.
 - Rename variables from Get Variable, Set Variable, and Has Variable nodes.
+- Rename variables from Blackboard variable items.
 - Start find and replace from the current graph context menu.
 
 ## Find And Replace
@@ -61,7 +63,7 @@ Node replacement preserves compatible connections where possible and restores th
 
 ## Variable Rename
 
-Right-click a **Get Variable**, **Set Variable**, or **Has Variable** node and choose **Rename Variable**.
+Right-click a **Get Variable**, **Set Variable**, or **Has Variable** node, or right-click a variable item in the Visual Scripting **Blackboard**, and choose **Rename Variable**.
 
 The finder opens in a filtered rename mode for the clicked variable name and variable kind. This keeps scopes separate, so a Graph variable rename does not touch Object, Scene, Application, or Saved variables with the same name.
 

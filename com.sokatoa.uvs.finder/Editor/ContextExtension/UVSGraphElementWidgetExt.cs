@@ -48,6 +48,12 @@ namespace Unity.VisualScripting.UVSFinder
         private static readonly Dictionary<Type, string> unitScriptPathsByType = new Dictionary<Type, string>();
         private static readonly FieldInfo definedDecoratorTypesField = typeof(WidgetProvider).BaseType?.GetField("definedDecoratorTypes", BindingFlags.Instance | BindingFlags.NonPublic);
         private static readonly FieldInfo resolvedDecoratorTypesField = typeof(WidgetProvider).BaseType?.GetField("resolvedDecoratorTypes", BindingFlags.Instance | BindingFlags.NonPublic);
+        private static readonly FieldInfo definedInspectorTypesField = typeof(InspectorProvider).BaseType?.GetField("definedDecoratorTypes", BindingFlags.Instance | BindingFlags.NonPublic);
+        private static readonly FieldInfo resolvedInspectorTypesField = typeof(InspectorProvider).BaseType?.GetField("resolvedDecoratorTypes", BindingFlags.Instance | BindingFlags.NonPublic);
+        private static readonly Dictionary<Type, Type> inspectorOverrides = new Dictionary<Type, Type>
+        {
+            { typeof(VariableDeclaration), typeof(UVSVariableDeclarationInspector) }
+        };
 
         [InitializeOnLoadMethod]
         private static void Initialize()
@@ -55,6 +61,7 @@ namespace Unity.VisualScripting.UVSFinder
             GraphWindow.activeContextChanged -= OnActiveContextChanged;
             GraphWindow.activeContextChanged += OnActiveContextChanged;
 
+            ApplyInspectorOverrides();
             EditorApplication.delayCall += ApplyToOpenGraphWindows;
         }
 
@@ -79,6 +86,16 @@ namespace Unity.VisualScripting.UVSFinder
             {
                 yield return new DropdownOption((Action)(() => OpenFinder(option.Keyword, option.Exact)), option.Label);
             }
+        }
+
+        public static IEnumerable<DropdownOption> GetVariableDeclarationDropdownOptions(VariableDeclaration declaration, VariableKind? variableKind)
+        {
+            if (declaration == null || variableKind == null || string.IsNullOrEmpty(declaration.name))
+            {
+                yield break;
+            }
+
+            yield return new DropdownOption((Action)(() => OpenVariableRename(declaration.name, variableKind.Value)), $"Rename Variable \"{declaration.name}\"...");
         }
 
         public static void SearchInCurrentGraph()
@@ -126,6 +143,30 @@ namespace Unity.VisualScripting.UVSFinder
             resolvedDecoratorTypes.Clear();
             canvas.widgetProvider.FreeAll();
             canvas.Recollect();
+        }
+
+        private static void ApplyInspectorOverrides()
+        {
+            if (definedInspectorTypesField == null || resolvedInspectorTypesField == null)
+            {
+                return;
+            }
+
+            var definedInspectorTypes = definedInspectorTypesField.GetValue(InspectorProvider.instance) as Dictionary<Type, Type>;
+            var resolvedInspectorTypes = resolvedInspectorTypesField.GetValue(InspectorProvider.instance) as Dictionary<Type, Type>;
+
+            if (definedInspectorTypes == null || resolvedInspectorTypes == null)
+            {
+                return;
+            }
+
+            foreach (var pair in inspectorOverrides)
+            {
+                definedInspectorTypes[pair.Key] = pair.Value;
+            }
+
+            resolvedInspectorTypes.Clear();
+            InspectorProvider.instance.FreeAll();
         }
 
         private static IEnumerable<UVSContextSearchAction> GetSearchActions(IGraphElement element)
@@ -298,6 +339,190 @@ namespace Unity.VisualScripting.UVSFinder
             }
 
             AssetDatabase.OpenAsset(script);
+        }
+    }
+
+    public sealed class UVSVariableDeclarationInspector : Inspector
+    {
+        private static readonly FieldInfo parentInspectorField = typeof(Inspector).GetField("parentInspector", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        private Metadata nameMetadata => metadata[nameof(VariableDeclaration.name)];
+        private Metadata valueMetadata => metadata[nameof(VariableDeclaration.value)];
+        private Metadata typeMetadata => metadata[nameof(VariableDeclaration.typeHandle)];
+
+        public UVSVariableDeclarationInspector(Metadata metadata)
+            : base(metadata)
+        {
+            VSUsageUtility.isVisualScriptingUsed = true;
+        }
+
+        protected override float GetHeight(float width, GUIContent label)
+        {
+            var height = 0f;
+
+            using (LudiqGUIUtility.labelWidth.Override(Styles.labelWidth))
+            {
+                height += Styles.padding;
+                height += GetNameHeight();
+                height += Styles.spacing;
+                height += GetTypeHeight(width);
+                height += Styles.spacing;
+                height += GetValueHeight(width);
+                height += Styles.padding;
+            }
+
+            return height;
+        }
+
+        protected override void OnGUI(Rect position, GUIContent label)
+        {
+            if (HandleContextClick(position))
+            {
+                return;
+            }
+
+            position = BeginLabeledBlock(metadata, position, label);
+
+            using (LudiqGUIUtility.labelWidth.Override(Styles.labelWidth))
+            {
+                y += Styles.padding;
+                var namePosition = position.VerticalSection(ref y, GetNameHeight());
+                y += Styles.spacing;
+                var typePosition = position.VerticalSection(ref y, GetTypeHeight(position.width));
+                y += Styles.spacing;
+                var valuePosition = position.VerticalSection(ref y, GetValueHeight(position.width));
+                y += Styles.padding;
+
+                OnNameGUI(namePosition);
+                OnTypeGUI(typePosition);
+                OnValueGUI(valuePosition);
+            }
+
+            EndBlock(metadata);
+        }
+
+        private bool HandleContextClick(Rect position)
+        {
+            var current = Event.current;
+
+            if (current.type != EventType.ContextClick || !position.Contains(current.mousePosition))
+            {
+                return false;
+            }
+
+            if (!(metadata.value is VariableDeclaration declaration) || !TryGetVariableKind(out var variableKind))
+            {
+                return false;
+            }
+
+            var options = UVSGraphElementWidgetExt.GetVariableDeclarationDropdownOptions(declaration, variableKind).ToArray();
+
+            if (options.Length == 0)
+            {
+                return false;
+            }
+
+            var menu = new GenericMenu();
+
+            foreach (var option in options)
+            {
+                if (!(option.value is Action action))
+                {
+                    continue;
+                }
+
+                menu.AddItem(new GUIContent(option.label), false, () => action());
+            }
+
+            menu.ShowAsContext();
+            current.Use();
+            return true;
+        }
+
+        private bool TryGetVariableKind(out VariableKind variableKind)
+        {
+            variableKind = default;
+
+            if (parentInspectorField?.GetValue(this) is VariableDeclarationsInspector parentInspector && parentInspector.kind.HasValue)
+            {
+                variableKind = parentInspector.kind.Value;
+                return true;
+            }
+
+            var parentMetadata = metadata.parent;
+
+            while (parentMetadata != null)
+            {
+                if (parentMetadata.value is VariableDeclarations declarations)
+                {
+                    variableKind = declarations.Kind;
+                    return true;
+                }
+
+                parentMetadata = parentMetadata.parent;
+            }
+
+            return false;
+        }
+
+        private float GetNameHeight()
+        {
+            return EditorGUIUtility.singleLineHeight;
+        }
+
+        private float GetValueHeight(float width)
+        {
+            return LudiqGUI.GetInspectorHeight(this, valueMetadata, width);
+        }
+
+        private float GetTypeHeight(float width)
+        {
+            return LudiqGUI.GetInspectorHeight(this, typeMetadata, width);
+        }
+
+        private void OnNameGUI(Rect namePosition)
+        {
+            namePosition = BeginLabeledBlock(nameMetadata, namePosition);
+
+            var newName = EditorGUI.DelayedTextField(namePosition, (string)nameMetadata.value);
+
+            if (EndBlock(nameMetadata))
+            {
+                var variableDeclarations = (VariableDeclarationCollection)metadata.parent.value;
+
+                if (StringUtility.IsNullOrWhiteSpace(newName))
+                {
+                    EditorUtility.DisplayDialog("Edit Variable Name", "Please enter a variable name.", "OK");
+                    return;
+                }
+
+                if (variableDeclarations.Contains(newName))
+                {
+                    EditorUtility.DisplayDialog("Edit Variable Name", "A variable with the same name already exists.", "OK");
+                    return;
+                }
+
+                nameMetadata.RecordUndo();
+                variableDeclarations.EditorRename((VariableDeclaration)metadata.value, newName);
+                nameMetadata.value = newName;
+            }
+        }
+
+        private void OnValueGUI(Rect valuePosition)
+        {
+            LudiqGUI.Inspector(valueMetadata, valuePosition, GUIContent.none);
+        }
+
+        private void OnTypeGUI(Rect position)
+        {
+            LudiqGUI.Inspector(typeMetadata, position, GUIContent.none);
+        }
+
+        private static class Styles
+        {
+            public static readonly float labelWidth = SystemObjectInspector.Styles.labelWidth;
+            public static readonly float padding = 2;
+            public static readonly float spacing = EditorGUIUtility.standardVerticalSpacing;
         }
     }
 

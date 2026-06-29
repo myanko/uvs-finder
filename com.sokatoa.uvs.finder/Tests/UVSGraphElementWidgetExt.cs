@@ -38,6 +38,16 @@ namespace Unity.VisualScripting.UVSFinder.Tests
         }
 
         [Test]
+        public void GetVariableDeclarationDropdownOptions_ForBlackboardVariable_IncludesRenameVariable()
+        {
+            var declaration = new VariableDeclaration("score", 0);
+
+            var options = Unity.VisualScripting.UVSFinder.UVSGraphElementWidgetExt.GetVariableDeclarationDropdownOptions(declaration, VariableKind.Graph).ToArray();
+
+            Assert.That(options.Any(option => option.label == "Rename Variable \"score\"..." && option.value is Action), Is.True);
+        }
+
+        [Test]
         public void GetDropdownOptions_ForCustomEventUnit_IncludesRenameEvent()
         {
             var unit = new CustomEvent();
