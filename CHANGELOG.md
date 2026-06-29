@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - Unreleased
+
+### Added
+
+- Find and replace workflow with value replacement, node replacement from a selected node template, previews, and selected/all-in-tab replacement actions.
+- Variable rename workflow for Get Variable, Set Variable, Has/Is Variable nodes, and matching blackboard declarations across the active search scopes.
+- Event rename workflow for Custom Event and Trigger Custom Event units, keeping event families separated by exact event name.
+- Blackboard variable declaration search for graph, object, scene, application, saved, and prefab variables.
+- Right-click Visual Scripting graph actions for finding related elements, renaming variables or events, opening a unit's C# script, and starting find and replace from the current graph.
+- Blackboard variable items now expose a right-click **Rename Variable** action that starts the scoped variable rename workflow.
+- Search indexing for visible unit header inspectable labels and values, so nodes can be found by data shown in their headers.
+- Search support for Time node configured values.
+- Multi-select support in finder results.
+- Scope tab tooltips for the finder window.
+
+### Changed
+
+- Reworked Visual Scripting context menu and widget integration to avoid the Harmony patching dependency.
+- Expanded graph reference handling for prefabs, macros, embedded graphs, state graphs, and transition graphs during search and replacement.
+- Refreshed result and preview state after replacements to reduce stale graph element references.
+
+### Fixed
+
+- Finder search results and UI state now survive Unity domain reloads.
+- Restored variable, event, Open C# Script, and custom variable unit context menu actions after the Harmony cleanup.
+- Fixed 0.6 UI merge issues, including the finder tab minimum height.
+
+### Removed
+
+- Removed the bundled Harmony/editor patching package and its related patching assets.
+
 ## [0.5.0] - 2023-06-02
 
 ### Added
