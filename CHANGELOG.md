@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Event rename workflow for Custom Event and Trigger Custom Event units, keeping event families separated by exact event name.
 - Blackboard variable declaration search for graph, object, scene, application, saved, and prefab variables.
 - Right-click Visual Scripting graph actions for finding related elements, renaming variables or events, opening a unit's C# script, and starting find and replace from the current graph.
-- Blackboard variable items now expose a right-click **Rename Variable** action that starts the scoped variable rename workflow.
+- Blackboard variable items now expose right-click find actions for the variable name and related Get, Set, and Has Variable nodes, plus **Rename Variable** for the scoped variable rename workflow.
 - Search indexing for visible unit header inspectable labels and values, so nodes can be found by data shown in their headers.
 - Search support for Time node configured values.
 - Multi-select support in finder results.

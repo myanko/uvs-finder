@@ -28,6 +28,13 @@ namespace Unity.VisualScripting.UVSFinder
     {
         private const string MissingScriptPath = "";
 
+        private enum VariableSearchTarget
+        {
+            Get,
+            Set,
+            Has
+        }
+
         private static readonly Dictionary<Type, Type> widgetOverrides = new Dictionary<Type, Type>
         {
             { typeof(GetVariable), typeof(UVSGetVariableWidget) },
@@ -96,6 +103,12 @@ namespace Unity.VisualScripting.UVSFinder
             }
 
             yield return new DropdownOption((Action)(() => OpenVariableRename(declaration.name, variableKind.Value)), $"Rename Variable \"{declaration.name}\"...");
+            yield return new DropdownOption((Action)(() => OpenFinder(declaration.name, false)), $"Find \"{declaration.name}\"");
+
+            foreach (var option in GetVariableSearchActions(declaration.name, variableKind.Value))
+            {
+                yield return new DropdownOption((Action)(() => OpenFinder(option.Keyword, option.Exact)), option.Label);
+            }
         }
 
         public static void SearchInCurrentGraph()
@@ -202,33 +215,30 @@ namespace Unity.VisualScripting.UVSFinder
                 case "Bolt.GetVariable":
                     {
                         var curr = (GetVariable)element;
-                        var relatedFindName = $"{curr.defaultValues["name"]} [Set Variable: {curr.kind}]";
-                        var relatedFindName2 = $"{curr.defaultValues["name"]} [Has Variable: {curr.kind}]";
-                        yield return Exact(name, true);
-                        yield return Exact(relatedFindName);
-                        yield return Exact(relatedFindName2);
+                        foreach (var option in GetVariableSearchActions(curr.defaultValues["name"]?.ToString(), curr.kind, VariableSearchTarget.Get, name))
+                        {
+                            yield return option;
+                        }
                         break;
                     }
                 case "Unity.VisualScripting.SetVariable":
                 case "Bolt.SetVariable":
                     {
                         var curr = (SetVariable)element;
-                        var relatedFindName = $"{curr.defaultValues["name"]} [Get Variable: {curr.kind}]";
-                        var relatedFindName2 = $"{curr.defaultValues["name"]} [Has Variable: {curr.kind}]";
-                        yield return Exact(relatedFindName);
-                        yield return Exact(name, true);
-                        yield return Exact(relatedFindName2);
+                        foreach (var option in GetVariableSearchActions(curr.defaultValues["name"]?.ToString(), curr.kind, VariableSearchTarget.Set, name))
+                        {
+                            yield return option;
+                        }
                         break;
                     }
                 case "Unity.VisualScripting.IsVariableDefined":
                 case "Bolt.IsVariableDefined":
                     {
                         var curr = (IsVariableDefined)element;
-                        var relatedFindName = $"{curr.defaultValues["name"]} [Get Variable: {curr.kind}]";
-                        var relatedFindName2 = $"{curr.defaultValues["name"]} [Set Variable: {curr.kind}]";
-                        yield return Exact(relatedFindName);
-                        yield return Exact(relatedFindName2);
-                        yield return Exact(name, true);
+                        foreach (var option in GetVariableSearchActions(curr.defaultValues["name"]?.ToString(), curr.kind, VariableSearchTarget.Has, name))
+                        {
+                            yield return option;
+                        }
                         break;
                     }
                 case "Unity.VisualScripting.GetMember":
@@ -256,6 +266,45 @@ namespace Unity.VisualScripting.UVSFinder
 
                         break;
                     }
+            }
+        }
+
+        private static IEnumerable<UVSContextSearchAction> GetVariableSearchActions(
+            string variableName,
+            VariableKind variableKind,
+            VariableSearchTarget? emphasizedTarget = null,
+            string emphasizedLabel = null)
+        {
+            if (string.IsNullOrEmpty(variableName))
+            {
+                yield break;
+            }
+
+            yield return Exact(GetVariableSearchLabel(variableName, variableKind, VariableSearchTarget.Get, emphasizedTarget, emphasizedLabel), emphasizedTarget == VariableSearchTarget.Get);
+            yield return Exact(GetVariableSearchLabel(variableName, variableKind, VariableSearchTarget.Set, emphasizedTarget, emphasizedLabel), emphasizedTarget == VariableSearchTarget.Set);
+            yield return Exact(GetVariableSearchLabel(variableName, variableKind, VariableSearchTarget.Has, emphasizedTarget, emphasizedLabel), emphasizedTarget == VariableSearchTarget.Has);
+        }
+
+        private static string GetVariableSearchLabel(
+            string variableName,
+            VariableKind variableKind,
+            VariableSearchTarget target,
+            VariableSearchTarget? emphasizedTarget,
+            string emphasizedLabel)
+        {
+            if (target == emphasizedTarget && !string.IsNullOrEmpty(emphasizedLabel))
+            {
+                return emphasizedLabel;
+            }
+
+            switch (target)
+            {
+                case VariableSearchTarget.Get:
+                    return $"{variableName} [Get Variable: {variableKind}]";
+                case VariableSearchTarget.Set:
+                    return $"{variableName} [Set Variable: {variableKind}]";
+                default:
+                    return $"{variableName} [Has Variable: {variableKind}]";
             }
         }
 

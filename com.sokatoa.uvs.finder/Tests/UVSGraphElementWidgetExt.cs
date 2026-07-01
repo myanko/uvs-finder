@@ -48,6 +48,19 @@ namespace Unity.VisualScripting.UVSFinder.Tests
         }
 
         [Test]
+        public void GetVariableDeclarationDropdownOptions_ForBlackboardVariable_IncludesFindVariableName()
+        {
+            var declaration = new VariableDeclaration("score", 0);
+
+            var options = Unity.VisualScripting.UVSFinder.UVSGraphElementWidgetExt.GetVariableDeclarationDropdownOptions(declaration, VariableKind.Graph).ToArray();
+
+            Assert.That(options.Any(option => option.label == "Find \"score\"" && option.value is Action), Is.True);
+            Assert.That(options.Any(option => option.label == "Find \"score [Get Variable: Graph]\"" && option.value is Action), Is.True);
+            Assert.That(options.Any(option => option.label == "Find \"score [Set Variable: Graph]\"" && option.value is Action), Is.True);
+            Assert.That(options.Any(option => option.label == "Find \"score [Has Variable: Graph]\"" && option.value is Action), Is.True);
+        }
+
+        [Test]
         public void GetDropdownOptions_ForCustomEventUnit_IncludesRenameEvent()
         {
             var unit = new CustomEvent();
