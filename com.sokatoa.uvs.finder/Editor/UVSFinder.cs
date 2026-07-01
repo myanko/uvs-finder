@@ -806,6 +806,7 @@ namespace Unity.VisualScripting.UVSFinder
         private void RefreshSearchAfterReplace()
         {
             ClearResultSelection();
+            AdvanceRenameSearchTargetToReplacement();
 
             if (variableRenameSearchActive)
             {
@@ -833,6 +834,29 @@ namespace Unity.VisualScripting.UVSFinder
 
             OnSearchAction(searchField.value, lastSearchExact);
             FinalizeReplaceRefresh();
+        }
+
+        private void AdvanceRenameSearchTargetToReplacement()
+        {
+            if (selectedReplaceMode != UVSReplaceMode.Values)
+            {
+                return;
+            }
+
+            var replacement = replaceField?.value;
+            if (string.IsNullOrEmpty(replacement))
+            {
+                return;
+            }
+
+            if (variableRenameSearchActive)
+            {
+                variableRenameName = replacement;
+            }
+            else if (eventRenameSearchActive && eventRenameInfo.IsValid)
+            {
+                eventRenameInfo = new UVSEventRenameInfo(replacement, eventRenameInfo.ValueKey, eventRenameInfo.FamilyKey);
+            }
         }
 
         private void PrepareForReplaceMutation(IReadOnlyCollection<ResultItem> replaceableItems)
