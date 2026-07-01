@@ -40,8 +40,21 @@ namespace Unity.VisualScripting.UVSFinder
             { typeof(GetVariable), typeof(UVSGetVariableWidget) },
             { typeof(SetVariable), typeof(UVSSetVariableWidget) },
             { typeof(IsVariableDefined), typeof(UVSIsVariableDefinedWidget) },
+            { typeof(Literal), typeof(UVSLiteralWidget) },
+            { typeof(MissingType), typeof(UVSMissingTypeUnitWidget) },
+            { typeof(GraphInput), typeof(UVSGraphInputWidget) },
+            { typeof(GraphOutput), typeof(UVSGraphOutputWidget) },
+#pragma warning disable 618
+            { typeof(VariableUnit), typeof(UVSVariableUnitWidget) },
+#pragma warning restore 618
             { typeof(IUnit), typeof(UVSContextSearchUnitWidget<>) },
             { typeof(IEventUnit), typeof(UVSEventContextSearchUnitWidget<>) },
+#if NEW_INPUT_SYSTEM || PACKAGE_INPUT_SYSTEM_EXISTS
+            { typeof(Unity.VisualScripting.InputSystem.OnInputSystemEvent), typeof(UVSInputSystemWidget) },
+            { typeof(Unity.VisualScripting.InputSystem.OnInputSystemEventButton), typeof(UVSInputSystemButtonWidget) },
+            { typeof(Unity.VisualScripting.InputSystem.OnInputSystemEventFloat), typeof(UVSInputSystemFloatWidget) },
+            { typeof(Unity.VisualScripting.InputSystem.OnInputSystemEventVector2), typeof(UVSInputSystemVector2Widget) },
+#endif
             { typeof(GraphGroup), typeof(UVSGraphGroupWidget) },
             { typeof(SubgraphUnit), typeof(UVSSuperUnitWidget) },
             { typeof(StateUnit), typeof(UVSStateUnitWidget) },
@@ -87,6 +100,12 @@ namespace Unity.VisualScripting.UVSFinder
             if (UVSSearchProvider.TryGetEventRenameInfo(element, out var eventInfo))
             {
                 yield return new DropdownOption((Action)(() => OpenEventRename(eventInfo)), $"Rename Event \"{eventInfo.ValueText}\"...");
+            }
+
+            var genericFind = GetGenericFindAction(element);
+            if (genericFind.HasValue)
+            {
+                yield return new DropdownOption((Action)(() => OpenFinderAndReplace(genericFind.Value.Keyword, genericFind.Value.Exact)), $"Find and Replace \"{genericFind.Value.Keyword}\"");
             }
 
             foreach (var option in GetSearchActions(element))
@@ -259,14 +278,26 @@ namespace Unity.VisualScripting.UVSFinder
                     }
                 default:
                     {
-                        if (!string.IsNullOrEmpty(name))
+                        var genericFind = GetGenericFindAction(element);
+                        if (genericFind.HasValue)
                         {
-                            yield return Find(name);
+                            yield return genericFind.Value;
                         }
 
                         break;
                     }
             }
+        }
+
+        private static UVSContextSearchAction? GetGenericFindAction(IGraphElement element)
+        {
+            if (element == null)
+            {
+                return null;
+            }
+
+            var name = GraphElement.GetElementName(element);
+            return string.IsNullOrEmpty(name) ? (UVSContextSearchAction?)null : Find(name);
         }
 
         private static IEnumerable<UVSContextSearchAction> GetVariableSearchActions(
@@ -325,6 +356,12 @@ namespace Unity.VisualScripting.UVSFinder
             uvsFinder.OnSearchAction(keyword, exact);
         }
 
+        private static void OpenFinderAndReplace(string keyword, bool exact)
+        {
+            var uvsFinder = UVSFinder.GetUVSFinder();
+            uvsFinder.StartFindAndReplace(keyword, exact);
+        }
+
         private static void OpenVariableRename(string variableName, VariableKind variableKind)
         {
             var uvsFinder = UVSFinder.GetUVSFinder();
@@ -351,16 +388,19 @@ namespace Unity.VisualScripting.UVSFinder
                 return scriptPath != MissingScriptPath;
             }
 
-            foreach (var guid in AssetDatabase.FindAssets($"{GetScriptSearchName(type)} t:MonoScript"))
+            foreach (var searchName in GetScriptSearchNames(type))
             {
-                var candidatePath = AssetDatabase.GUIDToAssetPath(guid);
-                var candidate = AssetDatabase.LoadAssetAtPath<MonoScript>(candidatePath);
-
-                if (candidate != null && candidate.GetClass() == type)
+                foreach (var guid in AssetDatabase.FindAssets($"{searchName} t:MonoScript"))
                 {
-                    scriptPath = candidatePath;
-                    unitScriptPathsByType[type] = scriptPath;
-                    return true;
+                    var candidatePath = AssetDatabase.GUIDToAssetPath(guid);
+                    var candidate = AssetDatabase.LoadAssetAtPath<MonoScript>(candidatePath);
+
+                    if (IsScriptForType(candidate, type))
+                    {
+                        scriptPath = candidatePath;
+                        unitScriptPathsByType[type] = scriptPath;
+                        return true;
+                    }
                 }
             }
 
@@ -369,12 +409,45 @@ namespace Unity.VisualScripting.UVSFinder
             return false;
         }
 
+        private static IEnumerable<string> GetScriptSearchNames(Type type)
+        {
+            for (var current = type; current != null && current != typeof(object); current = current.BaseType)
+            {
+                yield return GetScriptSearchName(current);
+            }
+        }
+
         private static string GetScriptSearchName(Type type)
         {
             var name = type.Name;
             var genericMarkerIndex = name.IndexOf('`');
 
             return genericMarkerIndex >= 0 ? name.Substring(0, genericMarkerIndex) : name;
+        }
+
+        private static bool IsScriptForType(MonoScript script, Type type)
+        {
+            if (script == null)
+            {
+                return false;
+            }
+
+            if (script.GetClass() == type)
+            {
+                return true;
+            }
+
+            var text = script.text;
+            if (string.IsNullOrEmpty(text))
+            {
+                return false;
+            }
+
+            var typeName = type.Name;
+            return text.Contains($"class {typeName}") ||
+                text.Contains($"struct {typeName}") ||
+                text.Contains($"interface {typeName}") ||
+                text.Contains($"enum {typeName}");
         }
 
         private static void OpenUnitScript(string scriptPath)
@@ -582,6 +655,26 @@ namespace Unity.VisualScripting.UVSFinder
         {
         }
 
+        public override void HandleCapture()
+        {
+            if (UVSWholeNodeContextClick.TryHandle(position, mousePosition, OnContext))
+            {
+                return;
+            }
+
+            base.HandleCapture();
+        }
+
+        public override void HandleInput()
+        {
+            if (UVSWholeNodeContextClick.TryHandle(position, mousePosition, OnContext))
+            {
+                return;
+            }
+
+            base.HandleInput();
+        }
+
         protected override IEnumerable<DropdownOption> contextOptions
         {
             get
@@ -598,6 +691,113 @@ namespace Unity.VisualScripting.UVSFinder
             }
         }
     }
+
+    public sealed class UVSLiteralWidget : UVSContextSearchUnitWidget<Literal>
+    {
+        public UVSLiteralWidget(FlowCanvas canvas, Literal unit) : base(canvas, unit)
+        {
+        }
+
+        protected override bool showHeaderAddon => unit.isDefined;
+
+        public override bool foregroundRequiresInput => true;
+
+        protected override float GetHeaderAddonWidth()
+        {
+            var adaptiveWidthAttribute = unit.type.GetAttribute<InspectorAdaptiveWidthAttribute>();
+
+            return Mathf.Min(metadata.Inspector().GetAdaptiveWidth(), adaptiveWidthAttribute?.width ?? Styles.maxSettingsWidth);
+        }
+
+        protected override float GetHeaderAddonHeight(float width)
+        {
+            return LudiqGUI.GetInspectorHeight(null, metadata, width, GUIContent.none);
+        }
+
+        public override void BeforeFrame()
+        {
+            base.BeforeFrame();
+
+            if (showHeaderAddon &&
+                (GetHeaderAddonWidth() != headerAddonPosition.width ||
+                    GetHeaderAddonHeight(headerAddonPosition.width) != headerAddonPosition.height))
+            {
+                Reposition();
+            }
+        }
+
+        protected override void DrawHeaderAddon()
+        {
+            using (LudiqGUIUtility.labelWidth.Override(75))
+            using (Inspector.adaptiveWidth.Override(true))
+            {
+                EditorGUI.BeginChangeCheck();
+
+                LudiqGUI.Inspector(metadata, headerAddonPosition, GUIContent.none);
+
+                if (EditorGUI.EndChangeCheck())
+                {
+                    unit.EnsureDefined();
+                    Reposition();
+                }
+            }
+        }
+    }
+
+    public sealed class UVSMissingTypeUnitWidget : UVSContextSearchUnitWidget<MissingType>
+    {
+        public UVSMissingTypeUnitWidget(FlowCanvas canvas, MissingType unit) : base(canvas, unit)
+        {
+        }
+
+        protected override bool showSubtitle => !string.IsNullOrEmpty(unit.formerType);
+
+        protected override void CacheDescription()
+        {
+            base.CacheDescription();
+
+            if (showSubtitle)
+            {
+                titleContent.text = unit.formerType;
+                subtitleContent.text = "Script Missing!";
+            }
+            else
+            {
+                titleContent.text = "Script Missing!";
+            }
+
+            titleContent.tooltip = $"No definition for type '{unit.formerType}' can be found. Did you perhaps remove a '{unit.formerType}.cs' script file?";
+        }
+    }
+
+    public sealed class UVSGraphInputWidget : UVSContextSearchUnitWidget<GraphInput>
+    {
+        public UVSGraphInputWidget(FlowCanvas canvas, GraphInput unit) : base(canvas, unit)
+        {
+        }
+
+        protected override NodeColorMix baseColor => NodeColorMix.TealReadable;
+    }
+
+    public sealed class UVSGraphOutputWidget : UVSContextSearchUnitWidget<GraphOutput>
+    {
+        public UVSGraphOutputWidget(FlowCanvas canvas, GraphOutput unit) : base(canvas, unit)
+        {
+        }
+
+        protected override NodeColorMix baseColor => NodeColorMix.TealReadable;
+    }
+
+#pragma warning disable 618
+    public sealed class UVSVariableUnitWidget : UVSContextSearchUnitWidget<VariableUnit>
+    {
+        public UVSVariableUnitWidget(FlowCanvas canvas, VariableUnit unit) : base(canvas, unit)
+        {
+        }
+
+        protected override NodeColorMix baseColor => NodeColorMix.TealReadable;
+    }
+#pragma warning restore 618
 
     public class UVSUnifiedVariableUnitWidget<TUnit> : UnitWidget<TUnit>
         where TUnit : UnifiedVariableUnit
@@ -674,6 +874,89 @@ namespace Unity.VisualScripting.UVSFinder
         }
 
         protected override NodeColorMix baseColor => NodeColor.Green;
+    }
+
+#if NEW_INPUT_SYSTEM || PACKAGE_INPUT_SYSTEM_EXISTS
+    public class UVSInputSystemWidget : InputSystemWidget
+    {
+        public UVSInputSystemWidget(FlowCanvas canvas, Unity.VisualScripting.InputSystem.OnInputSystemEvent unit) : base(canvas, unit)
+        {
+        }
+
+        public override void HandleCapture()
+        {
+            if (UVSWholeNodeContextClick.TryHandle(position, mousePosition, OnContext))
+            {
+                return;
+            }
+
+            base.HandleCapture();
+        }
+
+        public override void HandleInput()
+        {
+            if (UVSWholeNodeContextClick.TryHandle(position, mousePosition, OnContext))
+            {
+                return;
+            }
+
+            base.HandleInput();
+        }
+
+        protected override IEnumerable<DropdownOption> contextOptions
+        {
+            get
+            {
+                foreach (var option in UVSGraphElementWidgetExt.GetDropdownOptions(unit))
+                {
+                    yield return option;
+                }
+
+                foreach (var baseOption in base.contextOptions)
+                {
+                    yield return baseOption;
+                }
+            }
+        }
+    }
+
+    public sealed class UVSInputSystemButtonWidget : UVSInputSystemWidget
+    {
+        public UVSInputSystemButtonWidget(FlowCanvas canvas, Unity.VisualScripting.InputSystem.OnInputSystemEventButton unit) : base(canvas, unit)
+        {
+        }
+    }
+
+    public sealed class UVSInputSystemFloatWidget : UVSInputSystemWidget
+    {
+        public UVSInputSystemFloatWidget(FlowCanvas canvas, Unity.VisualScripting.InputSystem.OnInputSystemEventFloat unit) : base(canvas, unit)
+        {
+        }
+    }
+
+    public sealed class UVSInputSystemVector2Widget : UVSInputSystemWidget
+    {
+        public UVSInputSystemVector2Widget(FlowCanvas canvas, Unity.VisualScripting.InputSystem.OnInputSystemEventVector2 unit) : base(canvas, unit)
+        {
+        }
+    }
+#endif
+
+    internal static class UVSWholeNodeContextClick
+    {
+        public static bool TryHandle(Rect position, Vector2 mousePosition, Action onContext)
+        {
+            var current = Event.current;
+
+            if (current.type != EventType.ContextClick || !position.Contains(mousePosition))
+            {
+                return false;
+            }
+
+            onContext();
+            current.Use();
+            return true;
+        }
     }
 
     public sealed class UVSGraphGroupWidget : GraphGroupWidget

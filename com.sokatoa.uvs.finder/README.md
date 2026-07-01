@@ -18,6 +18,7 @@ Open it with **Alt+F**, type a search term, and press **Enter**.
 - Find Time nodes by configured input values such as delay, duration, and unscaled time.
 - Find graph, object, scene, application, saved, and prefab blackboard variable declarations.
 - Right-click graph elements for contextual finder actions.
+- Right-click graph elements to start a find and replace search for the clicked element.
 - Right-click nodes to open the C# script that defines the unit, when Unity can resolve it.
 - Right-click variable nodes to rename matching Get, Set, Has, and blackboard variables across the selected search scope.
 - Right-click blackboard variable items to find the variable name, find related Get, Set, and Has Variable nodes, or start the same scoped rename workflow from the variable declaration.
@@ -32,6 +33,8 @@ Node Finder adds right-click actions directly in Visual Scripting graphs.
 Supported contextual actions include:
 
 - Find selected node or group.
+- Find nodes and graph elements without specialized related-item actions by their generic display name.
+- Start find and replace for the clicked node or graph element.
 - Find related Custom Event and Trigger Custom Event nodes.
 - Find related Get Variable, Set Variable, and Has Variable nodes.
 - Find Blackboard variables by name, or find related Get Variable, Set Variable, and Has Variable nodes from a Blackboard variable item.

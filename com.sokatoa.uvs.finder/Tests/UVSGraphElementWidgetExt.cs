@@ -22,6 +22,16 @@ namespace Unity.VisualScripting.UVSFinder.Tests
             Assert.That(options.Any(option => option.label == "Open C# Script"), Is.False);
         }
 
+#if NEW_INPUT_SYSTEM || PACKAGE_INPUT_SYSTEM_EXISTS
+        [Test]
+        public void GetDropdownOptions_ForInputSystemEventButton_IncludesOpenCSharpScript()
+        {
+            var options = Unity.VisualScripting.UVSFinder.UVSGraphElementWidgetExt.GetDropdownOptions(new InputSystem.OnInputSystemEventButton()).ToArray();
+
+            Assert.That(options.Any(option => option.label == "Open C# Script" && option.value is Action), Is.True);
+        }
+#endif
+
         [Test]
         public void GetDropdownOptions_ForVariableUnit_IncludesRenameVariable()
         {
@@ -35,6 +45,32 @@ namespace Unity.VisualScripting.UVSFinder.Tests
             var options = Unity.VisualScripting.UVSFinder.UVSGraphElementWidgetExt.GetDropdownOptions(unit).ToArray();
 
             Assert.That(options.Any(option => option.label == "Rename Variable \"score\"..." && option.value is Action), Is.True);
+        }
+
+        [Test]
+        public void GetDropdownOptions_ForUnit_IncludesFindAndReplace()
+        {
+            var unit = new WaitForSecondsUnit();
+            unit.EnsureDefined();
+            unit.defaultValues["seconds"] = 2.5f;
+            unit.defaultValues["unscaledTime"] = true;
+
+            var options = Unity.VisualScripting.UVSFinder.UVSGraphElementWidgetExt.GetDropdownOptions(unit).ToArray();
+
+            Assert.That(options.Any(option => option.label == "Find and Replace \"Wait For Seconds [Delay: 2.5, Unscaled: True]\"" && option.value is Action), Is.True);
+        }
+
+        [Test]
+        public void GetDropdownOptions_ForElementWithoutCustomSearch_IncludesGenericFind()
+        {
+            var group = new GraphGroup
+            {
+                label = "Setup"
+            };
+
+            var options = Unity.VisualScripting.UVSFinder.UVSGraphElementWidgetExt.GetDropdownOptions(group).ToArray();
+
+            Assert.That(options.Any(option => option.label == "Find \"\"Setup\" [Graph Group]\"" && option.value is Action), Is.True);
         }
 
         [Test]

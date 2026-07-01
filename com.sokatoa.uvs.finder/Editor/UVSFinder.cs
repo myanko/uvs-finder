@@ -550,6 +550,32 @@ namespace Unity.VisualScripting.UVSFinder
             CaptureSelectedNodeTemplate();
         }
 
+        public void StartFindAndReplace(string keyword, bool isExact = false)
+        {
+            if (string.IsNullOrEmpty(keyword))
+            {
+                EditorUtility.DisplayDialog("Find And Replace", "The selected graph element does not have a searchable name.", "OK");
+                return;
+            }
+
+            selectedReplaceMode = UVSReplaceMode.Values;
+            replacementNodeTemplate = null;
+            replacementNodeTemplateName = null;
+            replaceMode?.SetValueWithoutNotify(ReplaceModeValuesLabel);
+            replaceField?.SetValueWithoutNotify(string.Empty);
+
+            if (replaceFoldout != null)
+            {
+                replaceFoldout.value = true;
+            }
+
+            OnSearchAction(keyword, isExact);
+            UpdateReplaceControls();
+            RefreshReplacePreview();
+            CapturePersistentState();
+            replaceField?.Focus();
+        }
+
         public void StartVariableRename(string variableName, VariableKind variableKind)
         {
             if (string.IsNullOrEmpty(variableName))
