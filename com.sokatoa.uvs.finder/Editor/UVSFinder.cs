@@ -250,11 +250,11 @@ namespace Unity.VisualScripting.UVSFinder
             resultListview.selectionType = SelectionType.Multiple;
 
             // Callback invoked when the user double clicks an item
-            resultListview.onItemsChosen += OnItemsChosen;
+            resultListview.itemsChosen += OnItemsChosen;
 
             // Callback invoked when the user changes the selection inside the ListView
-            resultListview.onSelectionChange += OnItemsChosen;
-            resultListview.onSelectionChange += _ =>
+            resultListview.selectionChanged += OnItemsChosen;
+            resultListview.selectionChanged += _ =>
             {
                 RefreshResultSelectionStyles();
                 graphPreview?.MarkDirtyRepaint();
@@ -2298,8 +2298,8 @@ namespace Unity.VisualScripting.UVSFinder
         }
     }
 
-    class SearchInfo {
-        public List<GraphReference> references;
+    class SearchInfo
+    {
         public IGraphElement element;
         public bool found;
     }
